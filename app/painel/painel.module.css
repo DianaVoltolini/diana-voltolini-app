@@ -6,52 +6,53 @@
 }
 
 .header {
-  border-bottom: 1px solid #e1e7ed;
+  border-bottom: 1px solid #d8e1e9;
   background: #ffffff;
 }
 
 .headerContent {
   display: flex;
-  min-height: 74px;
+  min-height: 76px;
   align-items: center;
   justify-content: space-between;
-  gap: 25px;
+  gap: 24px;
 }
 
 .logo {
-  width: 182px;
+  width: 190px;
   height: auto;
 }
 
 .logoutButton {
-  min-height: 38px;
-  border: 1px solid #d8e0e7;
-  border-radius: 6px;
+  min-height: 42px;
+  border: 1px solid #cbd7e1;
+  border-radius: 7px;
   background: #ffffff;
   color: #0d1b2a;
-  padding: 0 16px;
-  font-size: 0.73rem;
+  padding: 0 18px;
+  font-size: 0.94rem;
   font-weight: 700;
 }
 
 .logoutButton:hover {
   border-color: #0d1b2a;
+  background: #f8fbff;
 }
 
 .content {
-  padding-block: 60px 85px;
+  padding-block: 48px 76px;
 }
 
 .welcome {
-  margin-bottom: 34px;
+  margin-bottom: 30px;
 }
 
 .eyebrow {
-  margin: 0 0 9px;
-  color: #9f7d17;
-  font-size: 0.62rem;
-  font-weight: 750;
-  letter-spacing: 0.15em;
+  margin: 0 0 8px;
+  color: #806311;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   line-height: 1.4;
   text-transform: uppercase;
 }
@@ -59,27 +60,29 @@
 .welcome h1 {
   margin: 0 0 8px;
   color: #0d1b2a;
-  font-family: var(--font-playfair), Georgia, serif;
-  font-size: clamp(2rem, 4vw, 2.65rem);
-  font-weight: 650;
-  letter-spacing: -0.03em;
+  font-family: var(--font-ui);
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
 }
 
 .welcome > p:last-child {
   margin: 0;
-  color: #65717e;
-  font-size: 0.84rem;
+  color: #536271;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .summaryGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 15px;
-  margin-bottom: 50px;
+  margin-bottom: 38px;
 }
 
 .summaryGrid article {
-  border: 1px solid #e1e7ed;
+  border: 1px solid #d8e1e9;
   border-radius: 9px;
   background: #ffffff;
   padding: 22px;
@@ -87,20 +90,21 @@
 
 .summaryGrid span {
   display: block;
-  margin-bottom: 13px;
-  color: #65717e;
-  font-size: 0.7rem;
+  margin-bottom: 9px;
+  color: #536271;
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .summaryGrid strong {
   color: #0d1b2a;
-  font-family: var(--font-playfair), Georgia, serif;
-  font-size: 1.8rem;
-  font-weight: 650;
+  font-family: var(--font-ui);
+  font-size: 1.9rem;
+  font-weight: 700;
 }
 
 .diagnosticsSection {
-  border: 1px solid #e1e7ed;
+  border: 1px solid #d8e1e9;
   border-radius: 10px;
   background: #ffffff;
   padding: 28px;
@@ -111,15 +115,16 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 
 .sectionHeader h2 {
   margin: 0;
   color: #0d1b2a;
-  font-family: var(--font-playfair), Georgia, serif;
-  font-size: 1.45rem;
-  font-weight: 650;
+  font-family: var(--font-ui);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 .diagnosticsList {
@@ -129,47 +134,68 @@
 
 .diagnosticCard {
   display: flex;
-  min-height: 95px;
+  min-height: 96px;
   align-items: center;
   justify-content: space-between;
-  gap: 25px;
-  border: 1px solid #e1e7ed;
+  gap: 24px;
+  border: 1px solid #d8e1e9;
   border-radius: 8px;
+  background: #ffffff;
   padding: 18px 20px;
 }
 
 .diagnosticType {
   display: block;
   margin-bottom: 5px;
-  color: #65717e;
-  font-size: 0.65rem;
+  color: #536271;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .diagnosticCard strong {
   display: block;
   margin-bottom: 5px;
   color: #0d1b2a;
-  font-size: 0.8rem;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .diagnosticCard small {
   display: block;
-  color: #7b8692;
-  font-size: 0.66rem;
+  color: #5c6a78;
+  font-size: 0.88rem;
+  line-height: 1.5;
 }
 
 .status {
   display: inline-flex;
-  min-height: 28px;
+  min-height: 34px;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
   background: #eef2f5;
-  color: #53606e;
-  padding: 0 11px;
-  font-size: 0.64rem;
+  color: #3e4c59;
+  padding: 0 13px;
+  font-size: 0.84rem;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.status_awaiting_questionnaire,
+.status_awaiting_documents {
+  background: #fff7e8;
+  color: #765000;
+}
+
+.status_documents_received {
+  background: #eef5ff;
+  color: #24559a;
+}
+
+.status_under_review,
+.status_awaiting_approval {
+  background: #f1efff;
+  color: #5742a3;
 }
 
 .status_completed {
@@ -178,8 +204,8 @@
 }
 
 .status_client_action_required {
-  background: #fff6e5;
-  color: #8a5a00;
+  background: #fff2dc;
+  color: #754900;
 }
 
 .status_cancelled {
@@ -188,79 +214,110 @@
 }
 
 .emptyState {
-  border: 1px dashed #cfd8e1;
-  border-radius: 8px;
-  padding: 36px 25px;
+  border: 1px dashed #c6d1db;
+  border-radius: 9px;
+  background: #fbfdff;
+  padding: 36px 24px;
   text-align: center;
 }
 
 .emptyState h3 {
   margin: 0 0 8px;
   color: #0d1b2a;
-  font-size: 0.86rem;
+  font-size: 1.08rem;
+  font-weight: 700;
 }
 
 .emptyState p {
-  max-width: 480px;
+  max-width: 540px;
   margin: 0 auto 18px;
-  color: #65717e;
-  font-size: 0.75rem;
+  color: #536271;
+  font-size: 0.96rem;
   line-height: 1.65;
 }
 
 .emptyState a {
   display: inline-flex;
-  min-height: 39px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 7px;
   background: #c9a227;
   color: #0d1b2a;
-  padding: 0 16px;
-  font-size: 0.72rem;
-  font-weight: 750;
+  padding: 0 18px;
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.emptyState a:hover {
+  background: #d7b53c;
 }
 
 @media (max-width: 700px) {
   .headerContent {
-    min-height: 66px;
+    min-height: 70px;
   }
 
   .logo {
-    width: 145px;
+    width: 160px;
+  }
+
+  .logoutButton {
+    min-height: 40px;
+    padding-inline: 15px;
+    font-size: 0.9rem;
   }
 
   .content {
-    padding-block: 42px 60px;
+    padding-block: 40px 58px;
+  }
+
+  .welcome h1 {
+    font-size: 2rem;
   }
 
   .summaryGrid {
     grid-template-columns: 1fr;
     gap: 10px;
-    margin-bottom: 35px;
+    margin-bottom: 30px;
   }
 
   .summaryGrid article {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 18px;
   }
 
   .summaryGrid span {
     margin-bottom: 0;
+    font-size: 0.92rem;
   }
 
   .summaryGrid strong {
-    font-size: 1.4rem;
+    font-size: 1.55rem;
   }
 
   .diagnosticsSection {
-    padding: 21px 16px;
+    padding: 22px 16px;
+  }
+
+  .sectionHeader h2 {
+    font-size: 1.45rem;
   }
 
   .diagnosticCard {
     align-items: flex-start;
     flex-direction: column;
     gap: 14px;
+    padding: 17px;
+  }
+
+  .emptyState {
+    padding: 30px 18px;
+  }
+
+  .emptyState a {
+    width: 100%;
   }
 }

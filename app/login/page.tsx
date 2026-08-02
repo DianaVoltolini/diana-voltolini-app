@@ -17,7 +17,8 @@ type LoginPageProps = {
 };
 
 const errorMessages: Record<string, string> = {
-  "campos-obrigatorios": "Preencha o e-mail e a senha para continuar.",
+  "campos-obrigatorios":
+    "Preencha o e-mail e a senha para continuar.",
   "credenciais-invalidas":
     "E-mail ou senha inválidos. Confira os dados e tente novamente.",
 };
@@ -38,6 +39,7 @@ export default async function LoginPage({
           <a
             href="https://dianavoltolini.com.br"
             aria-label="Acessar o site Diana Voltolini"
+            className={styles.logoLink}
           >
             <Image
               className={styles.logo}
@@ -50,7 +52,9 @@ export default async function LoginPage({
           </a>
 
           <div className={styles.presentationText}>
-            <p className={styles.eyebrow}>Área exclusiva do cliente</p>
+            <p className={styles.eyebrow}>
+              Área exclusiva do cliente
+            </p>
 
             <h1>
               Acompanhe seus serviços com clareza e segurança.
@@ -71,7 +75,10 @@ export default async function LoginPage({
       <section className={styles.access}>
         <div className={styles.accessContent}>
           <header className={styles.header}>
-            <p className={styles.eyebrow}>Acesso do cliente</p>
+            <p className={styles.eyebrow}>
+              Acesso do cliente
+            </p>
+
             <h2>Entre na sua conta</h2>
 
             <p>
@@ -79,59 +86,63 @@ export default async function LoginPage({
             </p>
           </header>
 
-          {errorMessage ? (
-            <div className={styles.errorMessage} role="alert">
-              {errorMessage}
-            </div>
-          ) : null}
+          <div className={styles.formBlock}>
+            {errorMessage ? (
+              <div className={styles.errorMessage} role="alert">
+                {errorMessage}
+              </div>
+            ) : null}
 
-          <form className={styles.form} action={login}>
-            <div className={styles.field}>
-              <label htmlFor="email">E-mail</label>
+            <form className={styles.form} action={login}>
+              <div className={styles.field}>
+                <label htmlFor="email">E-mail</label>
 
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                placeholder="seuemail@empresa.com.br"
-                required
-              />
-            </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="seuemail@empresa.com.br"
+                  required
+                />
+              </div>
 
-            <div className={styles.field}>
-              <label htmlFor="password">Senha</label>
+              <div className={styles.field}>
+                <label htmlFor="password">Senha</label>
 
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                placeholder="Digite sua senha"
-                required
-              />
-            </div>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="Digite sua senha"
+                  required
+                />
+              </div>
 
-            <button className={styles.submitButton} type="submit">
-              Entrar na área do cliente
-            </button>
-          </form>
-
-          <div className={styles.information}>
-            <strong>Ainda não recebeu seu acesso?</strong>
-
-            <p>
-              O cadastro será liberado após a confirmação da contratação e do
-              pagamento do serviço.
-            </p>
+              <button className={styles.submitButton} type="submit">
+                Entrar na área do cliente
+              </button>
+            </form>
           </div>
 
-          <a
-            className={styles.backLink}
-            href="https://dianavoltolini.com.br"
-          >
-            ← Voltar para o site
-          </a>
+          <div className={styles.accessFooter}>
+            <div className={styles.information}>
+              <strong>Ainda não recebeu seu acesso?</strong>
+
+              <p>
+                O cadastro será liberado após a confirmação da contratação e do
+                pagamento do serviço.
+              </p>
+            </div>
+
+            <a
+              className={styles.backLink}
+              href="https://dianavoltolini.com.br"
+            >
+              ← Voltar para o site
+            </a>
+          </div>
         </div>
       </section>
     </main>

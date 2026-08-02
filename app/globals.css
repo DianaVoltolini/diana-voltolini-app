@@ -5,19 +5,25 @@
   --navy-dark: #081522;
   --navy-soft: #17283a;
   --gold: #c9a227;
-  --gold-dark: #9f7d17;
+  --gold-dark: #8a6b12;
   --white: #ffffff;
   --soft-white: #f8fbff;
   --soft-blue: #f2f6fa;
   --graphite: #111827;
-  --text: #34404d;
-  --muted: #65717e;
-  --border: #e1e7ed;
+  --text: #263442;
+  --muted: #536271;
+  --border: #d8e1e9;
   --danger: #b42318;
   --danger-background: #fff4f2;
   --success: #177245;
   --success-background: #effaf4;
   --container: 1160px;
+
+  --font-ui:
+    "Segoe UI",
+    Arial,
+    Helvetica,
+    sans-serif;
 }
 
 * {
@@ -26,14 +32,19 @@
 
 html {
   min-height: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
   min-height: 100vh;
   margin: 0;
+  overflow-x: hidden;
   background: var(--soft-white);
   color: var(--text);
-  font-family: var(--font-inter), Arial, sans-serif;
+  font-family: var(--font-ui);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.58;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -43,12 +54,14 @@ button,
 input,
 textarea,
 select {
-  font: inherit;
+  font-family: var(--font-ui);
 }
 
 button,
-input {
-  border-radius: 0;
+input,
+textarea,
+select {
+  font-size: 1rem;
 }
 
 button {
@@ -72,8 +85,17 @@ h3 {
   margin-top: 0;
 }
 
+button,
+a,
+input {
+  -webkit-tap-highlight-color: transparent;
+}
+
 .container {
-  width: min(calc(100% - 48px), var(--container));
+  width: min(
+    calc(100% - 48px),
+    var(--container)
+  );
   margin-inline: auto;
 }
 
@@ -90,7 +112,14 @@ h3 {
 }
 
 @media (max-width: 640px) {
+  body {
+    font-size: 16px;
+  }
+
   .container {
-    width: min(calc(100% - 32px), var(--container));
+    width: min(
+      calc(100% - 32px),
+      var(--container)
+    );
   }
 }
