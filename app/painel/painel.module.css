@@ -1,0 +1,266 @@
+/* app/painel/painel.module.css */
+
+.page {
+  min-height: 100vh;
+  background: #f2f6fa;
+}
+
+.header {
+  border-bottom: 1px solid #e1e7ed;
+  background: #ffffff;
+}
+
+.headerContent {
+  display: flex;
+  min-height: 74px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+}
+
+.logo {
+  width: 182px;
+  height: auto;
+}
+
+.logoutButton {
+  min-height: 38px;
+  border: 1px solid #d8e0e7;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0d1b2a;
+  padding: 0 16px;
+  font-size: 0.73rem;
+  font-weight: 700;
+}
+
+.logoutButton:hover {
+  border-color: #0d1b2a;
+}
+
+.content {
+  padding-block: 60px 85px;
+}
+
+.welcome {
+  margin-bottom: 34px;
+}
+
+.eyebrow {
+  margin: 0 0 9px;
+  color: #9f7d17;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.15em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.welcome h1 {
+  margin: 0 0 8px;
+  color: #0d1b2a;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(2rem, 4vw, 2.65rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.welcome > p:last-child {
+  margin: 0;
+  color: #65717e;
+  font-size: 0.84rem;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+  margin-bottom: 50px;
+}
+
+.summaryGrid article {
+  border: 1px solid #e1e7ed;
+  border-radius: 9px;
+  background: #ffffff;
+  padding: 22px;
+}
+
+.summaryGrid span {
+  display: block;
+  margin-bottom: 13px;
+  color: #65717e;
+  font-size: 0.7rem;
+}
+
+.summaryGrid strong {
+  color: #0d1b2a;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 1.8rem;
+  font-weight: 650;
+}
+
+.diagnosticsSection {
+  border: 1px solid #e1e7ed;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 28px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  color: #0d1b2a;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 1.45rem;
+  font-weight: 650;
+}
+
+.diagnosticsList {
+  display: grid;
+  gap: 10px;
+}
+
+.diagnosticCard {
+  display: flex;
+  min-height: 95px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  border: 1px solid #e1e7ed;
+  border-radius: 8px;
+  padding: 18px 20px;
+}
+
+.diagnosticType {
+  display: block;
+  margin-bottom: 5px;
+  color: #65717e;
+  font-size: 0.65rem;
+}
+
+.diagnosticCard strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #0d1b2a;
+  font-size: 0.8rem;
+}
+
+.diagnosticCard small {
+  display: block;
+  color: #7b8692;
+  font-size: 0.66rem;
+}
+
+.status {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #eef2f5;
+  color: #53606e;
+  padding: 0 11px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status_completed {
+  background: #effaf4;
+  color: #177245;
+}
+
+.status_client_action_required {
+  background: #fff6e5;
+  color: #8a5a00;
+}
+
+.status_cancelled {
+  background: #fff4f2;
+  color: #b42318;
+}
+
+.emptyState {
+  border: 1px dashed #cfd8e1;
+  border-radius: 8px;
+  padding: 36px 25px;
+  text-align: center;
+}
+
+.emptyState h3 {
+  margin: 0 0 8px;
+  color: #0d1b2a;
+  font-size: 0.86rem;
+}
+
+.emptyState p {
+  max-width: 480px;
+  margin: 0 auto 18px;
+  color: #65717e;
+  font-size: 0.75rem;
+  line-height: 1.65;
+}
+
+.emptyState a {
+  display: inline-flex;
+  min-height: 39px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: #c9a227;
+  color: #0d1b2a;
+  padding: 0 16px;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+@media (max-width: 700px) {
+  .headerContent {
+    min-height: 66px;
+  }
+
+  .logo {
+    width: 145px;
+  }
+
+  .content {
+    padding-block: 42px 60px;
+  }
+
+  .summaryGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 35px;
+  }
+
+  .summaryGrid article {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .summaryGrid span {
+    margin-bottom: 0;
+  }
+
+  .summaryGrid strong {
+    font-size: 1.4rem;
+  }
+
+  .diagnosticsSection {
+    padding: 21px 16px;
+  }
+
+  .diagnosticCard {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+}
