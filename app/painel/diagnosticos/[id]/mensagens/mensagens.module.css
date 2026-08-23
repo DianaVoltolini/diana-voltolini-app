@@ -1,0 +1,116 @@
+/* app/painel/diagnosticos/[id]/mensagens/mensagens.module.css */
+
+.form {
+  display: grid;
+  gap: 16px;
+  border-top: 1px solid #dce4eb;
+  padding-top: 24px;
+}
+
+.form label {
+  display: grid;
+  gap: 8px;
+}
+
+.form label > span {
+  color: #17283a;
+  font-size: 0.96rem;
+  font-weight: 750;
+}
+
+.form textarea {
+  width: 100%;
+  min-height: 125px;
+  resize: vertical;
+  border: 1px solid #c7d3dd;
+  border-radius: 9px;
+  outline: none;
+  background: #ffffff;
+  color: #111827;
+  padding: 13px 15px;
+  font-size: 0.97rem;
+  line-height: 1.6;
+}
+
+.form textarea:focus {
+  border-color: #9d7b14;
+  box-shadow:
+    0 0 0 4px
+    rgba(201, 162, 39, 0.13);
+}
+
+.form textarea:disabled {
+  background: #eef2f5;
+  color: #687684;
+}
+
+.formFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.formFooter small {
+  max-width: 620px;
+  color: #71808d;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.formFooter button {
+  display: inline-flex;
+  min-width: 165px;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #c9a227;
+  border-radius: 8px;
+  background: #c9a227;
+  color: #0d1b2a;
+  padding: 0 20px;
+  font-size: 0.91rem;
+  font-weight: 800;
+}
+
+.formFooter button:hover:not(:disabled) {
+  background: #d4ae35;
+}
+
+.formFooter button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.successMessage,
+.errorMessage {
+  margin: 0;
+  border-radius: 8px;
+  padding: 13px 15px;
+  font-size: 0.88rem;
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.successMessage {
+  border: 1px solid #b9dfc9;
+  background: #effaf4;
+  color: #176b43;
+}
+
+.errorMessage {
+  border: 1px solid #ecc1bc;
+  background: #fff4f2;
+  color: #9e261d;
+}
+
+@media (max-width: 650px) {
+  .formFooter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .formFooter button {
+    width: 100%;
+  }
+}

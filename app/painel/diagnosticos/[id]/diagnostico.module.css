@@ -1,0 +1,632 @@
+/* app/painel/diagnosticos/[id]/diagnostico.module.css */
+
+.page {
+  min-height: 100dvh;
+  background: #f2f6fa;
+}
+
+.header {
+  border-bottom: 1px solid #d6e0e8;
+  background: #ffffff;
+}
+
+.headerContent {
+  display: flex;
+  min-height: 88px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.logo {
+  width: 215px;
+  height: auto;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.backButton,
+.logoutButton {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-size: 0.88rem;
+  font-weight: 750;
+}
+
+.backButton {
+  border: 1px solid #ccd6df;
+  background: #ffffff;
+  color: #0d1b2a;
+}
+
+.logoutButton {
+  border: 1px solid #0d1b2a;
+  background: #0d1b2a;
+  color: #ffffff;
+}
+
+.content {
+  padding-block: 34px 72px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 27px;
+  color: #637280;
+  font-size: 0.88rem;
+}
+
+.breadcrumb a {
+  font-weight: 700;
+}
+
+.breadcrumb strong {
+  color: #0d1b2a;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 27px;
+}
+
+.eyebrow {
+  margin: 0 0 9px;
+  color: #846611;
+  font-size: 0.83rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  margin: 0 0 10px;
+  color: #0d1b2a;
+  font-size: clamp(
+    2.65rem,
+    4vw,
+    3.65rem
+  );
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1.05;
+}
+
+.heroDescription {
+  max-width: 760px;
+  margin: 0;
+  color: #536372;
+  font-size: 1.08rem;
+  line-height: 1.65;
+}
+
+.status {
+  display: inline-flex;
+  min-height: 39px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #edf1f4;
+  color: #455462;
+  padding: 0 16px;
+  font-size: 0.86rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.status_awaiting_questionnaire,
+.status_awaiting_documents {
+  background: #fff7e5;
+  color: #755000;
+}
+
+.status_documents_received {
+  background: #eaf3ff;
+  color: #225a9b;
+}
+
+.status_under_review {
+  background: #f1efff;
+  color: #5742a3;
+}
+
+.status_client_action_required {
+  background: #fff0d1;
+  color: #754900;
+}
+
+.status_awaiting_approval {
+  background: #eef1ff;
+  color: #3c4e9d;
+}
+
+.status_completed {
+  background: #edf9f2;
+  color: #177245;
+}
+
+.status_cancelled {
+  background: #fff2f0;
+  color: #b42318;
+}
+
+.pendingBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 35px;
+  margin-bottom: 22px;
+  border: 1px solid #e5c56d;
+  border-left: 5px solid #c9a227;
+  border-radius: 11px;
+  background: #fff9e9;
+  padding: 24px 27px;
+}
+
+.pendingEyebrow {
+  margin: 0 0 6px;
+  color: #846611;
+  font-size: 0.77rem;
+  font-weight: 850;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.pendingBanner h2 {
+  margin: 0 0 8px;
+  color: #0d1b2a;
+  font-size: 1.42rem;
+}
+
+.pendingBanner p:last-child {
+  max-width: 830px;
+  margin: 0;
+  color: #4f5e6c;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.pendingBannerActions {
+  display: grid;
+  min-width: 215px;
+  gap: 9px;
+}
+
+.pendingBannerActions a {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #c9a227;
+  border-radius: 8px;
+  padding: 7px 15px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.pendingBannerActions a:first-child {
+  background: #c9a227;
+  color: #0d1b2a;
+}
+
+.pendingBannerActions a:last-child {
+  background: #ffffff;
+  color: #0d1b2a;
+}
+
+.progressCard,
+.informationCard,
+.nextStepCard,
+.communicationCard {
+  border: 1px solid #d6e0e8;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow:
+    0 8px 24px
+    rgba(13, 27, 42, 0.03);
+}
+
+.progressCard {
+  margin-bottom: 20px;
+  padding: 25px 27px;
+}
+
+.progressHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 25px;
+}
+
+.progressHeader div {
+  display: grid;
+  gap: 3px;
+}
+
+.progressHeader span {
+  color: #667583;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.progressHeader strong {
+  color: #0d1b2a;
+  font-size: 1.2rem;
+}
+
+.progressHeader b {
+  color: #846611;
+  font-size: 1.32rem;
+}
+
+.progressTrack {
+  height: 9px;
+  margin-block: 17px 15px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5ebf0;
+}
+
+.progressTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #c9a227;
+}
+
+.progressCard > p {
+  margin: 0;
+  color: #586876;
+  font-size: 0.94rem;
+  line-height: 1.62;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 21px;
+}
+
+.summaryGrid article {
+  min-height: 140px;
+  border: 1px solid #d6e0e8;
+  border-radius: 11px;
+  background: #ffffff;
+  padding: 21px;
+}
+
+.summaryGrid span {
+  display: block;
+  margin-bottom: 10px;
+  color: #596877;
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.summaryGrid strong {
+  display: block;
+  margin-bottom: 7px;
+  color: #0d1b2a;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.summaryGrid small {
+  color: #71808d;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.mainGrid {
+  display: grid;
+  align-items: start;
+  grid-template-columns:
+    minmax(0, 1.4fr)
+    minmax(310px, 0.6fr);
+  gap: 21px;
+}
+
+.informationCard,
+.nextStepCard {
+  padding: 28px;
+}
+
+.cardHeader {
+  margin-bottom: 22px;
+}
+
+.cardHeader h2,
+.nextStepCard h2,
+.communicationHeader h2 {
+  margin: 0;
+  color: #0d1b2a;
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+
+.informationList {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  margin: 0;
+  border-top: 1px solid #dce4eb;
+  border-left: 1px solid #dce4eb;
+}
+
+.informationList > div {
+  min-height: 94px;
+  border-right: 1px solid #dce4eb;
+  border-bottom: 1px solid #dce4eb;
+  padding: 16px 18px;
+}
+
+.informationList dt {
+  margin-bottom: 6px;
+  color: #657482;
+  font-size: 0.81rem;
+  font-weight: 650;
+}
+
+.informationList dd {
+  margin: 0;
+  color: #0d1b2a;
+  font-size: 0.94rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.nextStepCard {
+  border-top: 4px solid #c9a227;
+}
+
+.nextStepCard > p:not(.eyebrow) {
+  margin: 13px 0 21px;
+  color: #536372;
+  font-size: 0.95rem;
+  line-height: 1.68;
+}
+
+.pendingAction,
+.disabledAction {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.pendingAction {
+  border: 1px solid #c9a227;
+  background: #c9a227;
+  color: #0d1b2a;
+}
+
+.disabledAction {
+  background: #e9eef3;
+  color: #576675;
+}
+
+.nextStepCard small {
+  display: block;
+  margin-top: 17px;
+  color: #74828f;
+  font-size: 0.81rem;
+  line-height: 1.55;
+}
+
+.communicationCard {
+  scroll-margin-top: 25px;
+  margin-top: 21px;
+  padding: 29px;
+}
+
+.communicationHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 25px;
+  margin-bottom: 23px;
+}
+
+.communicationHeader > div > p:last-child {
+  margin: 9px 0 0;
+  color: #60707e;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.communicationHeader > span {
+  color: #687785;
+  font-size: 0.84rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.messageList {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.messageItem {
+  width: min(86%, 900px);
+  border: 1px solid #dce4eb;
+  border-radius: 10px;
+  padding: 17px 19px;
+}
+
+.messageItem header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 8px;
+}
+
+.messageItem header strong {
+  color: #0d1b2a;
+  font-size: 0.88rem;
+}
+
+.messageItem header span {
+  color: #7a8793;
+  font-size: 0.77rem;
+}
+
+.messageItem p {
+  margin: 0;
+  color: #435260;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.adminMessage {
+  justify-self: start;
+  background: #f7fafc;
+}
+
+.clientMessage {
+  justify-self: end;
+  border-color: #e2d5a9;
+  background: #fffaf0;
+}
+
+.emptyMessages,
+.errorNotice {
+  margin-bottom: 24px;
+  border-radius: 9px;
+  padding: 22px;
+}
+
+.emptyMessages {
+  border: 1px dashed #bdcad5;
+  background: #fbfdff;
+  text-align: center;
+}
+
+.emptyMessages strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #0d1b2a;
+}
+
+.emptyMessages p {
+  margin: 0;
+  color: #687785;
+  font-size: 0.88rem;
+}
+
+.errorNotice {
+  border: 1px solid #ecc1bc;
+  background: #fff4f2;
+  color: #9e261d;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+@media (max-width: 1050px) {
+  .summaryGrid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 750px) {
+  .headerContent {
+    min-height: 76px;
+  }
+
+  .logo {
+    width: 165px;
+  }
+
+  .backButton {
+    display: none;
+  }
+
+  .content {
+    padding-block: 27px 55px;
+  }
+
+  .hero {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .hero h1 {
+    font-size: 2.35rem;
+  }
+
+  .pendingBanner {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 20px;
+    padding: 21px 18px;
+  }
+
+  .pendingBannerActions {
+    min-width: 0;
+  }
+
+  .summaryGrid,
+  .informationList {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryGrid article {
+    min-height: auto;
+  }
+
+  .informationCard,
+  .nextStepCard,
+  .communicationCard,
+  .progressCard {
+    padding: 22px 17px;
+  }
+
+  .communicationHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .messageItem {
+    width: 100%;
+  }
+
+  .messageItem header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+}

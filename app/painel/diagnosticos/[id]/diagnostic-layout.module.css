@@ -1,0 +1,46 @@
+/* app/painel/diagnosticos/[id]/diagnostic-layout.module.css */
+
+.resultShortcut {
+  position: fixed;
+  z-index: 50;
+  right: 26px;
+  bottom: 25px;
+
+  display: inline-flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #c9a227;
+  border-radius: 10px;
+
+  background: #c9a227;
+  color: #0d1b2a;
+
+  padding: 0 23px;
+
+  box-shadow:
+    0 12px 30px
+    rgba(13, 27, 42, 0.2);
+
+  font-size: 0.94rem;
+  font-weight: 800;
+  text-align: center;
+
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.resultShortcut:hover {
+  background: #d5ae31;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 650px) {
+  .resultShortcut {
+    right: 14px;
+    bottom: 14px;
+    left: 14px;
+  }
+}

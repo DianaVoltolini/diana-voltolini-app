@@ -1,0 +1,541 @@
+/* app/painel/diagnosticos/[id]/documentos/documentos.module.css */
+
+.page {
+  min-height: 100dvh;
+  background: #f2f6fa;
+}
+
+.header {
+  border-bottom: 1px solid #d6e0e8;
+  background: #ffffff;
+}
+
+.headerContent {
+  display: flex;
+  min-height: 88px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.logo {
+  width: 215px;
+  height: auto;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.backButton,
+.logoutButton {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-size: 0.88rem;
+  font-weight: 750;
+}
+
+.backButton {
+  border: 1px solid #ccd6df;
+  background: #ffffff;
+  color: #0d1b2a;
+}
+
+.logoutButton {
+  border: 1px solid #0d1b2a;
+  background: #0d1b2a;
+  color: #ffffff;
+}
+
+.content {
+  padding-block: 34px 72px;
+}
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 27px;
+  color: #637280;
+  font-size: 0.88rem;
+}
+
+.breadcrumb a {
+  font-weight: 700;
+}
+
+.breadcrumb strong {
+  color: #0d1b2a;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 22px;
+}
+
+.eyebrow {
+  margin: 0 0 9px;
+  color: #846611;
+  font-size: 0.83rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  margin: 0 0 10px;
+  color: #0d1b2a;
+  font-size: clamp(
+    2.65rem,
+    4vw,
+    3.65rem
+  );
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1.05;
+}
+
+.hero > div:first-child > p:last-child {
+  max-width: 720px;
+  margin: 0;
+  color: #536372;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.summary {
+  display: grid;
+  min-width: 270px;
+  border: 1px solid #d6e0e8;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 18px 20px;
+}
+
+.summary span {
+  color: #657482;
+  font-size: 0.8rem;
+}
+
+.summary strong {
+  margin-block: 4px;
+  color: #0d1b2a;
+  font-size: 1rem;
+}
+
+.summary small {
+  color: #74828f;
+  font-size: 0.8rem;
+}
+
+.pendingNotice {
+  margin-bottom: 20px;
+  border: 1px solid #e4c66f;
+  border-left: 5px solid #c9a227;
+  border-radius: 10px;
+  background: #fff9e9;
+  padding: 20px 23px;
+}
+
+.pendingNotice strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #0d1b2a;
+  font-size: 1.05rem;
+}
+
+.pendingNotice p {
+  margin: 0;
+  color: #526170;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.limitCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 20px;
+  border: 1px solid #d6e0e8;
+  border-radius: 11px;
+  background: #ffffff;
+  padding: 21px 24px;
+}
+
+.limitCard div {
+  display: grid;
+}
+
+.limitCard span {
+  color: #657482;
+  font-size: 0.84rem;
+}
+
+.limitCard strong {
+  color: #0d1b2a;
+  font-size: 1.45rem;
+}
+
+.limitCard p {
+  margin: 0;
+  color: #667583;
+  font-size: 0.88rem;
+}
+
+.manager {
+  display: grid;
+  gap: 20px;
+}
+
+.uploadCard,
+.documentsCard,
+.finalizeCard {
+  border: 1px solid #d6e0e8;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 28px;
+}
+
+.uploadCard header,
+.cardHeader {
+  margin-bottom: 22px;
+}
+
+.uploadCard h2,
+.cardHeader h2,
+.finalizeCard h2 {
+  margin: 0;
+  color: #0d1b2a;
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.uploadCard header > p:last-child,
+.finalizeCard p:last-child {
+  margin: 9px 0 0;
+  color: #60707e;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.uploadGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.uploadGrid label {
+  display: grid;
+  gap: 8px;
+}
+
+.uploadGrid label > span {
+  color: #17283a;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.uploadGrid select,
+.uploadGrid input {
+  width: 100%;
+  min-height: 50px;
+  border: 1px solid #c7d3dd;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  padding: 9px 13px;
+}
+
+.uploadGrid small {
+  color: #73818e;
+  font-size: 0.8rem;
+}
+
+.selectedFiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.selectedFiles span {
+  border: 1px solid #d5dfe7;
+  border-radius: 999px;
+  background: #f5f8fb;
+  color: #42515f;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+.uploadButton {
+  min-height: 48px;
+  margin-top: 20px;
+  border: 1px solid #c9a227;
+  border-radius: 8px;
+  background: #c9a227;
+  color: #0d1b2a;
+  padding: 0 20px;
+  font-size: 0.91rem;
+  font-weight: 800;
+}
+
+.uploadButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.successMessage,
+.errorMessage {
+  border-radius: 9px;
+  padding: 15px 17px;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.successMessage {
+  border: 1px solid #b9dfc9;
+  background: #effaf4;
+  color: #176b43;
+}
+
+.errorMessage {
+  border: 1px solid #ecc1bc;
+  background: #fff4f2;
+  color: #9e261d;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.cardHeader > span {
+  color: #687785;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.documentList {
+  display: grid;
+  gap: 12px;
+}
+
+.documentItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  border: 1px solid #dce4eb;
+  border-radius: 9px;
+  background: #fbfdff;
+  padding: 18px;
+}
+
+.documentInformation {
+  min-width: 0;
+}
+
+.documentInformation strong {
+  display: block;
+  margin-bottom: 5px;
+  overflow-wrap: anywhere;
+  color: #0d1b2a;
+  font-size: 0.94rem;
+}
+
+.documentInformation > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #596877;
+  font-size: 0.84rem;
+}
+
+.documentInformation small {
+  color: #74828f;
+  font-size: 0.78rem;
+}
+
+.reviewNote {
+  margin: 11px 0 0;
+  border-left: 3px solid #c9a227;
+  background: #fff9e9;
+  color: #4e5d6b;
+  padding: 10px 12px;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.documentActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.documentActions a,
+.documentActions button {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  padding: 0 13px;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.documentActions a {
+  border: 1px solid #c9a227;
+  background: #c9a227;
+  color: #0d1b2a;
+}
+
+.documentActions button {
+  border: 1px solid #d5a7a2;
+  background: #ffffff;
+  color: #a22b22;
+}
+
+.documentStatus {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  border-radius: 999px;
+  background: #edf1f4;
+  color: #455462;
+  padding: 0 12px;
+  font-size: 0.77rem;
+  font-weight: 750;
+}
+
+.documentStatus_approved {
+  background: #edf9f2;
+  color: #177245;
+}
+
+.documentStatus_under_review {
+  background: #eaf3ff;
+  color: #225a9b;
+}
+
+.documentStatus_rejected {
+  background: #fff0d1;
+  color: #754900;
+}
+
+.finalizeCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  border-top: 4px solid #c9a227;
+}
+
+.finalizeCard button {
+  min-width: 210px;
+  min-height: 50px;
+  border: 1px solid #c9a227;
+  border-radius: 8px;
+  background: #c9a227;
+  color: #0d1b2a;
+  padding: 0 20px;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.finalizeCard button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.emptyState {
+  border: 1px dashed #bdcad5;
+  border-radius: 9px;
+  background: #fbfdff;
+  color: #687785;
+  padding: 30px;
+  text-align: center;
+}
+
+@media (max-width: 800px) {
+  .hero,
+  .limitCard,
+  .finalizeCard,
+  .documentItem {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .summary {
+    min-width: 0;
+  }
+
+  .uploadGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .documentActions {
+    justify-content: flex-start;
+  }
+
+  .finalizeCard button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .headerContent {
+    min-height: 76px;
+  }
+
+  .logo {
+    width: 165px;
+  }
+
+  .backButton {
+    display: none;
+  }
+
+  .content {
+    padding-block: 27px 55px;
+  }
+
+  .hero h1 {
+    font-size: 2.35rem;
+  }
+
+  .uploadCard,
+  .documentsCard,
+  .finalizeCard {
+    padding: 22px 17px;
+  }
+
+  .cardHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .documentActions a,
+  .documentActions button {
+    flex: 1;
+  }
+}

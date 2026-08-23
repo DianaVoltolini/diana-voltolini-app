@@ -1,4 +1,4 @@
-// lib/supabase/server.ts
+// C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\lib\supabase\server.ts
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -6,11 +6,16 @@ import { cookies } from "next/headers";
 export async function createClient() {
   const cookieStore = await cookies();
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL;
+
   const supabasePublishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  if (!supabaseUrl || !supabasePublishableKey) {
+  if (
+    !supabaseUrl ||
+    !supabasePublishableKey
+  ) {
     throw new Error(
       "As variáveis NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY não foram configuradas.",
     );
@@ -25,11 +30,19 @@ export async function createClient() {
           return cookieStore.getAll();
         },
 
-        setAll(cookiesToSet, _headers) {
+        setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(
-              ({ name, value, options }) => {
-                cookieStore.set(name, value, options);
+              ({
+                name,
+                value,
+                options,
+              }) => {
+                cookieStore.set(
+                  name,
+                  value,
+                  options,
+                );
               },
             );
           } catch {

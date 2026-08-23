@@ -1,4 +1,4 @@
-/* app/login/login.module.css */
+/* C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\app\login\login.module.css */
 
 .page {
   display: grid;
@@ -8,25 +8,32 @@
   background: #f7f9fc;
 }
 
+.presentation,
+.access {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 100dvh;
+}
+
 .presentation {
   display: flex;
-  min-width: 0;
   align-items: stretch;
   justify-content: center;
   background: #021426;
-  padding: 54px 52px;
+  padding: 44px 52px;
 }
 
 .presentationContent {
   display: grid;
   width: min(100%, 610px);
-  min-height: 680px;
+  height: 100%;
   grid-template-rows: auto 1fr auto;
-  row-gap: 28px;
+  row-gap: 24px;
 }
 
 .logoLink {
   display: inline-flex;
+  width: fit-content;
   align-self: start;
 }
 
@@ -80,19 +87,18 @@
 
 .access {
   display: flex;
-  min-width: 0;
   align-items: stretch;
   justify-content: center;
   background: #f7f9fc;
-  padding: 54px 52px;
+  padding: 44px 52px;
 }
 
 .accessContent {
   display: grid;
   width: min(100%, 650px);
-  min-height: 680px;
+  height: 100%;
   grid-template-rows: auto 1fr auto;
-  row-gap: 28px;
+  row-gap: 24px;
 }
 
 .header {
@@ -118,28 +124,63 @@
 }
 
 .formBlock {
+  width: 100%;
   align-self: center;
 }
 
 .errorMessage {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
   border: 1px solid rgba(180, 35, 24, 0.25);
   border-radius: 8px;
   background: #fff4f2;
   color: #92251d;
-  padding: 14px 16px;
-  font-size: 1rem;
+  padding: 13px 16px;
+  font-size: 0.96rem;
   font-weight: 600;
   line-height: 1.5;
 }
 
+.successMessage {
+  border: 1px solid #cce2d5;
+  border-radius: 9px;
+  background: #f3faf6;
+  padding: 22px;
+}
+
+.successMessage strong {
+  display: block;
+  margin-bottom: 10px;
+  color: #17633d;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.successMessage p {
+  margin: 0;
+  color: #496253;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.successMessage p + p {
+  margin-top: 10px;
+}
+
 .form {
   display: grid;
-  gap: 18px;
+  gap: 17px;
+}
+
+.passwordGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .field {
   display: grid;
+  min-width: 0;
   gap: 9px;
 }
 
@@ -150,7 +191,9 @@
 }
 
 .field input {
+  box-sizing: border-box;
   width: 100%;
+  min-width: 0;
   min-height: 56px;
   border: 1px solid #c9d4de;
   border-radius: 8px;
@@ -173,7 +216,8 @@
 
 .field input:focus {
   border-color: #a98418;
-  box-shadow: 0 0 0 4px rgba(201, 162, 39, 0.14);
+  box-shadow:
+    0 0 0 4px rgba(201, 162, 39, 0.14);
 }
 
 .submitButton {
@@ -183,6 +227,7 @@
   border-radius: 8px;
   background: #c9a227;
   color: #0d1b2a;
+  cursor: pointer;
   font-family: var(--font-ui);
   font-size: 1.08rem;
   font-weight: 700;
@@ -204,35 +249,16 @@
 
 .accessFooter {
   align-self: end;
-}
-
-.information {
-  margin-top: 0;
   border-top: 1px solid #d8e1e9;
-  padding-top: 20px;
-}
-
-.information strong {
-  display: block;
-  margin-bottom: 8px;
-  color: #0d1b2a;
-  font-size: 1.08rem;
-  font-weight: 700;
-}
-
-.information p {
-  margin: 0;
-  color: #556373;
-  font-size: 1rem;
-  line-height: 1.65;
+  padding-top: 18px;
 }
 
 .backLink {
   display: inline-flex;
-  margin-top: 18px;
   color: #435261;
   font-size: 1rem;
   font-weight: 650;
+  text-decoration: none;
 }
 
 .backLink:hover {
@@ -240,53 +266,124 @@
   text-decoration: underline;
 }
 
+/*
+ * Notebook / desktop com pouca altura.
+ * Mantém login e criação de acesso dentro da viewport.
+ */
 @media (min-width: 961px) and (max-height: 860px) {
   .presentation,
   .access {
-    padding: 34px 42px;
+    padding: 30px 42px;
   }
 
   .presentationContent,
   .accessContent {
-    min-height: 610px;
-    row-gap: 22px;
+    row-gap: 18px;
   }
 
   .logo {
-    width: 215px;
+    width: 205px;
   }
 
   .eyebrow {
-    font-size: 0.88rem;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
+    font-size: 0.86rem;
   }
 
   .presentationText h1 {
-    font-size: 3.4rem;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
+    font-size: 3.15rem;
   }
 
   .presentationText > p:last-child {
-    font-size: 1.24rem;
-    line-height: 1.62;
+    font-size: 1.16rem;
+    line-height: 1.6;
+  }
+
+  .slogan {
+    font-size: 0.92rem;
   }
 
   .header h2 {
-    font-size: 2.7rem;
+    margin-bottom: 10px;
+    font-size: 2.45rem;
   }
 
   .header > p:last-child {
-    font-size: 1.02rem;
+    font-size: 0.98rem;
+  }
+
+  .form {
+    gap: 12px;
+  }
+
+  .passwordGrid {
+    gap: 12px;
+  }
+
+  .field {
+    gap: 6px;
   }
 
   .field label {
+    font-size: 0.96rem;
+  }
+
+  .field input {
+    min-height: 48px;
+    font-size: 0.98rem;
+  }
+
+  .submitButton {
+    min-height: 49px;
     font-size: 1rem;
   }
 
-  .field input,
+  .accessFooter {
+    padding-top: 14px;
+  }
+
+  .backLink {
+    font-size: 0.94rem;
+  }
+}
+
+@media (min-width: 961px) and (max-height: 700px) {
+  .presentation,
+  .access {
+    padding: 22px 38px;
+  }
+
+  .logo {
+    width: 185px;
+  }
+
+  .presentationText h1 {
+    font-size: 2.7rem;
+  }
+
+  .presentationText > p:last-child {
+    font-size: 1.02rem;
+  }
+
+  .header h2 {
+    font-size: 2.15rem;
+  }
+
+  .header > p:last-child {
+    font-size: 0.92rem;
+  }
+
+  .form {
+    gap: 9px;
+  }
+
+  .field input {
+    min-height: 44px;
+  }
+
   .submitButton {
-    min-height: 52px;
-    font-size: 1rem;
+    min-height: 45px;
   }
 }
 
@@ -297,33 +394,25 @@
 
   .presentation,
   .access {
+    min-height: auto;
     padding: 36px 28px;
   }
 
   .presentationContent,
   .accessContent {
     width: min(100%, 700px);
-    min-height: auto;
+    height: auto;
   }
 
-  .presentationContent {
-    grid-template-rows: auto auto auto;
-    row-gap: 24px;
-  }
-
+  .presentationContent,
   .accessContent {
-    grid-template-rows: auto auto auto;
+    grid-template-rows:
+      auto auto auto;
     row-gap: 24px;
   }
 
-  .presentationText {
-    align-self: start;
-  }
-
-  .formBlock {
-    align-self: start;
-  }
-
+  .presentationText,
+  .formBlock,
   .accessFooter,
   .slogan {
     align-self: start;
@@ -363,7 +452,6 @@
   }
 
   .slogan,
-  .information p,
   .backLink {
     font-size: 0.95rem;
   }
@@ -386,7 +474,7 @@
     font-size: 1rem;
   }
 
-  .information strong {
-    font-size: 1rem;
+  .passwordGrid {
+    grid-template-columns: 1fr;
   }
 }
