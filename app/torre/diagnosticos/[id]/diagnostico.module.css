@@ -1,0 +1,1576 @@
+/* app/painel/diagnosticos/[id]/diagnostico.module.css */
+
+.page {
+  min-height: 100dvh;
+  background: #f2f6fa;
+}
+
+.header {
+  border-bottom: 1px solid #d6e0e8;
+  background: #ffffff;
+}
+
+.headerContent {
+  display: flex;
+  min-height: 84px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.brandArea {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo {
+  width: 190px;
+  height: auto;
+}
+
+.brandArea > span {
+  border-left: 1px solid #d4dde5;
+  color: #0d1b2a;
+  padding-left: 20px;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.adminIdentity {
+  display: grid;
+  justify-items: end;
+  margin-inline: 6px;
+}
+
+.adminIdentity strong {
+  color: #0d1b2a;
+  font-size: 0.9rem;
+}
+
+.adminIdentity span {
+  color: #6b7885;
+  font-size: 0.78rem;
+}
+
+.backButton,
+.logoutButton,
+.secondaryAction,
+.xmlButton,
+.finalizeLink {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-size: 0.88rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.backButton,
+.secondaryAction {
+  border: 1px solid #cbd6df;
+  background: #ffffff;
+  color: #0d1b2a;
+}
+
+.logoutButton {
+  border: 1px solid #0d1b2a;
+  background: #0d1b2a;
+  color: #ffffff;
+}
+
+.xmlButton,
+.finalizeLink {
+  border: 1px solid #c9a227;
+  background: #c9a227;
+  color: #0d1b2a;
+}
+
+.content {
+  padding-block: 28px 70px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  color: #637280;
+  font-size: 0.86rem;
+}
+
+.breadcrumb a {
+  font-weight: 700;
+}
+
+.breadcrumb strong {
+  color: #0d1b2a;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 22px;
+}
+
+.eyebrow {
+  margin: 0 0 7px;
+  color: #846611;
+  font-size: 0.76rem;
+  font-weight: 850;
+  letter-spacing: 0.11em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  margin: 0 0 8px;
+  color: #0d1b2a;
+  font-size: clamp(
+    2.25rem,
+    3.4vw,
+    3.15rem
+  );
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.hero > div:first-child > p:last-child {
+  max-width: 720px;
+  margin: 0;
+  color: #536372;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.status {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #edf1f4;
+  color: #455462;
+  padding: 0 16px;
+  font-size: 0.84rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.status_awaiting_questionnaire,
+.status_awaiting_documents {
+  background: #fff7e5;
+  color: #755000;
+}
+
+.status_documents_received {
+  background: #eaf3ff;
+  color: #225a9b;
+}
+
+.status_under_review {
+  background: #f1efff;
+  color: #5742a3;
+}
+
+.status_client_action_required {
+  background: #fff1d8;
+  color: #754900;
+}
+
+.status_awaiting_approval {
+  background: #eef1ff;
+  color: #3c4e9d;
+}
+
+.status_completed {
+  background: #edf9f2;
+  color: #177245;
+}
+
+.status_cancelled {
+  background: #fff2f0;
+  color: #b42318;
+}
+
+.errorMessage,
+.successMessage {
+  margin-bottom: 18px;
+  border-radius: 9px;
+  padding: 15px 17px;
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.errorMessage {
+  border: 1px solid #ecc1bc;
+  background: #fff4f2;
+  color: #9e261d;
+}
+
+.successMessage {
+  border: 1px solid #b9dfc9;
+  background: #effaf4;
+  color: #176b43;
+}
+
+.workflow {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.workflow article {
+  display: flex;
+  min-height: 78px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #d6e0e8;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 15px 17px;
+}
+
+.workflow article > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+
+.workflow article strong,
+.workflow article small {
+  display: block;
+}
+
+.workflow article strong {
+  margin-bottom: 3px;
+  color: #0d1b2a;
+  font-size: 0.9rem;
+}
+
+.workflow article small {
+  color: #73818e;
+  font-size: 0.78rem;
+}
+
+.workflowDone > span {
+  background: #edf9f2;
+  color: #177245;
+}
+
+.workflowCurrent {
+  border-color: #c9a227 !important;
+  box-shadow:
+    0 0 0 2px
+    rgba(201, 162, 39, 0.08);
+}
+
+.workflowCurrent > span {
+  background: #f3e6b8;
+  color: #715400;
+}
+
+.workflowPending > span {
+  background: #edf1f4;
+  color: #71808d;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.summaryGrid article {
+  min-height: 116px;
+  border: 1px solid #d6e0e8;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 18px;
+}
+
+.summaryGrid span {
+  display: block;
+  margin-bottom: 7px;
+  color: #657482;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.summaryGrid strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #0d1b2a;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.summaryGrid small {
+  color: #7a8792;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.mainGrid {
+  display: grid;
+  align-items: start;
+  grid-template-columns:
+    minmax(0, 1fr)
+    300px;
+  gap: 20px;
+}
+
+.primaryColumn,
+.secondaryColumn {
+  display: grid;
+  gap: 20px;
+}
+
+.card,
+.analysisCard,
+.nextStepCard,
+.serviceCard,
+.historyCard {
+  border: 1px solid #d6e0e8;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow:
+    0 6px 20px
+    rgba(13, 27, 42, 0.025);
+}
+
+.card,
+.analysisCard {
+  padding: 26px;
+}
+
+.nextStepCard,
+.serviceCard,
+.historyCard {
+  padding: 22px;
+}
+
+.nextStepCard {
+  position: sticky;
+  top: 18px;
+  border-top: 4px solid #c9a227;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 20px;
+}
+
+.cardHeader h2 {
+  margin: 0 0 6px;
+  color: #0d1b2a;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.cardDescription {
+  max-width: 700px;
+  margin: 0;
+  color: #61717f;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.analysisCount {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  border-radius: 999px;
+  background: #f2f5f8;
+  color: #51606e;
+  padding: 0 12px;
+  font-size: 0.8rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.contextGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.contextGrid > div {
+  min-height: 86px;
+  border: 1px solid #dce4eb;
+  border-radius: 8px;
+  background: #fbfdff;
+  padding: 14px;
+}
+
+.contextGrid span,
+.contextText span,
+.clientContext span {
+  display: block;
+  margin-bottom: 5px;
+  color: #697785;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.contextGrid strong {
+  display: block;
+  color: #0d1b2a;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.contextText {
+  display: grid;
+  gap: 9px;
+}
+
+.contextText > div {
+  border-left: 3px solid #d8e0e7;
+  background: #f8fafc;
+  padding: 12px 15px;
+}
+
+.contextText p {
+  margin: 0;
+  color: #354553;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.contextText p + p {
+  margin-top: 7px;
+}
+
+.analysisForm {
+  display: grid;
+  gap: 24px;
+}
+
+.operationList {
+  display: grid;
+  gap: 18px;
+}
+
+.operationCard {
+  overflow: hidden;
+  border: 1px solid #d7e0e7;
+  border-radius: 11px;
+  background: #ffffff;
+}
+
+.operationHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #dde5eb;
+  background: #f7f9fb;
+  padding: 18px 20px;
+}
+
+.operationNumber {
+  display: block;
+  margin-bottom: 3px;
+  color: #846611;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.operationHeader h3 {
+  margin: 0 0 4px;
+  color: #0d1b2a;
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+
+.operationHeader p {
+  margin: 0;
+  color: #61717f;
+  font-size: 0.84rem;
+}
+
+.fileUnavailable {
+  color: #7c8994;
+  font-size: 0.82rem;
+}
+
+.clientContext {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  border-bottom: 1px solid #e0e7ed;
+  background: #fbfcfd;
+  padding: 16px 20px;
+}
+
+.clientContext > div {
+  border: 1px solid #e0e6eb;
+  border-radius: 7px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.clientContext p {
+  margin: 0;
+  color: #3d4c59;
+  font-size: 0.87rem;
+  line-height: 1.55;
+}
+
+.contextWide {
+  grid-column: 1 / -1;
+}
+
+.operationFields,
+.analysisFields {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.operationFields {
+  padding: 20px;
+}
+
+.operationFields label,
+.analysisFields label,
+.documentReviewForm label,
+.messageForm label,
+.nextStepCard label {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+}
+
+.operationFields label > span,
+.analysisFields label > span,
+.documentReviewForm label > span,
+.messageForm label > span,
+.nextStepCard label > span {
+  color: #17283a;
+  font-size: 0.88rem;
+  font-weight: 750;
+}
+
+.operationFields label > small,
+.analysisFields label > small {
+  color: #71808d;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.fullField {
+  grid-column: 1 / -1;
+}
+
+.classificationField {
+  max-width: 390px;
+}
+
+.operationFields input,
+.operationFields select,
+.operationFields textarea,
+.analysisFields select,
+.analysisFields textarea,
+.documentReviewForm select,
+.documentReviewForm textarea,
+.messageForm textarea,
+.nextStepCard input {
+  width: 100%;
+  border: 1px solid #cbd6df;
+  border-radius: 8px;
+  outline: none;
+  background: #ffffff;
+  color: #17212b;
+  font-family: inherit;
+  font-size: 0.94rem;
+}
+
+.operationFields input,
+.operationFields select,
+.analysisFields select,
+.documentReviewForm select,
+.nextStepCard input {
+  min-height: 46px;
+  padding: 0 12px;
+}
+
+.operationFields textarea,
+.analysisFields textarea,
+.documentReviewForm textarea,
+.messageForm textarea {
+  min-height: 105px;
+  resize: vertical;
+  padding: 11px 12px;
+  line-height: 1.58;
+}
+
+.operationFields textarea,
+.analysisFields textarea {
+  min-height: 125px;
+}
+
+.operationFields input:focus,
+.operationFields select:focus,
+.operationFields textarea:focus,
+.analysisFields select:focus,
+.analysisFields textarea:focus,
+.documentReviewForm select:focus,
+.documentReviewForm textarea:focus,
+.messageForm textarea:focus,
+.nextStepCard input:focus {
+  border-color: #a98418;
+  box-shadow:
+    0 0 0 3px
+    rgba(201, 162, 39, 0.12);
+}
+
+.operationFields input:disabled,
+.operationFields select:disabled,
+.operationFields textarea:disabled,
+.analysisFields select:disabled,
+.analysisFields textarea:disabled {
+  background: #edf1f4;
+  color: #697784;
+}
+
+.conclusionSection {
+  border-top: 1px solid #dce4eb;
+  padding-top: 24px;
+}
+
+.conclusionHeader {
+  margin-bottom: 19px;
+}
+
+.conclusionHeader h3 {
+  margin: 0 0 6px;
+  color: #0d1b2a;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.conclusionHeader > p:last-child {
+  margin: 0;
+  color: #637280;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.saveArea {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  border: 1px solid #d7e1e8;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 16px 18px;
+}
+
+.saveArea strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #0d1b2a;
+  font-size: 0.9rem;
+}
+
+.saveArea p {
+  margin: 0;
+  color: #657482;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.saveArea button,
+.documentReviewForm button,
+.messageForm > button,
+.nextStepCard button {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #c9a227;
+  border-radius: 8px;
+  background: #c9a227;
+  color: #0d1b2a;
+  padding: 0 18px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.saveArea button:hover,
+.documentReviewForm button:hover,
+.messageForm > button:hover,
+.nextStepCard button:hover {
+  background: #d4ae35;
+}
+
+.documentReviewList {
+  display: grid;
+  gap: 12px;
+}
+
+.documentReviewCard {
+  border: 1px solid #dce4eb;
+  border-radius: 9px;
+  background: #fbfdff;
+  padding: 17px;
+}
+
+.documentReviewCard > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.documentReviewCard header strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #0d1b2a;
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+
+.documentReviewCard header span {
+  display: block;
+  margin-bottom: 3px;
+  color: #596877;
+  font-size: 0.8rem;
+}
+
+.documentReviewCard header small {
+  color: #74828f;
+  font-size: 0.76rem;
+}
+
+.documentReviewCard header a {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #c9a227;
+  border-radius: 7px;
+  background: #c9a227;
+  color: #0d1b2a;
+  padding: 0 12px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.documentReviewForm {
+  display: grid;
+  align-items: end;
+  grid-template-columns:
+    190px minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.documentReviewForm textarea {
+  min-height: 72px;
+}
+
+.messageForm {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 22px;
+  border: 1px solid #dce4eb;
+  border-radius: 9px;
+  background: #fbfdff;
+  padding: 18px;
+}
+
+.messageOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.messageOptions label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #42515f;
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.messageOptions input {
+  width: 17px;
+  height: 17px;
+  accent-color: #c9a227;
+}
+
+.messageForm > button {
+  justify-self: start;
+}
+
+.messageList {
+  display: grid;
+  gap: 10px;
+}
+
+.messageList article {
+  border: 1px solid #dce4eb;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 15px;
+}
+
+.messageList article header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+
+.messageList header strong {
+  color: #0d1b2a;
+  font-size: 0.86rem;
+}
+
+.messageList header span {
+  color: #74828f;
+  font-size: 0.75rem;
+}
+
+.messageList p {
+  margin: 0 0 8px;
+  color: #465563;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.messageList small {
+  color: #846611;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.nextStepCard h2,
+.historyCard h2 {
+  margin: 0 0 10px;
+  color: #0d1b2a;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.nextStepCard > p:not(.eyebrow) {
+  margin: 0 0 16px;
+  color: #5d6c79;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.nextStepCard form {
+  display: grid;
+  gap: 12px;
+}
+
+.nextStepCard button {
+  width: 100%;
+}
+
+.nextStepNotice,
+.readyNotice {
+  margin-bottom: 14px;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.nextStepNotice {
+  border: 1px solid #e4dac0;
+  background: #fffaf0;
+}
+
+.readyNotice {
+  border: 1px solid #b9dfc9;
+  background: #effaf4;
+}
+
+.nextStepNotice strong,
+.readyNotice strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #0d1b2a;
+  font-size: 0.86rem;
+}
+
+.nextStepNotice p,
+.readyNotice p {
+  margin: 0;
+  color: #5c6b78;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.nextStepNotice ul {
+  margin: 8px 0 0 18px;
+  padding: 0;
+  color: #5c6b78;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.disabledButton {
+  width: 100%;
+  border-color: #d7dde2 !important;
+  background: #e8edf1 !important;
+  color: #8a96a0 !important;
+  cursor: not-allowed !important;
+}
+
+.finalizeLink {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.serviceCard dl {
+  display: grid;
+  margin: 0;
+}
+
+.serviceCard dl > div {
+  border-bottom: 1px solid #e0e7ed;
+  padding-block: 12px;
+}
+
+.serviceCard dl > div:last-child {
+  border-bottom: 0;
+}
+
+.serviceCard dt {
+  margin-bottom: 4px;
+  color: #677684;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.serviceCard dd {
+  margin: 0;
+  color: #0d1b2a;
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.historyCard h2 {
+  margin-bottom: 18px;
+}
+
+.historyList {
+  display: grid;
+}
+
+.historyList article {
+  display: grid;
+  grid-template-columns:
+    13px minmax(0, 1fr);
+  gap: 10px;
+  position: relative;
+  padding-bottom: 18px;
+}
+
+.historyList article:not(:last-child)::before {
+  position: absolute;
+  top: 13px;
+  bottom: 0;
+  left: 5px;
+  width: 2px;
+  background: #dce4eb;
+  content: "";
+}
+
+.historyList article > span {
+  position: relative;
+  z-index: 1;
+  width: 11px;
+  height: 11px;
+  margin-top: 4px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #c9a227;
+  box-shadow:
+    0 0 0 1px #c9a227;
+}
+
+.historyList strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #0d1b2a;
+  font-size: 0.84rem;
+}
+
+.historyList p {
+  margin: 0 0 4px;
+  color: #566675;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.historyList small {
+  color: #7b8894;
+  font-size: 0.72rem;
+}
+
+.noHistory {
+  margin: 0;
+  color: #657482;
+  font-size: 0.84rem;
+}
+
+.emptyState {
+  border: 1px dashed #bdcad5;
+  border-radius: 9px;
+  background: #fbfdff;
+  color: #62717f;
+  padding: 26px;
+  text-align: center;
+}
+
+@media (max-width: 1180px) {
+  .contextGrid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .summaryGrid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .secondaryColumn {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .nextStepCard {
+    position: static;
+  }
+
+  .historyCard {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 850px) {
+  .documentReviewForm {
+    grid-template-columns: 1fr;
+  }
+
+  .documentReviewForm button {
+    width: 100%;
+  }
+
+  .workflow {
+    grid-template-columns: 1fr;
+  }
+
+  .secondaryColumn {
+    grid-template-columns: 1fr;
+  }
+
+  .historyCard {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .headerContent {
+    min-height: 74px;
+  }
+
+  .logo {
+    width: 158px;
+  }
+
+  .brandArea > span,
+  .adminIdentity,
+  .backButton {
+    display: none;
+  }
+
+  .content {
+    padding-block: 22px 50px;
+  }
+
+  .hero {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .hero h1 {
+    font-size: 2.15rem;
+  }
+
+  .heroActions {
+    justify-content: flex-start;
+  }
+
+  .summaryGrid,
+  .contextGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryGrid article {
+    min-height: auto;
+  }
+
+  .card,
+  .analysisCard,
+  .nextStepCard,
+  .serviceCard,
+  .historyCard {
+    padding: 20px 16px;
+  }
+
+  .cardHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .operationHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .xmlButton {
+    width: 100%;
+  }
+
+  .clientContext,
+  .operationFields,
+  .analysisFields {
+    grid-template-columns: 1fr;
+  }
+
+  .contextWide,
+  .fullField {
+    grid-column: auto;
+  }
+
+  .classificationField {
+    max-width: none;
+  }
+
+  .saveArea {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .saveArea button {
+    width: 100%;
+  }
+
+  .documentReviewCard > header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .documentReviewCard header a {
+    width: 100%;
+  }
+
+  .messageOptions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .messageForm > button {
+    width: 100%;
+  }
+}
+/* =========================================================
+   ETAPA 2 — ANÁLISE INDIVIDUAL DOS XMLs
+   ========================================================= */
+
+.analysisPage {
+  padding: 28px 0 70px;
+}
+
+.analysisContainer {
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.analysisHero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 22px;
+}
+
+.analysisHero h1 {
+  margin: 0 0 9px;
+  color: #0d1b2a;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+}
+
+.analysisHero > div:first-child > p:last-child {
+  max-width: 700px;
+  margin: 0;
+  color: #5c6b79;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.analysisProgress {
+  min-width: 220px;
+  border: 1px solid #d6e0e8;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 15px;
+}
+
+.analysisProgress strong {
+  display: block;
+  margin-bottom: 9px;
+  color: #0d1b2a;
+  font-size: 0.88rem;
+}
+
+.analysisProgress > div {
+  overflow: hidden;
+  height: 7px;
+  border-radius: 999px;
+  background: #e7edf2;
+}
+
+.analysisProgress > div > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #c9a227;
+}
+
+.xmlAnalysisCard {
+  overflow: hidden;
+  border: 1px solid #d4dee6;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow:
+    0 8px 28px
+    rgba(13, 27, 42, 0.035);
+}
+
+.xmlAnalysisHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid #dce4eb;
+  background: #f7f9fb;
+  padding: 24px 27px;
+}
+
+.xmlAnalysisHeader > div > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #846611;
+  font-size: 0.76rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.xmlAnalysisHeader h2 {
+  margin: 0 0 5px;
+  color: #0d1b2a;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.xmlAnalysisHeader p {
+  margin: 0;
+  color: #5f6f7c;
+  font-size: 0.9rem;
+}
+
+.downloadButton {
+  display: inline-flex;
+  min-width: 130px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #c9a227;
+  border-radius: 8px;
+  background: #c9a227;
+  color: #0d1b2a;
+  padding: 0 17px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.downloadButton:hover {
+  background: #d4ae35;
+}
+
+.downloadUnavailable {
+  color: #778591;
+  font-size: 0.84rem;
+}
+
+.clientXmlContext {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 11px;
+  border-bottom: 1px solid #dce4eb;
+  background: #fbfcfd;
+  padding: 20px 27px;
+}
+
+.clientXmlContext > div {
+  border: 1px solid #dde5eb;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 14px;
+}
+
+.clientXmlContext span {
+  display: block;
+  margin-bottom: 6px;
+  color: #62717f;
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.clientXmlContext p {
+  margin: 0;
+  color: #354553;
+  font-size: 0.91rem;
+  line-height: 1.55;
+}
+
+.wideContext {
+  grid-column: 1 / -1;
+}
+
+.xmlAnalysisForm {
+  padding: 27px;
+}
+
+.analysisFormGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.analysisFormGrid label {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.analysisFormGrid label > span {
+  color: #17283a;
+  font-size: 0.94rem;
+  font-weight: 800;
+}
+
+.analysisFormGrid label > small {
+  color: #71808d;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.analysisFormGrid input,
+.analysisFormGrid select,
+.analysisFormGrid textarea {
+  width: 100%;
+  border: 1px solid #c7d3dd;
+  border-radius: 8px;
+  outline: none;
+  background: #ffffff;
+  color: #17212b;
+  font-family: inherit;
+  font-size: 0.96rem;
+}
+
+.analysisFormGrid input,
+.analysisFormGrid select {
+  min-height: 49px;
+  padding: 0 13px;
+}
+
+.analysisFormGrid textarea {
+  min-height: 150px;
+  resize: vertical;
+  padding: 13px;
+  line-height: 1.6;
+}
+
+.analysisFormGrid input:focus,
+.analysisFormGrid select:focus,
+.analysisFormGrid textarea:focus {
+  border-color: #a98418;
+  box-shadow:
+    0 0 0 3px
+    rgba(201, 162, 39, 0.12);
+}
+
+.analysisWideField {
+  grid-column: 1 / -1;
+}
+
+.analysisFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 27px;
+  border-top: 1px solid #dce4eb;
+  padding-top: 21px;
+}
+
+.analysisNavigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.analysisNavigation a {
+  color: #415160;
+  font-size: 0.87rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.analysisNavigation a:hover {
+  color: #0d1b2a;
+  text-decoration: underline;
+}
+
+.analysisFooter > button {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #c9a227;
+  border-radius: 8px;
+  background: #c9a227;
+  color: #0d1b2a;
+  padding: 0 20px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.analysisFooter > button:hover {
+  background: #d4ae35;
+}
+
+@media (max-width: 760px) {
+  .analysisContainer {
+    width: min(100% - 24px, 1120px);
+  }
+
+  .analysisHero {
+    flex-direction: column;
+  }
+
+  .analysisProgress {
+    width: 100%;
+  }
+
+  .xmlAnalysisHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .downloadButton {
+    width: 100%;
+  }
+
+  .clientXmlContext,
+  .analysisFormGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .wideContext,
+  .analysisWideField {
+    grid-column: auto;
+  }
+
+  .xmlAnalysisForm {
+    padding: 21px 17px;
+  }
+
+  .clientXmlContext {
+    padding: 17px;
+  }
+
+  .analysisFooter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .analysisFooter > button {
+    width: 100%;
+  }
+}
