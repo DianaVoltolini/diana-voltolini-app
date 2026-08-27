@@ -116,15 +116,6 @@ export default async function ExpressQuestionnaireLayout({
   }
 
   if (
-    diagnostic.status !==
-    "awaiting_questionnaire"
-  ) {
-    redirect(
-      `/painel/diagnosticos/${diagnostic.id}`,
-    );
-  }
-
-  if (
     diagnostic.service_type &&
     diagnostic.service_type !==
       "express"
@@ -133,6 +124,13 @@ export default async function ExpressQuestionnaireLayout({
       `/painel/diagnosticos/${diagnostic.id}`,
     );
   }
+
+  const isEditable =
+    diagnostic.status ===
+    "awaiting_questionnaire";
+
+  const reviewBasePath =
+    `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/revisao`;
 
   const {
     data: questionnaire,
@@ -224,12 +222,14 @@ export default async function ExpressQuestionnaireLayout({
     guidanceRatio >= 1;
 
   const progress =
-    Math.round(
-      companyRatio * 25 +
-        preparationRatio * 25 +
-        documentRatio * 25 +
-        guidanceRatio * 25,
-    );
+    isEditable
+      ? Math.round(
+          companyRatio * 25 +
+            preparationRatio * 25 +
+            documentRatio * 25 +
+            guidanceRatio * 25,
+        )
+      : 100;
 
   const reviewReady =
     companyComplete &&
@@ -237,90 +237,143 @@ export default async function ExpressQuestionnaireLayout({
     documentsComplete &&
     guidanceComplete;
 
-  const steps = [
-    {
-      number: "1",
-      title: "Empresa",
-      description:
-        "Identificação e contexto",
+  const steps = isEditable
+    ? [
+        {
+          number: "1",
+          title: "Empresa",
+          description:
+            "Identificação e contexto",
 
-      href:
-        `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/empresa`,
+          href:
+            `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/empresa`,
 
-      ratio:
-        companyRatio,
+          ratio:
+            companyRatio,
 
-      enabled:
-        true,
-    },
-    {
-      number: "2",
-      title: "Preparação",
-      description:
-        "ERP, IBS/CBS e contabilidade",
+          enabled:
+            true,
+        },
+        {
+          number: "2",
+          title: "Preparação",
+          description:
+            "ERP, IBS/CBS e contabilidade",
 
-      href:
-        `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/preparacao`,
+          href:
+            `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/preparacao`,
 
-      ratio:
-        preparationRatio,
+          ratio:
+            preparationRatio,
 
-      enabled:
-        companyComplete,
-    },
-    {
-      number: "3",
-      title: "NF-e para análise",
-      description:
-        "XMLs e contexto de cada nota",
+          enabled:
+            companyComplete,
+        },
+        {
+          number: "3",
+          title: "NF-e para análise",
+          description:
+            "XMLs e contexto de cada nota",
 
-      href:
-        `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/documentos`,
+          href:
+            `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/documentos`,
 
-      ratio:
-        documentRatio,
+          ratio:
+            documentRatio,
 
-      enabled:
-        companyComplete &&
-        preparationComplete,
-    },
-    {
-      number: "4",
-      title: "Dúvidas e orientação",
-      description:
-        "Questões que deseja esclarecer",
+          enabled:
+            companyComplete &&
+            preparationComplete,
+        },
+        {
+          number: "4",
+          title: "Dúvidas e orientação",
+          description:
+            "Questões que deseja esclarecer",
 
-      href:
-        `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/orientacao`,
+          href:
+            `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/orientacao`,
 
-      ratio:
-        guidanceRatio,
+          ratio:
+            guidanceRatio,
 
-      enabled:
-        companyComplete &&
-        preparationComplete &&
-        documentsComplete,
-    },
-    {
-      number: "5",
-      title: "Revisão e envio",
-      description:
-        "Conferência final",
+          enabled:
+            companyComplete &&
+            preparationComplete &&
+            documentsComplete,
+        },
+        {
+          number: "5",
+          title: "Revisão e envio",
+          description:
+            "Conferência final",
 
-      href:
-        `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/revisao`,
+          href:
+            reviewBasePath,
 
-      ratio:
-        reviewReady
-          ? 0.5
-          : 0,
+          ratio:
+            reviewReady
+              ? 0.5
+              : 0,
 
-      enabled:
-        reviewReady,
+          enabled:
+            reviewReady,
 
-      reviewReady,
-    },
-  ];
+          reviewReady,
+        },
+      ]
+    : [
+        {
+          number: "1",
+          title: "Empresa",
+          description:
+            "Identificação e contexto",
+          href:
+            `${reviewBasePath}#empresa`,
+          ratio: 1,
+          enabled: true,
+        },
+        {
+          number: "2",
+          title: "Preparação",
+          description:
+            "ERP, IBS/CBS e contabilidade",
+          href:
+            `${reviewBasePath}#preparacao`,
+          ratio: 1,
+          enabled: true,
+        },
+        {
+          number: "3",
+          title: "NF-e para análise",
+          description:
+            "XMLs e contexto de cada nota",
+          href:
+            `${reviewBasePath}#documentos`,
+          ratio: 1,
+          enabled: true,
+        },
+        {
+          number: "4",
+          title: "Dúvidas e orientação",
+          description:
+            "Questões apresentadas",
+          href:
+            `${reviewBasePath}#orientacao`,
+          ratio: 1,
+          enabled: true,
+        },
+        {
+          number: "5",
+          title: "Revisão e envio",
+          description:
+            "Informações enviadas",
+          href:
+            reviewBasePath,
+          ratio: 1,
+          enabled: true,
+        },
+      ];
 
   return (
     <main className={styles.page}>
@@ -414,14 +467,15 @@ export default async function ExpressQuestionnaireLayout({
               </p>
 
               <h1>
-                Informações para análise
+                {isEditable
+                  ? "Informações para análise"
+                  : "Informações enviadas"}
               </h1>
 
               <p>
-                Preencha uma etapa por
-                vez. As informações ficam
-                salvas e podem ser
-                revisadas antes do envio.
+                {isEditable
+                  ? "Preencha uma etapa por vez. As informações ficam salvas e podem ser revisadas antes do envio."
+                  : "Consulte as informações que você enviou para este diagnóstico. Após a finalização, o conteúdo permanece disponível para consulta."}
               </p>
             </div>
 
@@ -431,11 +485,15 @@ export default async function ExpressQuestionnaireLayout({
               }
             >
               <span>
-                Preenchimento
+                {isEditable
+                  ? "Preenchimento"
+                  : "Envio"}
               </span>
 
               <strong>
-                {progress}%
+                {isEditable
+                  ? `${progress}%`
+                  : "Concluído"}
               </strong>
             </div>
           </header>
@@ -464,13 +522,15 @@ export default async function ExpressQuestionnaireLayout({
               }
             >
               <strong>
-                {progress}% preenchido
+                {isEditable
+                  ? `${progress}% preenchido`
+                  : "Informações enviadas"}
               </strong>
 
               <span>
-                Você pode voltar às
-                etapas anteriores antes
-                do envio final.
+                {isEditable
+                  ? "Você pode voltar às etapas anteriores antes do envio final."
+                  : "Modo de consulta: as informações finalizadas permanecem disponíveis, sem possibilidade de alteração."}
               </span>
             </div>
           </section>
@@ -487,6 +547,7 @@ export default async function ExpressQuestionnaireLayout({
             >
               <StepNavigation
                 steps={steps}
+                readOnly={!isEditable}
               />
 
               <div
@@ -495,15 +556,15 @@ export default async function ExpressQuestionnaireLayout({
                 }
               >
                 <strong>
-                  Salvamento por etapa
+                  {isEditable
+                    ? "Salvamento por etapa"
+                    : "Consulta do envio"}
                 </strong>
 
                 <p>
-                  Ao clicar em salvar e
-                  continuar, suas
-                  informações permanecem
-                  disponíveis mesmo que
-                  você saia da página.
+                  {isEditable
+                    ? "Ao clicar em salvar e continuar, suas informações permanecem disponíveis mesmo que você saia da página."
+                    : "As informações enviadas permanecem disponíveis para consulta durante todo o andamento do diagnóstico."}
                 </p>
               </div>
             </aside>

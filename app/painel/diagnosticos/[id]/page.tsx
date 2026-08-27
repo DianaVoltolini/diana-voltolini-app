@@ -36,6 +36,7 @@ type DiagnosticPageProps = {
 
 type ActionPath =
   | "questionario-expresso"
+  | "questionario-expresso/revisao"
   | "documentos"
   | null;
 
@@ -89,10 +90,10 @@ const statusInformation: Record<
 
   awaiting_documents: {
     label:
-      "Aguardando documentos",
+      "Última revisão",
 
     description:
-      "O questionário foi recebido. Existem documentos que ainda precisam ser confirmados.",
+      "Seu questionário está preenchido. Faça a última revisão antes de finalizar o envio para análise.",
 
     step:
       2,
@@ -101,19 +102,19 @@ const statusInformation: Record<
       35,
 
     nextAction:
-      "Enviar documentos e XMLs",
+      "Revisar e finalizar o envio",
 
     nextDescription:
-      "Envie os documentos complementares necessários para continuidade da análise.",
+      "Confira as informações e os XMLs enviados antes de encaminhar definitivamente o diagnóstico para análise.",
 
     actionLabel:
-      "Enviar documentos e XMLs",
+      "Revisar etapas e finalizar",
 
     actionPath:
-      "documentos",
+      "questionario-expresso/revisao",
 
     note:
-      "O prazo começará após a confirmação do envio completo dos documentos.",
+      "Antes de finalizar, você pode revisar as informações enviadas. Depois da confirmação final, os dados permanecerão disponíveis apenas para consulta.",
   },
 
   documents_received: {
@@ -323,6 +324,10 @@ function formatDate(
 
   return new Intl.DateTimeFormat(
     "pt-BR",
+    {
+      timeZone:
+        "America/Sao_Paulo",
+    },
   ).format(
     new Date(value),
   );
@@ -346,6 +351,9 @@ function formatDateTime(
 
       timeStyle:
         "short",
+
+      timeZone:
+        "America/Sao_Paulo",
     },
   ).format(
     new Date(value),
@@ -640,6 +648,11 @@ export default async function DiagnosticPage({
       : questionnaire
         ? "Em preenchimento"
         : "Não iniciado";
+
+  const questionnaireViewHref =
+    questionnaire?.submitted_at
+      ? `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/revisao`
+      : null;
 
   const canSendMessage =
     ![
@@ -1141,6 +1154,21 @@ export default async function DiagnosticPage({
                   }
                 </span>
               )}
+
+              {questionnaireViewHref &&
+              actionHref !==
+                questionnaireViewHref ? (
+                <Link
+                  className={
+                    styles.backButton
+                  }
+                  href={
+                    questionnaireViewHref
+                  }
+                >
+                  Visualizar informações enviadas
+                </Link>
+              ) : null}
 
               <small>
                 {

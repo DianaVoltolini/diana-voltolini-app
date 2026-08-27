@@ -19,6 +19,7 @@ type StepItem = {
 
 type StepNavigationProps = {
   steps: StepItem[];
+  readOnly?: boolean;
 };
 
 function normalizePath(value: string) {
@@ -32,7 +33,12 @@ function normalizePath(value: string) {
 function getStepStatus(
   step: StepItem,
   isActive: boolean,
+  readOnly: boolean,
 ) {
+  if (readOnly) {
+    return "Enviado";
+  }
+
   if (isActive) {
     return "Etapa atual";
   }
@@ -58,6 +64,7 @@ function getStepStatus(
 
 export default function StepNavigation({
   steps,
+  readOnly = false,
 }: StepNavigationProps) {
   const pathname =
     normalizePath(usePathname());
@@ -69,8 +76,9 @@ export default function StepNavigation({
     >
       {steps.map((step) => {
         const isActive =
+          !readOnly &&
           pathname ===
-          normalizePath(step.href);
+            normalizePath(step.href);
 
         const content = (
           <>
@@ -111,6 +119,7 @@ export default function StepNavigation({
                 {getStepStatus(
                   step,
                   isActive,
+                  readOnly,
                 )}
               </b>
             </div>

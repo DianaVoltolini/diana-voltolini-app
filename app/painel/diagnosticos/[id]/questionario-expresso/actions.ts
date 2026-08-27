@@ -1186,3 +1186,123 @@ export async function submitExpressQuestionnaire(
     `/painel/diagnosticos/${diagnosticId}`,
   );
 }
+
+export async function finalizePendingExpressDocuments(
+  formData: FormData,
+) {
+  const diagnosticId =
+    readText(
+      formData,
+      "diagnosticId",
+    );
+
+  const confirmSubmission =
+    formData.get(
+      "confirmSubmission",
+    ) === "on";
+
+  if (!diagnosticId) {
+    redirect("/painel");
+  }
+
+  if (!confirmSubmission) {
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "revisao",
+        "erro=confirmacao-obrigatoria",
+      ),
+    );
+  }
+
+  const supabase =
+    await createClient();
+
+  const { data: claimsData } =
+    await supabase.auth.getClaims();
+
+  const userId =
+    typeof claimsData?.claims?.sub ===
+    "string"
+      ? claimsData.claims.sub
+      : null;
+
+  if (!userId) {
+    redirect("/login");
+  }
+
+  const {
+    data: diagnostic,
+    error: diagnosticError,
+  } = await supabase
+    .from("diagnostics")
+    .select(
+      `
+        id,
+        status,
+        user_id
+      `,
+    )
+    .eq(
+      "id",
+      diagnosticId,
+    )
+    .eq(
+      "user_id",
+      userId,
+    )
+    .maybeSingle();
+
+  if (
+    diagnosticError ||
+    !diagnostic
+  ) {
+    redirect("/painel");
+  }
+
+  if (
+    diagnostic.status !==
+    "awaiting_documents"
+  ) {
+    redirect(
+      `/painel/diagnosticos/${diagnostic.id}`,
+    );
+  }
+
+  const {
+    error,
+  } = await supabase.rpc(
+    "submit_diagnostic_documents",
+    {
+      requested_diagnostic_id:
+        diagnosticId,
+    },
+  );
+
+  if (error) {
+    console.error(
+      "Erro ao finalizar documentos pendentes:",
+      error,
+    );
+
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "revisao",
+        "erro=nao-foi-possivel-enviar",
+      ),
+    );
+  }
+
+  revalidateExpressPaths(
+    diagnosticId,
+  );
+
+  revalidatePath(
+    `/painel/diagnosticos/${diagnosticId}/documentos`,
+  );
+
+  redirect(
+    `/painel/diagnosticos/${diagnosticId}`,
+  );
+}

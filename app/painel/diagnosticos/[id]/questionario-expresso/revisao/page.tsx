@@ -14,6 +14,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 
 import {
+  finalizePendingExpressDocuments,
   submitExpressQuestionnaire,
 } from "../actions";
 
@@ -216,14 +217,21 @@ export default async function ReviewPage({
     notFound();
   }
 
-  if (
-    diagnostic.status !==
-    "awaiting_questionnaire"
-  ) {
-    redirect(
-      `/painel/diagnosticos/${diagnostic.id}`,
-    );
-  }
+  const canEdit =
+    diagnostic.status ===
+    "awaiting_questionnaire";
+
+  const canFinalize =
+    diagnostic.status ===
+      "awaiting_questionnaire" ||
+    diagnostic.status ===
+      "awaiting_documents";
+
+  const submissionAction =
+    diagnostic.status ===
+      "awaiting_documents"
+      ? finalizePendingExpressDocuments
+      : submitExpressQuestionnaire;
 
   const {
     data: questionnaire,
@@ -273,11 +281,14 @@ export default async function ReviewPage({
       : [];
 
   if (
-    !asString(
-      company.legalName,
-    ) ||
-    !asString(
-      company.cnpj,
+    canEdit &&
+    (
+      !asString(
+        company.legalName,
+      ) ||
+      !asString(
+        company.cnpj,
+      )
     )
   ) {
     redirect(
@@ -286,6 +297,7 @@ export default async function ReviewPage({
   }
 
   if (
+    canEdit &&
     !asString(
       preparation.erpName,
     )
@@ -296,6 +308,7 @@ export default async function ReviewPage({
   }
 
   if (
+    canEdit &&
     documents.length === 0
   ) {
     redirect(
@@ -304,6 +317,7 @@ export default async function ReviewPage({
   }
 
   if (
+    canEdit &&
     guidance.completed !== true
   ) {
     redirect(
@@ -325,16 +339,15 @@ export default async function ReviewPage({
         </span>
 
         <h2>
-          Revisão do questionário
+          {canFinalize
+            ? "Revisão e envio"
+            : "Informações enviadas"}
         </h2>
 
         <p>
-          Confira as informações antes
-          de concluir o questionário.
-          Depois, você poderá revisar,
-          complementar ou substituir os
-          documentos antes de liberá-los
-          para análise.
+          {canFinalize
+            ? "Confira os dados e os XMLs abaixo antes de finalizar o envio para análise."
+            : "Este questionário já foi finalizado. As informações enviadas permanecem disponíveis nesta área para consulta."}
         </p>
       </header>
 
@@ -350,6 +363,7 @@ export default async function ReviewPage({
       ) : null}
 
       <section
+        id="empresa"
         className={
           styles.section
         }
@@ -369,11 +383,13 @@ export default async function ReviewPage({
             </div>
           </div>
 
-          <Link
-            href={`/painel/diagnosticos/${diagnostic.id}/questionario-expresso/empresa`}
-          >
-            Editar
-          </Link>
+          {canEdit ? (
+            <Link
+              href={`/painel/diagnosticos/${diagnostic.id}/questionario-expresso/empresa`}
+            >
+              Editar
+            </Link>
+          ) : null}
         </header>
 
         <dl
@@ -471,6 +487,7 @@ export default async function ReviewPage({
       </section>
 
       <section
+        id="preparacao"
         className={
           styles.section
         }
@@ -491,11 +508,13 @@ export default async function ReviewPage({
             </div>
           </div>
 
-          <Link
-            href={`/painel/diagnosticos/${diagnostic.id}/questionario-expresso/preparacao`}
-          >
-            Editar
-          </Link>
+          {canEdit ? (
+            <Link
+              href={`/painel/diagnosticos/${diagnostic.id}/questionario-expresso/preparacao`}
+            >
+              Editar
+            </Link>
+          ) : null}
         </header>
 
         <dl
@@ -585,6 +604,7 @@ export default async function ReviewPage({
       </section>
 
       <section
+        id="documentos"
         className={
           styles.section
         }
@@ -607,11 +627,13 @@ export default async function ReviewPage({
             </div>
           </div>
 
-          <Link
-            href={`/painel/diagnosticos/${diagnostic.id}/questionario-expresso/documentos`}
-          >
-            Editar
-          </Link>
+          {canEdit ? (
+            <Link
+              href={`/painel/diagnosticos/${diagnostic.id}/questionario-expresso/documentos`}
+            >
+              Editar
+            </Link>
+          ) : null}
         </header>
 
         <div
@@ -697,6 +719,7 @@ export default async function ReviewPage({
       </section>
 
       <section
+        id="orientacao"
         className={
           styles.section
         }
@@ -717,11 +740,13 @@ export default async function ReviewPage({
             </div>
           </div>
 
-          <Link
-            href={`/painel/diagnosticos/${diagnostic.id}/questionario-expresso/orientacao`}
-          >
-            Editar
-          </Link>
+          {canEdit ? (
+            <Link
+              href={`/painel/diagnosticos/${diagnostic.id}/questionario-expresso/orientacao`}
+            >
+              Editar
+            </Link>
+          ) : null}
         </header>
 
         <dl
@@ -807,89 +832,117 @@ export default async function ReviewPage({
         </p>
       </section>
 
-      <section
-        className={
-          styles.scope
-        }
-      >
-        <h3>
-          Antes de finalizar
-        </h3>
-
-        <p>
-          Você está enviando
-          {" "}
-          <strong>
-            {documents.length}
-            {" "}
-            {documents.length === 1
-              ? "XML"
-              : "XMLs"}
-          </strong>
-          {" "}
-          de até
-          {" "}
-          <strong>
-            {diagnostic.document_limit}
-          </strong>
-          {" "}
-          permitidos neste diagnóstico.
-        </p>
-
-        {documents.length <
-        diagnostic.document_limit ? (
-          <p>
-            Você não é obrigado a utilizar todas as vagas. Porém, se finalizar agora, o diagnóstico seguirá para análise somente com os arquivos já enviados e você não poderá adicionar novos XMLs por conta própria depois desta confirmação.
-          </p>
-        ) : (
-          <p>
-            Você atingiu o limite de XMLs contratado. Confira os arquivos antes de finalizar o envio.
-          </p>
-        )}
-
-        <p>
-          Antes de finalizar, você pode voltar a qualquer uma das etapas anteriores para revisar ou corrigir informações, excluir um XML ou adicionar outros arquivos dentro do limite contratado.
-        </p>
-      </section>
-
-      <form
-        className={
-          styles.submitArea
-        }
-        action={
-          submitExpressQuestionnaire
-        }
-      >
-        <input
-          type="hidden"
-          name="diagnosticId"
-          value={diagnostic.id}
-        />
-
-        <label>
-          <input
-            type="checkbox"
-            name="confirmSubmission"
-            required
-          />
-
-          <span>
-            Revisei as informações e os XMLs enviados e confirmo que desejo finalizar este diagnóstico e encaminhá-lo para análise. Estou ciente de que, após esta confirmação, não poderei adicionar, substituir ou excluir XMLs por conta própria. Se houver necessidade de complemento durante a análise, receberei uma solicitação pela Área do Cliente.
-          </span>
-        </label>
-
-        <div>
-          <Link
-            href={`/painel/diagnosticos/${diagnostic.id}/questionario-expresso/orientacao`}
+      {canFinalize ? (
+        <>
+          <section
+            className={
+              styles.scope
+            }
           >
-            Voltar
-          </Link>
+            <h3>
+              Antes de finalizar
+            </h3>
 
-          <button type="submit">
-            Finalizar e enviar para análise
-          </button>
-        </div>
-      </form>
+            <p>
+              Você está enviando{" "}
+              <strong>
+                {documents.length}{" "}
+                {documents.length === 1
+                  ? "XML"
+                  : "XMLs"}
+              </strong>{" "}
+              de até{" "}
+              <strong>
+                {diagnostic.document_limit}
+              </strong>{" "}
+              permitidos neste diagnóstico.
+            </p>
+
+            {documents.length <
+            diagnostic.document_limit ? (
+              <p>
+                Você não é obrigado a utilizar todas as vagas. Se finalizar agora, o diagnóstico seguirá para análise somente com os arquivos já enviados e não será possível adicionar novos XMLs por conta própria depois desta confirmação.
+              </p>
+            ) : (
+              <p>
+                Você atingiu o limite de XMLs contratado. Confira os arquivos antes de finalizar o envio.
+              </p>
+            )}
+
+            <p>
+              {canEdit
+                ? "Antes de finalizar, você pode voltar a qualquer uma das etapas anteriores para revisar ou corrigir informações, excluir um XML ou adicionar outros arquivos dentro do limite contratado."
+                : "Faça esta última conferência antes de encaminhar definitivamente o material para análise."}
+            </p>
+          </section>
+
+          <form
+            className={
+              styles.submitArea
+            }
+            action={
+              submissionAction
+            }
+          >
+            <input
+              type="hidden"
+              name="diagnosticId"
+              value={diagnostic.id}
+            />
+
+            <label>
+              <input
+                type="checkbox"
+                name="confirmSubmission"
+                required
+              />
+
+              <span>
+                Revisei as informações e os XMLs enviados e confirmo que desejo finalizar este diagnóstico e encaminhá-lo para análise. Estou ciente de que, após esta confirmação, não poderei adicionar, substituir ou excluir XMLs por conta própria. Se houver necessidade de complemento durante a análise, receberei uma solicitação pela Área do Cliente.
+              </span>
+            </label>
+
+            <div>
+              {canEdit ? (
+                <Link
+                  href={`/painel/diagnosticos/${diagnostic.id}/questionario-expresso/orientacao`}
+                >
+                  Voltar
+                </Link>
+              ) : (
+                <Link
+                  href={`/painel/diagnosticos/${diagnostic.id}`}
+                >
+                  Voltar ao diagnóstico
+                </Link>
+              )}
+
+              <button type="submit">
+                Finalizar e enviar para análise
+              </button>
+            </div>
+          </form>
+        </>
+      ) : (
+        <section
+          className={
+            styles.scope
+          }
+        >
+          <h3>
+            Envio finalizado
+          </h3>
+
+          <p>
+            Estas são as informações que foram encaminhadas para análise. Elas permanecem disponíveis nesta área para consulta durante todo o andamento do diagnóstico.
+          </p>
+
+          <p>
+            Após a finalização, os dados e XMLs não podem ser alterados por conta própria. Caso seja necessário algum complemento, você receberá uma solicitação pela Área do Cliente.
+          </p>
+        </section>
+      )}
+
     </article>
   );
 }
