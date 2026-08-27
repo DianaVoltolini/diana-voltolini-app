@@ -1091,16 +1091,19 @@ export async function submitExpressQuestionnaire(
   }
 
   /*
-   * 1. Conclui oficialmente o questionário.
+   * Conclui oficialmente o questionário.
    *
-   * Esta é a mesma RPC que já existia
-   * no questionário anterior.
-   *
-   * Ela deve fazer a transição:
+   * A RPC faz a transição:
    *
    * awaiting_questionnaire
    *          ↓
    * awaiting_documents
+   *
+   * IMPORTANTE:
+   * nesta etapa NÃO confirmamos os documentos.
+   * O cliente poderá revisar, complementar ou
+   * substituir os arquivos antes de liberá-los
+   * para análise.
    */
   const {
     error:
@@ -1130,58 +1133,6 @@ export async function submitExpressQuestionnaire(
     );
   }
 
-  /*
-   * 2. Neste novo fluxo os XMLs já foram
-   * enviados dentro do questionário.
-   *
-   * Portanto, imediatamente após o
-   * questionário ser concluído,
-   * confirmamos também os documentos.
-   *
-   * Fluxo esperado:
-   *
-   * awaiting_documents
-   *          ↓
-   * documents_received
-   */
-  const {
-    error:
-      documentsSubmitError,
-  } = await supabase.rpc(
-    "submit_diagnostic_documents",
-    {
-      requested_diagnostic_id:
-        diagnosticId,
-    },
-  );
-
-  if (
-    documentsSubmitError
-  ) {
-    console.error(
-      "Questionário concluído, mas não foi possível confirmar os documentos:",
-      documentsSubmitError,
-    );
-
-    revalidateExpressPaths(
-      diagnosticId,
-    );
-
-    /*
-     * Neste ponto o questionário já pode
-     * ter mudado para awaiting_documents.
-     *
-     * Por segurança, não tentamos
-     * desfazer a primeira transição.
-     * Direcionamos para o diagnóstico,
-     * onde poderemos identificar a
-     * situação real.
-     */
-    redirect(
-      `/painel/diagnosticos/${diagnosticId}`,
-    );
-  }
-
   revalidateExpressPaths(
     diagnosticId,
   );
@@ -1190,7 +1141,16 @@ export async function submitExpressQuestionnaire(
     `/painel/diagnosticos/${diagnosticId}/documentos`,
   );
 
+  /*
+   * O questionário foi concluído, porém
+   * os documentos continuam em aberto.
+   *
+   * O status permanece awaiting_documents
+   * até que o cliente clique em
+   * "Finalizar envio para análise" na
+   * página de documentos.
+   */
   redirect(
-    `/painel/diagnosticos/${diagnosticId}`,
+    `/painel/diagnosticos/${diagnosticId}/documentos`,
   );
 }

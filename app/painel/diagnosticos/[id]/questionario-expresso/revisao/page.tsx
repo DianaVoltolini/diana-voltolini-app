@@ -324,13 +324,16 @@ export default async function ReviewPage({
         </span>
 
         <h2>
-          Revisão e envio
+          Revisão do questionário
         </h2>
 
         <p>
           Confira as informações antes
-          de liberar o diagnóstico para
-          análise.
+          de concluir o questionário.
+          Depois, você poderá revisar,
+          complementar ou substituir os
+          documentos antes de liberá-los
+          para análise.
         </p>
       </header>
 
@@ -826,10 +829,12 @@ export default async function ReviewPage({
 
           <span>
             Revisei as informações acima
-            e autorizo a análise dos XMLs
-            e dados enviados para execução
-            deste Diagnóstico Expresso
-            IBS/CBS.
+            e confirmo o envio do
+            questionário. Na próxima
+            etapa, poderei revisar e
+            complementar os documentos
+            antes de liberá-los para
+            análise.
           </span>
         </label>
 
@@ -841,7 +846,7 @@ export default async function ReviewPage({
           </Link>
 
           <button type="submit">
-            Enviar para análise
+            Concluir questionário e revisar documentos
           </button>
         </div>
       </form>
