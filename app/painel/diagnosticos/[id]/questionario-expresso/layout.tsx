@@ -1,4 +1,4 @@
-// app/painel/diagnosticos/[id]/questionario-expresso/layout.tsx
+// C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\app\painel\diagnosticos\[id]\questionario-expresso\layout.tsx
 
 import type {
   ReactNode,
@@ -15,6 +15,8 @@ import {
 import { createClient } from "@/lib/supabase/server";
 
 import { logout } from "../../../actions";
+
+import StepNavigation from "./step-navigation";
 
 import styles from "./questionario-expresso.module.css";
 
@@ -63,20 +65,6 @@ function calculateRatio(
 
   return completed /
     values.length;
-}
-
-function stepStatus(
-  ratio: number,
-) {
-  if (ratio >= 1) {
-    return "Concluída";
-  }
-
-  if (ratio > 0) {
-    return "Em preenchimento";
-  }
-
-  return "Não iniciada";
 }
 
 export default async function ExpressQuestionnaireLayout({
@@ -223,6 +211,18 @@ export default async function ExpressQuestionnaireLayout({
       ? 1
       : 0;
 
+  const companyComplete =
+    companyRatio >= 1;
+
+  const preparationComplete =
+    preparationRatio >= 1;
+
+  const documentsComplete =
+    documentRatio >= 1;
+
+  const guidanceComplete =
+    guidanceRatio >= 1;
+
   const progress =
     Math.round(
       companyRatio * 25 +
@@ -230,6 +230,12 @@ export default async function ExpressQuestionnaireLayout({
         documentRatio * 25 +
         guidanceRatio * 25,
     );
+
+  const reviewReady =
+    companyComplete &&
+    preparationComplete &&
+    documentsComplete &&
+    guidanceComplete;
 
   const steps = [
     {
@@ -260,7 +266,7 @@ export default async function ExpressQuestionnaireLayout({
         preparationRatio,
 
       enabled:
-        true,
+        companyComplete,
     },
     {
       number: "3",
@@ -275,7 +281,8 @@ export default async function ExpressQuestionnaireLayout({
         documentRatio,
 
       enabled:
-        true,
+        companyComplete &&
+        preparationComplete,
     },
     {
       number: "4",
@@ -290,7 +297,9 @@ export default async function ExpressQuestionnaireLayout({
         guidanceRatio,
 
       enabled:
-        true,
+        companyComplete &&
+        preparationComplete &&
+        documentsComplete,
     },
     {
       number: "5",
@@ -302,12 +311,14 @@ export default async function ExpressQuestionnaireLayout({
         `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/revisao`,
 
       ratio:
-        progress === 100
+        reviewReady
           ? 0.5
           : 0,
 
       enabled:
-        progress === 100,
+        reviewReady,
+
+      reviewReady,
     },
   ];
 
@@ -474,77 +485,9 @@ export default async function ExpressQuestionnaireLayout({
                 styles.stepSidebar
               }
             >
-              <nav
-                className={
-                  styles.stepNavigation
-                }
-                aria-label="Etapas do questionário"
-              >
-                {steps.map(
-                  (step) => {
-                    const content = (
-                      <>
-                        <span
-                          className={
-                            styles.stepNumber
-                          }
-                        >
-                          {step.number}
-                        </span>
-
-                        <div>
-                          <strong>
-                            {step.title}
-                          </strong>
-
-                          <small>
-                            {
-                              step.description
-                            }
-                          </small>
-
-                          <b>
-                            {step.number ===
-                              "5" &&
-                            progress ===
-                              100
-                              ? "Pronta para revisão"
-                              : stepStatus(
-                                  step.ratio,
-                                )}
-                          </b>
-                        </div>
-                      </>
-                    );
-
-                    return step.enabled ? (
-                      <Link
-                        key={step.number}
-                        className={
-                          step.ratio >= 1
-                            ? styles.completedStep
-                            : step.ratio > 0
-                              ? styles.startedStep
-                              : ""
-                        }
-                        href={step.href}
-                      >
-                        {content}
-                      </Link>
-                    ) : (
-                      <div
-                        key={step.number}
-                        className={
-                          styles.disabledStep
-                        }
-                        aria-disabled="true"
-                      >
-                        {content}
-                      </div>
-                    );
-                  },
-                )}
-              </nav>
+              <StepNavigation
+                steps={steps}
+              />
 
               <div
                 className={

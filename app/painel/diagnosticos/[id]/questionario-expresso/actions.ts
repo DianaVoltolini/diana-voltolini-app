@@ -1091,19 +1091,15 @@ export async function submitExpressQuestionnaire(
   }
 
   /*
-   * Conclui oficialmente o questionário.
+   * Finalização única do Diagnóstico Expresso.
    *
-   * A RPC faz a transição:
+   * Neste ponto o cliente já revisou todas as
+   * etapas e confirmou expressamente o envio.
+   * Primeiro concluímos o questionário:
    *
    * awaiting_questionnaire
    *          ↓
    * awaiting_documents
-   *
-   * IMPORTANTE:
-   * nesta etapa NÃO confirmamos os documentos.
-   * O cliente poderá revisar, complementar ou
-   * substituir os arquivos antes de liberá-los
-   * para análise.
    */
   const {
     error:
@@ -1133,6 +1129,51 @@ export async function submitExpressQuestionnaire(
     );
   }
 
+  /*
+   * Em seguida confirmamos definitivamente os
+   * XMLs já enviados:
+   *
+   * awaiting_documents
+   *          ↓
+   * documents_received
+   *
+   * A partir daqui o cliente não pode adicionar,
+   * substituir ou excluir XMLs por conta própria.
+   * Se a análise exigir complemento, a equipe poderá
+   * solicitar uma nova ação ao cliente.
+   */
+  const {
+    error:
+      documentsSubmitError,
+  } = await supabase.rpc(
+    "submit_diagnostic_documents",
+    {
+      requested_diagnostic_id:
+        diagnosticId,
+    },
+  );
+
+  if (
+    documentsSubmitError
+  ) {
+    console.error(
+      "Questionário concluído, mas não foi possível finalizar os documentos:",
+      documentsSubmitError,
+    );
+
+    revalidateExpressPaths(
+      diagnosticId,
+    );
+
+    revalidatePath(
+      `/painel/diagnosticos/${diagnosticId}/documentos`,
+    );
+
+    redirect(
+      `/painel/diagnosticos/${diagnosticId}`,
+    );
+  }
+
   revalidateExpressPaths(
     diagnosticId,
   );
@@ -1141,16 +1182,7 @@ export async function submitExpressQuestionnaire(
     `/painel/diagnosticos/${diagnosticId}/documentos`,
   );
 
-  /*
-   * O questionário foi concluído, porém
-   * os documentos continuam em aberto.
-   *
-   * O status permanece awaiting_documents
-   * até que o cliente clique em
-   * "Finalizar envio para análise" na
-   * página de documentos.
-   */
   redirect(
-    `/painel/diagnosticos/${diagnosticId}/documentos`,
+    `/painel/diagnosticos/${diagnosticId}`,
   );
 }

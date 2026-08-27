@@ -1,4 +1,4 @@
-// app/painel/diagnosticos/[id]/documentos/documents-manager.tsx
+// C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\app\painel\diagnosticos\[id]\documentos\documents-manager.tsx
 
 "use client";
 
@@ -159,12 +159,16 @@ function formatFileSize(
   ).toFixed(2)} MB`;
 }
 
-function formatDate(value: string) {
+function formatDate(
+  value: string,
+) {
   return new Intl.DateTimeFormat(
     "pt-BR",
     {
       dateStyle: "short",
       timeStyle: "short",
+      timeZone:
+        "America/Sao_Paulo",
     },
   ).format(new Date(value));
 }
@@ -464,9 +468,15 @@ export default function DocumentsManager({
   }
 
   async function handleFinalize() {
+    const hasUnusedSlots =
+      mainDocumentCount <
+      documentLimit;
+
     const confirmed =
       window.confirm(
-        "Confirma que todos os documentos necessários foram enviados?",
+        hasUnusedSlots
+          ? `Você enviou ${mainDocumentCount} de ${documentLimit} XMLs disponíveis. Ao finalizar, o envio será encerrado e não será possível adicionar novos XMLs depois. Deseja finalizar mesmo assim?`
+          : "Você atingiu o limite de XMLs do diagnóstico. Ao finalizar, os documentos serão enviados para análise e não será possível adicionar novos XMLs. Deseja continuar?",
       );
 
     if (!confirmed) {
@@ -816,20 +826,30 @@ export default function DocumentsManager({
                 styles.eyebrow
               }
             >
-              Confirmação
+              Confirmação final
             </p>
 
             <h2>
-              Finalizar envio dos
-              documentos
+              Finalizar envio para análise
             </h2>
 
             <p>
-              Confirme somente depois
-              de enviar os XMLs
-              principais e todos os
-              documentos necessários.
+              Você enviou {mainDocumentCount} de {documentLimit} XMLs principais disponíveis neste diagnóstico.
             </p>
+
+            {mainDocumentCount <
+            documentLimit ? (
+              <p>
+                <strong>
+                  Atenção:
+                </strong>{" "}
+                não é obrigatório utilizar as {documentLimit} vagas. Porém, ao finalizar agora, o diagnóstico seguirá para análise com os {mainDocumentCount} XMLs enviados e não será possível adicionar novos XMLs depois.
+              </p>
+            ) : (
+              <p>
+                O limite de XMLs foi atingido. Ao finalizar, os documentos serão encaminhados para análise e o envio será encerrado.
+              </p>
+            )}
           </div>
 
           <button
@@ -842,7 +862,9 @@ export default function DocumentsManager({
               handleFinalize
             }
           >
-            Confirmar documentos
+            {processing
+              ? "Finalizando..."
+              : "Finalizar envio para análise"}
           </button>
         </section>
       ) : null}

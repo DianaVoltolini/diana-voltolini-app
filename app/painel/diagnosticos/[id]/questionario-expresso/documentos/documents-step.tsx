@@ -1,4 +1,4 @@
-// app/painel/diagnosticos/[id]/questionario-expresso/documentos/documents-step.tsx
+// C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\app\painel\diagnosticos\[id]\questionario-expresso\documentos\documents-step.tsx
 
 "use client";
 
@@ -267,16 +267,6 @@ export default function DocumentsStep({
   }
 
   async function handleUpload() {
-    if (!selectedFile) {
-      setFeedback({
-        type: "error",
-        message:
-          "Selecione o arquivo XML.",
-      });
-
-      return;
-    }
-
     if (!operationType) {
       setFeedback({
         type: "error",
@@ -316,6 +306,16 @@ export default function DocumentsStep({
         type: "error",
         message:
           "Informe o erro ou rejeição apresentada.",
+      });
+
+      return;
+    }
+
+    if (!selectedFile) {
+      setFeedback({
+        type: "error",
+        message:
+          "Preencha as informações da operação e, por último, selecione o arquivo XML.",
       });
 
       return;
@@ -459,7 +459,10 @@ export default function DocumentsStep({
       setFeedback({
         type: "success",
         message:
-          "XML e informações da operação salvos com sucesso.",
+          documents.length + 1 <
+          documentLimit
+            ? "XML e informações da operação salvos. Você ainda pode adicionar outros XMLs antes da confirmação final dos documentos."
+            : "XML salvo. O limite de arquivos deste diagnóstico foi atingido.",
       });
 
       router.refresh();
@@ -538,11 +541,10 @@ export default function DocumentsStep({
           </h2>
 
           <p>
-            Para cada XML, informe o
-            contexto da operação. Os
-            dados técnicos da NF-e
-            serão obtidos diretamente
-            do arquivo.
+            Primeiro informe o contexto
+            da operação. Por último,
+            selecione o XML correspondente
+            e salve a NF-e.
           </p>
         </div>
 
@@ -586,37 +588,54 @@ export default function DocumentsStep({
           </h3>
 
           <div
+            style={{
+              marginBottom:
+                "22px",
+              border:
+                "1px solid #e2d39a",
+              borderLeft:
+                "4px solid #c9a227",
+              borderRadius:
+                "10px",
+              background:
+                "#fffaf0",
+              padding:
+                "16px 18px",
+            }}
+          >
+            <strong
+              style={{
+                display:
+                  "block",
+                marginBottom:
+                  "6px",
+                color:
+                  "#0d1b2a",
+              }}
+            >
+              Você pode enviar de 1 a {documentLimit} XMLs.
+            </strong>
+
+            <p
+              style={{
+                margin: 0,
+                color:
+                  "#5f6e7a",
+                fontSize:
+                  "0.86rem",
+                lineHeight:
+                  1.6,
+              }}
+            >
+              Não é obrigatório utilizar todas as vagas. Se você optar por concluir o envio com menos de {documentLimit} XMLs, o diagnóstico seguirá para análise somente com os arquivos enviados. Depois da confirmação final dos documentos, não será possível adicionar novos XMLs.
+            </p>
+          </div>
+
+          <div
             className={
               styles.formGrid
             }
           >
-            <label
-              className={
-                styles.fullField
-              }
-            >
-              <span>
-                Arquivo XML *
-              </span>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xml,application/xml,text/xml"
-                disabled={
-                  processing
-                }
-                onChange={
-                  handleFile
-                }
-              />
-
-              <small>
-                Envie um arquivo por
-                vez. Limite de 15 MB.
-              </small>
-            </label>
-
             <label>
               <span>
                 Operação representada *
@@ -810,6 +829,32 @@ export default function DocumentsStep({
                 />
               </label>
             ) : null}
+
+            <label
+              className={
+                styles.fullField
+              }
+            >
+              <span>
+                Arquivo XML *
+              </span>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xml,application/xml,text/xml"
+                disabled={
+                  processing
+                }
+                onChange={
+                  handleFile
+                }
+              />
+
+              <small>
+                Selecione o arquivo somente depois de preencher as informações acima. Envie um XML por vez, com até 15 MB.
+              </small>
+            </label>
           </div>
 
           <button

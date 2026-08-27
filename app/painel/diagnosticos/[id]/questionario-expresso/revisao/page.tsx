@@ -201,6 +201,7 @@ export default async function ReviewPage({
         code,
         status,
         service_type,
+        document_limit,
         user_id
       `,
     )
@@ -806,6 +807,51 @@ export default async function ReviewPage({
         </p>
       </section>
 
+      <section
+        className={
+          styles.scope
+        }
+      >
+        <h3>
+          Antes de finalizar
+        </h3>
+
+        <p>
+          Você está enviando
+          {" "}
+          <strong>
+            {documents.length}
+            {" "}
+            {documents.length === 1
+              ? "XML"
+              : "XMLs"}
+          </strong>
+          {" "}
+          de até
+          {" "}
+          <strong>
+            {diagnostic.document_limit}
+          </strong>
+          {" "}
+          permitidos neste diagnóstico.
+        </p>
+
+        {documents.length <
+        diagnostic.document_limit ? (
+          <p>
+            Você não é obrigado a utilizar todas as vagas. Porém, se finalizar agora, o diagnóstico seguirá para análise somente com os arquivos já enviados e você não poderá adicionar novos XMLs por conta própria depois desta confirmação.
+          </p>
+        ) : (
+          <p>
+            Você atingiu o limite de XMLs contratado. Confira os arquivos antes de finalizar o envio.
+          </p>
+        )}
+
+        <p>
+          Antes de finalizar, você pode voltar a qualquer uma das etapas anteriores para revisar ou corrigir informações, excluir um XML ou adicionar outros arquivos dentro do limite contratado.
+        </p>
+      </section>
+
       <form
         className={
           styles.submitArea
@@ -828,13 +874,7 @@ export default async function ReviewPage({
           />
 
           <span>
-            Revisei as informações acima
-            e confirmo o envio do
-            questionário. Na próxima
-            etapa, poderei revisar e
-            complementar os documentos
-            antes de liberá-los para
-            análise.
+            Revisei as informações e os XMLs enviados e confirmo que desejo finalizar este diagnóstico e encaminhá-lo para análise. Estou ciente de que, após esta confirmação, não poderei adicionar, substituir ou excluir XMLs por conta própria. Se houver necessidade de complemento durante a análise, receberei uma solicitação pela Área do Cliente.
           </span>
         </label>
 
@@ -846,7 +886,7 @@ export default async function ReviewPage({
           </Link>
 
           <button type="submit">
-            Concluir questionário e revisar documentos
+            Finalizar e enviar para análise
           </button>
         </div>
       </form>
