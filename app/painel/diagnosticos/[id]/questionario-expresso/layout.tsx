@@ -127,7 +127,9 @@ export default async function ExpressQuestionnaireLayout({
 
   const isEditable =
     diagnostic.status ===
-    "awaiting_questionnaire";
+      "awaiting_questionnaire" ||
+    diagnostic.status ===
+      "awaiting_documents";
 
   const reviewBasePath =
     `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/revisao`;

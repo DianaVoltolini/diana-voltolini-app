@@ -1,0 +1,7203 @@
+﻿========== PAINEL ==========
+// C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\app\painel\page.tsx
+
+import type { Metadata } from "next";
+
+import Image from "next/image";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+
+import { logout } from "./actions";
+
+import styles from "./painel.module.css";
+
+export const metadata: Metadata = {
+  title: "Ãrea do Cliente",
+};
+
+export const dynamic = "force-dynamic";
+
+type DiagnosticRow = {
+  id: string;
+  code: string;
+  status: string;
+  document_limit: number;
+  created_at: string;
+  submitted_at: string | null;
+  completed_at: string | null;
+  order_id: string | null;
+};
+
+type OrderRow = {
+  id: string;
+  status: string;
+};
+
+type DiagnosticDocumentRow = {
+  diagnostic_id: string;
+};
+
+const journeySteps = [
+  "Pagamento",
+  "Envio",
+  "AnÃ¡lise",
+  "RevisÃ£o final",
+  "Resultado",
+];
+
+function formatDate(
+  value: string | null | undefined,
+) {
+  if (!value) {
+    return "NÃ£o informado";
+  }
+
+  return new Intl.DateTimeFormat(
+    "pt-BR",
+    {
+      timeZone:
+        "America/Sao_Paulo",
+    },
+  ).format(
+    new Date(value),
+  );
+}
+
+function addDays(
+  value: string,
+  days: number,
+) {
+  const date =
+    new Date(value);
+
+  date.setDate(
+    date.getDate() +
+      days,
+  );
+
+  return date;
+}
+
+function formatDateObject(
+  value: Date,
+) {
+  return new Intl.DateTimeFormat(
+    "pt-BR",
+    {
+      timeZone:
+        "America/Sao_Paulo",
+    },
+  ).format(value);
+}
+
+function paymentStatusLabel(
+  value: string | null | undefined,
+) {
+  if (value === "paid") {
+    return "Confirmado";
+  }
+
+  if (value === "pending") {
+    return "Aguardando";
+  }
+
+  if (value === "cancelled") {
+    return "Cancelado";
+  }
+
+  if (value === "refunded") {
+    return "Reembolsado";
+  }
+
+  if (value === "failed") {
+    return "Falha";
+  }
+
+  return "NÃ£o informado";
+}
+
+function getGeneralStatus(
+  status: string,
+) {
+  if (
+    status ===
+      "awaiting_questionnaire" ||
+    status ===
+      "awaiting_documents"
+  ) {
+    return "Aguardando arquivos";
+  }
+
+  if (
+    status ===
+      "documents_received" ||
+    status ===
+      "under_review" ||
+    status ===
+      "client_action_required" ||
+    status ===
+      "awaiting_approval"
+  ) {
+    return "Em anÃ¡lise";
+  }
+
+  if (
+    status ===
+    "completed"
+  ) {
+    return "ConcluÃ­do";
+  }
+
+  if (
+    status ===
+    "cancelled"
+  ) {
+    return "Cancelado";
+  }
+
+  return "Em andamento";
+}
+
+function getStatusClass(
+  status: string,
+) {
+  if (
+    status ===
+    "completed"
+  ) {
+    return styles.statusCompleted;
+  }
+
+  if (
+    status ===
+      "awaiting_questionnaire" ||
+    status ===
+      "awaiting_documents"
+  ) {
+    return styles.statusWaiting;
+  }
+
+  if (
+    status ===
+    "cancelled"
+  ) {
+    return styles.statusCancelled;
+  }
+
+  return styles.statusAnalysis;
+}
+
+function getJourneyStep(
+  status: string,
+) {
+  if (
+    status ===
+      "awaiting_questionnaire" ||
+    status ===
+      "awaiting_documents"
+  ) {
+    return 2;
+  }
+
+  if (
+    status ===
+      "documents_received" ||
+    status ===
+      "under_review" ||
+    status ===
+      "client_action_required"
+  ) {
+    return 3;
+  }
+
+  if (
+    status ===
+    "awaiting_approval"
+  ) {
+    return 4;
+  }
+
+  if (
+    status ===
+    "completed"
+  ) {
+    return 5;
+  }
+
+  return 0;
+}
+
+function getCompletionForecast(
+  diagnostic: DiagnosticRow,
+) {
+  if (
+    diagnostic.completed_at
+  ) {
+    return {
+      value:
+        formatDate(
+          diagnostic.completed_at,
+        ),
+
+      helper:
+        "ConcluÃ­do",
+    };
+  }
+
+  if (
+    diagnostic.submitted_at
+  ) {
+    return {
+      value:
+        `AtÃ© ${formatDateObject(
+          addDays(
+            diagnostic.submitted_at,
+            5,
+          ),
+        )}`,
+
+      helper:
+        "AtÃ© 5 dias apÃ³s o envio",
+    };
+  }
+
+  return {
+    value:
+      "A definir",
+
+    helper:
+      "AtÃ© 5 dias apÃ³s o envio dos arquivos",
+  };
+}
+
+export default async function PainelPage() {
+  const supabase =
+    await createClient();
+
+  const {
+    data:
+      claimsData,
+  } =
+    await supabase.auth
+      .getClaims();
+
+  const userId =
+    typeof claimsData?.claims?.sub ===
+    "string"
+      ? claimsData.claims.sub
+      : null;
+
+  const userEmail =
+    typeof claimsData?.claims?.email ===
+    "string"
+      ? claimsData.claims.email
+      : null;
+
+  if (!userId) {
+    redirect("/login");
+  }
+
+  const admin =
+    getSupabaseAdmin();
+
+  const [
+    {
+      data:
+        profile,
+    },
+
+    {
+      data:
+        diagnosticData,
+    },
+
+    {
+      data:
+        orderData,
+    },
+  ] =
+    await Promise.all([
+      admin
+        .from(
+          "profiles",
+        )
+        .select(
+          "full_name, email, status",
+        )
+        .eq(
+          "id",
+          userId,
+        )
+        .maybeSingle(),
+
+      admin
+        .from(
+          "diagnostics",
+        )
+        .select(
+          `
+            id,
+            code,
+            status,
+            document_limit,
+            created_at,
+            submitted_at,
+            completed_at,
+            order_id
+          `,
+        )
+        .eq(
+          "user_id",
+          userId,
+        )
+        .order(
+          "created_at",
+          {
+            ascending:
+              false,
+          },
+        ),
+
+      admin
+        .from(
+          "orders",
+        )
+        .select(
+          `
+            id,
+            status
+          `,
+        )
+        .eq(
+          "user_id",
+          userId,
+        ),
+    ]);
+
+  const diagnostics =
+    (diagnosticData ??
+      []) as DiagnosticRow[];
+
+  const orders =
+    (orderData ??
+      []) as OrderRow[];
+
+  const diagnosticIds =
+    diagnostics.map(
+      (
+        diagnostic,
+      ) =>
+        diagnostic.id,
+    );
+
+  const {
+    data:
+      documentData,
+  } =
+    diagnosticIds.length >
+    0
+      ? await admin
+          .from(
+            "diagnostic_documents",
+          )
+          .select(
+            "diagnostic_id",
+          )
+          .in(
+            "diagnostic_id",
+            diagnosticIds,
+          )
+          .eq(
+            "counts_toward_limit",
+            true,
+          )
+          .neq(
+            "status",
+            "rejected",
+          )
+      : {
+          data:
+            [] as DiagnosticDocumentRow[],
+        };
+
+  const documents =
+    (documentData ??
+      []) as DiagnosticDocumentRow[];
+
+  const documentCountByDiagnostic =
+    new Map<
+      string,
+      number
+    >();
+
+  for (
+    const document
+    of documents
+  ) {
+    documentCountByDiagnostic.set(
+      document.diagnostic_id,
+
+      (
+        documentCountByDiagnostic.get(
+          document.diagnostic_id,
+        ) ?? 0
+      ) + 1,
+    );
+  }
+
+  const orderById =
+    new Map(
+      orders.map(
+        (
+          order,
+        ) => [
+          order.id,
+          order,
+        ],
+      ),
+    );
+
+  const displayName =
+    profile?.full_name?.trim() ||
+    userEmail?.split(
+      "@",
+    )[0] ||
+    "Cliente";
+
+  return (
+    <main
+      className={
+        styles.page
+      }
+    >
+      <header
+        className={
+          styles.header
+        }
+      >
+        <div
+          className={`container ${styles.headerContent}`}
+        >
+          <a
+            href="https://dianavoltolini.com.br"
+            aria-label="Acessar o site Diana Voltolini"
+          >
+            <Image
+              className={
+                styles.logo
+              }
+              src="/brand/logo-light.png"
+              alt="Diana Voltolini"
+              width={1535}
+              height={538}
+              priority
+            />
+          </a>
+
+          <form
+            action={
+              logout
+            }
+          >
+            <button
+              className={
+                styles.logoutButton
+              }
+              type="submit"
+            >
+              Sair
+            </button>
+          </form>
+        </div>
+      </header>
+
+      <section
+        className={
+          styles.content
+        }
+      >
+        <div className="container">
+          <header
+            className={
+              styles.welcome
+            }
+          >
+            <p
+              className={
+                styles.eyebrow
+              }
+            >
+              Ãrea do Cliente
+            </p>
+
+            <h1>
+              OlÃ¡, {displayName}.
+            </h1>
+
+            <p
+              className={
+                styles.welcomeText
+              }
+            >
+              Acompanhe seus
+              diagnÃ³sticos, consulte
+              informaÃ§Ãµes enviadas,
+              acompanhe mensagens e
+              acesse seus resultados.
+            </p>
+          </header>
+
+          <section
+            className={
+              styles.guidanceCard
+            }
+          >
+            <header
+              className={
+                styles.guidanceHeading
+              }
+            >
+              <div>
+                <p
+                  className={
+                    styles.eyebrow
+                  }
+                >
+                  Como funciona seu painel
+                </p>
+
+                <h2>
+                  Tudo o que vocÃª precisa
+                  acompanhar estÃ¡ aqui.
+                </h2>
+              </div>
+
+              <p>
+                Cada contrataÃ§Ã£o possui
+                seu prÃ³prio quadro. Ã‰ por
+                ele que vocÃª acompanha o
+                andamento, consulta as
+                informaÃ§Ãµes enviadas,
+                conversa conosco e recebe
+                o resultado final.
+              </p>
+            </header>
+
+            <div
+              className={
+                styles.guidanceList
+              }
+            >
+              <article>
+                <span>
+                  01
+                </span>
+
+                <div>
+                  <strong>
+                    Acompanhe cada
+                    diagnÃ³stico
+                  </strong>
+
+                  <p>
+                    Veja a data da
+                    contrataÃ§Ã£o, pagamento,
+                    arquivos enviados,
+                    previsÃ£o de conclusÃ£o
+                    e o status atual.
+                  </p>
+                </div>
+              </article>
+
+              <article>
+                <span>
+                  02
+                </span>
+
+                <div>
+                  <strong>
+                    Acompanhe a jornada
+                  </strong>
+
+                  <p>
+                    O painel mostra em
+                    qual ponto o trabalho
+                    estÃ¡: envio, anÃ¡lise,
+                    revisÃ£o final ou
+                    resultado.
+                  </p>
+                </div>
+              </article>
+
+              <article>
+                <span>
+                  03
+                </span>
+
+                <div>
+                  <strong>
+                    Use as mensagens
+                  </strong>
+
+                  <p>
+                    Se precisarmos de
+                    algum esclarecimento
+                    ou complemento, a
+                    comunicaÃ§Ã£o ficarÃ¡
+                    registrada dentro do
+                    diagnÃ³stico.
+                  </p>
+                </div>
+              </article>
+
+              <article>
+                <span>
+                  04
+                </span>
+
+                <div>
+                  <strong>
+                    Consulte o resultado
+                  </strong>
+
+                  <p>
+                    ApÃ³s a conclusÃ£o, o
+                    parecer e as
+                    informaÃ§Ãµes do
+                    diagnÃ³stico continuam
+                    disponÃ­veis na sua
+                    Ãrea do Cliente.
+                  </p>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section
+            className={
+              styles.diagnosticsSection
+            }
+          >
+            <header
+              className={
+                styles.sectionHeader
+              }
+            >
+              <div>
+                <p
+                  className={
+                    styles.eyebrow
+                  }
+                >
+                  Seus serviÃ§os
+                </p>
+
+                <h2>
+                  Seus diagnÃ³sticos
+                </h2>
+
+                <p>
+                  Cada diagnÃ³stico possui
+                  um acompanhamento
+                  independente.
+                </p>
+              </div>
+
+              <span
+                className={
+                  styles.diagnosticCount
+                }
+              >
+                {
+                  diagnostics.length
+                }{" "}
+                {diagnostics.length ===
+                1
+                  ? "diagnÃ³stico"
+                  : "diagnÃ³sticos"}
+              </span>
+            </header>
+
+            {diagnostics.length >
+            0 ? (
+              <div
+                className={
+                  styles.diagnosticList
+                }
+              >
+                {diagnostics.map(
+                  (
+                    diagnostic,
+                  ) => {
+                    const order =
+                      diagnostic.order_id
+                        ? orderById.get(
+                            diagnostic.order_id,
+                          ) ??
+                          null
+                        : null;
+
+                    const documentCount =
+                      documentCountByDiagnostic.get(
+                        diagnostic.id,
+                      ) ?? 0;
+
+                    const forecast =
+                      getCompletionForecast(
+                        diagnostic,
+                      );
+
+                    const journeyStep =
+                      getJourneyStep(
+                        diagnostic.status,
+                      );
+
+                    return (
+                      <article
+                        key={
+                          diagnostic.id
+                        }
+                        className={
+                          styles.diagnosticCard
+                        }
+                      >
+                        <header
+                          className={
+                            styles.diagnosticHeader
+                          }
+                        >
+                          <div>
+                            <p>
+                              DiagnÃ³stico
+                              Expresso IBS/CBS
+                            </p>
+
+                            <h3>
+                              {
+                                diagnostic.code
+                              }
+                            </h3>
+                          </div>
+
+                          <Link
+                            className={
+                              styles.accessButton
+                            }
+                            href={`/painel/diagnosticos/${diagnostic.id}`}
+                          >
+                            <span>
+                              Acessar diagnÃ³stico
+                            </span>
+
+                            <b
+                              aria-hidden="true"
+                            >
+                              â†’
+                            </b>
+                          </Link>
+                        </header>
+
+                        <div
+                          className={
+                            styles.factGrid
+                          }
+                        >
+                          <div
+                            className={
+                              styles.factCard
+                            }
+                          >
+                            <span>
+                              Contratado em
+                            </span>
+
+                            <strong>
+                              {formatDate(
+                                diagnostic.created_at,
+                              )}
+                            </strong>
+                          </div>
+
+                          <div
+                            className={
+                              styles.factCard
+                            }
+                          >
+                            <span>
+                              Pagamento
+                            </span>
+
+                            <strong>
+                              {paymentStatusLabel(
+                                order?.status,
+                              )}
+                            </strong>
+                          </div>
+
+                          <div
+                            className={
+                              styles.factCard
+                            }
+                          >
+                            <span>
+                              Arquivos enviados
+                            </span>
+
+                            <strong>
+                              {
+                                documentCount
+                              }{" "}
+                              de{" "}
+                              {
+                                diagnostic.document_limit
+                              }
+                            </strong>
+                          </div>
+
+                          <div
+                            className={
+                              styles.factCard
+                            }
+                          >
+                            <span>
+                              PrevisÃ£o de conclusÃ£o
+                            </span>
+
+                            <strong>
+                              {
+                                forecast.value
+                              }
+                            </strong>
+
+                            <small>
+                              {
+                                forecast.helper
+                              }
+                            </small>
+                          </div>
+
+                          <div
+                            className={`${styles.factCard} ${styles.statusFact}`}
+                          >
+                            <span>
+                              Status
+                            </span>
+
+                            <strong
+                              className={`${styles.statusBadge} ${getStatusClass(
+                                diagnostic.status,
+                              )}`}
+                            >
+                              {getGeneralStatus(
+                                diagnostic.status,
+                              )}
+                            </strong>
+                          </div>
+                        </div>
+
+                        <section
+                          className={
+                            styles.journeyBlock
+                          }
+                        >
+                          <header
+                            className={
+                              styles.journeyHeader
+                            }
+                          >
+                            <div>
+                              <span>
+                                Acompanhamento
+                              </span>
+
+                              <strong>
+                                Jornada do
+                                diagnÃ³stico
+                              </strong>
+                            </div>
+
+                            <small>
+                              Acompanhe a evoluÃ§Ã£o
+                              atÃ© a entrega do
+                              resultado.
+                            </small>
+                          </header>
+
+                          <div
+                            className={
+                              styles.journey
+                            }
+                          >
+                            {journeySteps.map(
+                              (
+                                step,
+                                index,
+                              ) => {
+                                const number =
+                                  index +
+                                  1;
+
+                                const completed =
+                                  diagnostic.status ===
+                                    "completed" ||
+                                  (
+                                    journeyStep >
+                                      0 &&
+                                    number <
+                                      journeyStep
+                                  );
+
+                                const current =
+                                  diagnostic.status !==
+                                    "completed" &&
+                                  number ===
+                                    journeyStep;
+
+                                return (
+                                  <div
+                                    key={
+                                      step
+                                    }
+                                    className={`${styles.journeyStep} ${
+                                      completed
+                                        ? styles.journeyCompleted
+                                        : current
+                                          ? styles.journeyCurrent
+                                          : ""
+                                    }`}
+                                  >
+                                    <span>
+                                      {completed
+                                        ? "âœ“"
+                                        : number}
+                                    </span>
+
+                                    <strong>
+                                      {step}
+                                    </strong>
+                                  </div>
+                                );
+                              },
+                            )}
+                          </div>
+                        </section>
+                      </article>
+                    );
+                  },
+                )}
+              </div>
+            ) : (
+              <section
+                className={
+                  styles.emptyState
+                }
+              >
+                <div>
+                  <h2>
+                    Nenhum diagnÃ³stico
+                    disponÃ­vel
+                  </h2>
+
+                  <p>
+                    Quando uma contrataÃ§Ã£o
+                    for confirmada, ela
+                    aparecerÃ¡ nesta Ã¡rea.
+                  </p>
+                </div>
+              </section>
+            )}
+          </section>
+
+          <section
+            className={
+              styles.purchaseStrip
+            }
+          >
+            <div>
+              <span>
+                Nova contrataÃ§Ã£o
+              </span>
+
+              <strong>
+                Gostaria de realizar uma
+                nova contrataÃ§Ã£o?
+              </strong>
+
+              <p>
+                VocÃª pode adquirir outro
+                DiagnÃ³stico Expresso e
+                acompanhÃ¡-lo separadamente
+                nesta mesma Ã¡rea.
+              </p>
+            </div>
+
+            <a
+              href="https://dianavoltolini.com.br/checkout/diagnostico-ibs-cbs"
+              className={
+                styles.purchaseButton
+              }
+            >
+              Contratar novo diagnÃ³stico
+              <b aria-hidden="true">
+                â†’
+              </b>
+            </a>
+          </section>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+========== CSS PAINEL ==========
+/* C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\app\painel\painel.module.css */
+
+.page {
+  min-height: 100vh;
+  background: #f5f8fa;
+  color: #0d1b2a;
+}
+
+.header {
+  border-bottom: 1px solid #e0e5e8;
+  background: #ffffff;
+}
+
+.headerContent {
+  display: flex;
+  min-height: 88px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.logo {
+  width: 205px;
+  height: auto;
+}
+
+.logoutButton {
+  min-width: 76px;
+  min-height: 42px;
+  border: 1px solid #0d1b2a;
+  border-radius: 6px;
+  background: #0d1b2a;
+  color: #ffffff;
+  padding: 0 18px;
+  font-family:
+    var(--font-inter),
+    Arial,
+    sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.content {
+  padding: 46px 0 76px;
+}
+
+.welcome {
+  margin-bottom: 31px;
+}
+
+.eyebrow {
+  margin: 0 0 9px;
+  color: #9b7610;
+  font-family:
+    var(--font-inter),
+    Arial,
+    sans-serif;
+  font-size: 0.69rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.welcome h1 {
+  margin: 0;
+  color: #0d1b2a;
+  font-family:
+    var(--font-playfair),
+    Georgia,
+    serif;
+  font-size: clamp(
+    2.4rem,
+    4vw,
+    3.25rem
+  );
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  line-height: 1.04;
+}
+
+.welcomeText {
+  max-width: 850px;
+  margin: 12px 0 0;
+  color: #60707d;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+/* ============================================================
+   COMO FUNCIONA â€” PRIMEIRA DOBRA
+   ============================================================ */
+
+.guidanceCard {
+  border: 1px solid #e2ded4;
+  border-radius: 9px;
+  background: #fffdf8;
+  padding: 39px 43px 37px;
+  box-shadow:
+    0 10px 28px
+    rgba(13, 27, 42, 0.035);
+}
+
+.guidanceHeading {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.1fr)
+    minmax(320px, 0.72fr);
+  align-items: end;
+  gap: 55px;
+  border-bottom: 1px solid #e5e0d6;
+  padding-bottom: 30px;
+}
+
+.guidanceHeading h2 {
+  max-width: 650px;
+  margin: 0;
+  color: #0d1b2a;
+  font-family:
+    var(--font-playfair),
+    Georgia,
+    serif;
+  font-size: clamp(
+    2rem,
+    3vw,
+    2.65rem
+  );
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+}
+
+.guidanceHeading > p {
+  margin: 0;
+  color: #64727d;
+  font-size: 0.92rem;
+  line-height: 1.75;
+}
+
+.guidanceList {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
+  margin-top: 30px;
+}
+
+.guidanceList article {
+  display: grid;
+  min-width: 0;
+  grid-template-columns:
+    40px minmax(0, 1fr);
+  gap: 14px;
+  padding: 4px 24px;
+}
+
+.guidanceList article:first-child {
+  padding-left: 0;
+}
+
+.guidanceList article:last-child {
+  padding-right: 0;
+}
+
+.guidanceList article + article {
+  border-left: 1px solid #e4dfd4;
+}
+
+.guidanceList article > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid #d8bd68;
+  border-radius: 50%;
+  background: #fff9e9;
+  color: #896806;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.guidanceList strong {
+  display: block;
+  color: #0d1b2a;
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.guidanceList p {
+  margin: 7px 0 0;
+  color: #687681;
+  font-size: 0.79rem;
+  line-height: 1.62;
+}
+
+/* ============================================================
+   DIAGNÃ“STICOS
+   ============================================================ */
+
+.diagnosticsSection {
+  margin-top: 49px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 20px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  color: #0d1b2a;
+  font-family:
+    var(--font-playfair),
+    Georgia,
+    serif;
+  font-size: 2rem;
+  font-weight: 650;
+}
+
+.sectionHeader > div > p:last-child {
+  margin: 7px 0 0;
+  color: #6a7883;
+  font-size: 0.83rem;
+}
+
+.diagnosticCount {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  border: 1px solid #dce2e6;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #6a7883;
+  padding: 0 13px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.diagnosticList {
+  display: grid;
+  gap: 24px;
+}
+
+.diagnosticCard {
+  overflow: hidden;
+  border: 1px solid #dbe1e5;
+  border-top: 3px solid #c9a227;
+  border-radius: 9px;
+  background: #ffffff;
+  box-shadow:
+    0 12px 30px
+    rgba(13, 27, 42, 0.04);
+}
+
+.diagnosticHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 26px;
+  padding: 26px 29px 23px;
+}
+
+.diagnosticHeader p {
+  margin: 0 0 5px;
+  color: #74818b;
+  font-size: 0.71rem;
+  font-weight: 700;
+}
+
+.diagnosticHeader h3 {
+  margin: 0;
+  color: #0d1b2a;
+  font-family:
+    var(--font-playfair),
+    Georgia,
+    serif;
+  font-size: 1.58rem;
+  font-weight: 650;
+}
+
+.accessButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  border: 1px solid #c9a227;
+  border-radius: 6px;
+  background: #c9a227;
+  color: #0d1b2a;
+  padding: 0 17px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.accessButton:hover {
+  background: #d3ad31;
+}
+
+.factGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      5,
+      minmax(0, 1fr)
+    );
+  border-top: 1px solid #e1e6e9;
+  border-bottom: 1px solid #e1e6e9;
+  background: #fafbfc;
+}
+
+.factCard {
+  min-width: 0;
+  padding: 18px 19px 19px;
+}
+
+.factCard + .factCard {
+  border-left: 1px solid #e1e6e9;
+}
+
+.factCard > span {
+  display: block;
+  min-height: 27px;
+  margin-bottom: 7px;
+  color: #75828c;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.factCard > strong {
+  display: block;
+  color: #0d1b2a;
+  font-size: 0.88rem;
+  font-weight: 750;
+  line-height: 1.38;
+}
+
+.factCard > small {
+  display: block;
+  margin-top: 4px;
+  color: #85919a;
+  font-size: 0.64rem;
+  line-height: 1.4;
+}
+
+.statusFact {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.statusBadge {
+  display: inline-flex !important;
+  min-height: 29px;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0 11px;
+  font-size: 0.69rem !important;
+}
+
+.statusWaiting {
+  background: #fff5dc;
+  color: #755000 !important;
+}
+
+.statusAnalysis {
+  background: #eaf3ff;
+  color: #225a9b !important;
+}
+
+.statusCompleted {
+  background: #edf8f1;
+  color: #217247 !important;
+}
+
+.statusCancelled {
+  background: #fff0ed;
+  color: #a9362b !important;
+}
+
+/* ============================================================
+   JORNADA
+   ============================================================ */
+
+.journeyBlock {
+  padding: 22px 29px 27px;
+}
+
+.journeyHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 21px;
+}
+
+.journeyHeader > div {
+  display: grid;
+  gap: 3px;
+}
+
+.journeyHeader span {
+  color: #94700a;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.journeyHeader strong {
+  color: #0d1b2a;
+  font-size: 0.96rem;
+}
+
+.journeyHeader small {
+  color: #7c8992;
+  font-size: 0.68rem;
+}
+
+.journey {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      5,
+      minmax(0, 1fr)
+    );
+}
+
+.journeyStep {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  color: #9ba5ad;
+  text-align: center;
+}
+
+.journeyStep:not(:last-child)::after {
+  position: absolute;
+  z-index: 0;
+  top: 15px;
+  left: calc(50% + 20px);
+  width: calc(100% - 40px);
+  height: 2px;
+  background: #dfe5e9;
+  content: "";
+}
+
+.journeyStep > span {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+  border: 2px solid #d9e0e5;
+  border-radius: 50%;
+  background: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.journeyStep strong {
+  font-size: 0.7rem;
+}
+
+.journeyCompleted {
+  color: #27764b;
+}
+
+.journeyCompleted > span {
+  border-color: #b5dbc3;
+  background: #edf8f1;
+  color: #27764b;
+}
+
+.journeyCompleted:not(:last-child)::after {
+  background: #bedfca;
+}
+
+.journeyCurrent {
+  color: #795d07;
+}
+
+.journeyCurrent > span {
+  border-color: #c9a227;
+  background: #fff8e5;
+  color: #795d07;
+}
+
+/* ============================================================
+   NOVA CONTRATAÃ‡ÃƒO â€” DISCRETA
+   ============================================================ */
+
+.purchaseStrip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 35px;
+  margin-top: 34px;
+  border-top: 1px solid #dfe4e7;
+  padding: 25px 4px 0;
+}
+
+.purchaseStrip > div {
+  max-width: 740px;
+}
+
+.purchaseStrip > div > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #92700d;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.purchaseStrip strong {
+  display: block;
+  color: #0d1b2a;
+  font-family:
+    var(--font-playfair),
+    Georgia,
+    serif;
+  font-size: 1.25rem;
+  font-weight: 650;
+}
+
+.purchaseStrip p {
+  margin: 5px 0 0;
+  color: #77838c;
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.purchaseButton {
+  display: inline-flex;
+  min-height: 42px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 19px;
+  border: 1px solid #d5b548;
+  border-radius: 6px;
+  background: transparent;
+  color: #715706;
+  padding: 0 15px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.purchaseButton:hover {
+  background: #fff8e6;
+}
+
+/* ============================================================
+   EMPTY
+   ============================================================ */
+
+.emptyState {
+  border: 1px solid #dde3e7;
+  border-radius: 9px;
+  background: #ffffff;
+  padding: 29px;
+}
+
+.emptyState h2 {
+  margin: 0;
+  font-family:
+    var(--font-playfair),
+    Georgia,
+    serif;
+  font-size: 1.5rem;
+}
+
+.emptyState p {
+  margin: 8px 0 0;
+  color: #6d7b85;
+}
+
+/* ============================================================
+   RESPONSIVO
+   ============================================================ */
+
+@media (max-width: 1000px) {
+  .guidanceList {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+  .guidanceList article {
+    padding: 20px;
+  }
+
+  .guidanceList article:nth-child(3) {
+    border-left: 0;
+  }
+
+  .guidanceList article:nth-child(n + 3) {
+    border-top: 1px solid #e4dfd4;
+  }
+
+  .factGrid {
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(0, 1fr)
+      );
+  }
+}
+
+@media (max-width: 760px) {
+  .guidanceHeading {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .guidanceList {
+    grid-template-columns: 1fr;
+  }
+
+  .guidanceList article {
+    padding: 20px 0;
+    border-left: 0 !important;
+  }
+
+  .guidanceList article + article {
+    border-top: 1px solid #e4dfd4;
+  }
+
+  .diagnosticHeader,
+  .journeyHeader,
+  .purchaseStrip,
+  .sectionHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .accessButton {
+    width: 100%;
+  }
+
+  .factGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .factCard + .factCard {
+    border-top: 1px solid #e1e6e9;
+    border-left: 0;
+  }
+
+  .journey {
+    overflow-x: auto;
+    grid-template-columns:
+      repeat(
+        5,
+        minmax(105px, 1fr)
+      );
+  }
+
+  .purchaseButton {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+========== DIAGNOSTICO ==========
+// C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\app\painel\diagnosticos\[id]\page.tsx
+
+import type {
+  CSSProperties,
+} from "react";
+
+import type {
+  Metadata,
+} from "next";
+
+import Image from "next/image";
+import Link from "next/link";
+
+import {
+  notFound,
+  redirect,
+} from "next/navigation";
+
+import { createClient } from "@/lib/supabase/server";
+
+import { logout } from "../../actions";
+
+import MessageForm from "./mensagens/message-form";
+
+import styles from "./diagnostico.module.css";
+
+export const metadata: Metadata = {
+  title:
+    "Detalhes do diagnÃ³stico",
+};
+
+export const dynamic =
+  "force-dynamic";
+
+type DiagnosticPageProps = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+type JsonRecord =
+  Record<string, unknown>;
+
+type ActionTarget =
+  | "questionario"
+  | "revisao"
+  | "mensagens"
+  | "documentos"
+  | "resultado"
+  | null;
+
+type StatusInformation = {
+  label: string;
+  description: string;
+  step: number;
+  percentage: number;
+
+  nextAction: string;
+  nextDescription: string;
+
+  primaryLabel: string | null;
+  primaryTarget: ActionTarget;
+
+  note: string;
+};
+
+function asRecord(
+  value: unknown,
+): JsonRecord {
+  return typeof value ===
+      "object" &&
+    value !== null &&
+    !Array.isArray(value)
+    ? value as JsonRecord
+    : {};
+}
+
+function hasText(
+  value: unknown,
+) {
+  return (
+    typeof value ===
+      "string" &&
+    value.trim().length >
+      0
+  );
+}
+
+function isQuestionnaireReadyForReview(
+  answers: unknown,
+  documentCount: number,
+) {
+  const root =
+    asRecord(answers);
+
+  const express =
+    asRecord(
+      root.express,
+    );
+
+  const company =
+    asRecord(
+      express.company,
+    );
+
+  const preparation =
+    asRecord(
+      express.preparation,
+    );
+
+  const guidance =
+    asRecord(
+      express.guidance,
+    );
+
+  const companyComplete =
+    [
+      company.legalName,
+      company.cnpj,
+      company.city,
+      company.state,
+      company.mainActivity,
+      company.taxRegime,
+      company.contactName,
+      company.contactValue,
+      company.businessContext,
+    ].every(hasText);
+
+  const preparationComplete =
+    [
+      preparation.erpName,
+      preparation.ibsCbsConfiguration,
+      preparation.accountingGuidance,
+    ].every(hasText);
+
+  const guidanceComplete =
+    guidance.completed ===
+      true &&
+    guidance.informationConfirmation ===
+      true;
+
+  return (
+    companyComplete &&
+    preparationComplete &&
+    documentCount >
+      0 &&
+    guidanceComplete
+  );
+}
+
+const statusInformation: Record<
+  string,
+  StatusInformation
+> = {
+  awaiting_questionnaire: {
+    label:
+      "Aguardando informaÃ§Ãµes",
+
+    description:
+      "O diagnÃ³stico foi liberado e aguarda o preenchimento das informaÃ§Ãµes necessÃ¡rias para a anÃ¡lise.",
+
+    step:
+      1,
+
+    percentage:
+      15,
+
+    nextAction:
+      "Preencher as informaÃ§Ãµes",
+
+    nextDescription:
+      "Preencha os dados da empresa, informe a preparaÃ§Ã£o para IBS/CBS, envie os XMLs selecionados e registre suas dÃºvidas.",
+
+    primaryLabel:
+      "Continuar questionÃ¡rio",
+
+    primaryTarget:
+      "questionario",
+
+    note:
+      "O prazo da anÃ¡lise comeÃ§a apÃ³s a confirmaÃ§Ã£o final do envio.",
+  },
+
+  awaiting_documents: {
+    label:
+      "FinalizaÃ§Ã£o pendente",
+
+    description:
+      "Seu questionÃ¡rio estÃ¡ concluÃ­do, mas o envio ainda precisa ser confirmado.",
+
+    step:
+      2,
+
+    percentage:
+      35,
+
+    nextAction:
+      "Concluir o envio para anÃ¡lise",
+
+    nextDescription:
+      "Confira as informaÃ§Ãµes e os XMLs selecionados antes de encaminhar definitivamente o diagnÃ³stico para anÃ¡lise.",
+
+    primaryLabel:
+      "Revisar e finalizar",
+
+    primaryTarget:
+      "revisao",
+
+    note:
+      "AtÃ© a confirmaÃ§Ã£o final vocÃª ainda pode revisar o conteÃºdo enviado.",
+  },
+
+  documents_received: {
+    label:
+      "Documentos enviados",
+
+    description:
+      "As informaÃ§Ãµes e os documentos foram enviados e aguardam a conferÃªncia tÃ©cnica.",
+
+    step:
+      3,
+
+    percentage:
+      55,
+
+    nextAction:
+      "Aguarde a finalizaÃ§Ã£o",
+
+    nextDescription:
+      "Seu questionÃ¡rio e os XMLs foram enviados para anÃ¡lise. Se surgir alguma dÃºvida ou necessidade de complemento, entraremos em contato pela Ã¡rea de mensagens deste diagnÃ³stico.",
+
+    primaryLabel:
+      "Mensagens",
+
+    primaryTarget:
+      "mensagens",
+
+    note:
+      "VocÃª pode acompanhar as atualizaÃ§Ãµes e consultar as informaÃ§Ãµes jÃ¡ enviadas por esta Ã¡rea.",
+  },
+
+  under_review: {
+    label:
+      "Em anÃ¡lise",
+
+    description:
+      "As informaÃ§Ãµes e os documentos enviados estÃ£o em conferÃªncia tÃ©cnica.",
+
+    step:
+      3,
+
+    percentage:
+      75,
+
+    nextAction:
+      "AnÃ¡lise em andamento",
+
+    nextDescription:
+      "A conferÃªncia tÃ©cnica jÃ¡ comeÃ§ou. Caso seja necessÃ¡rio algum esclarecimento ou complemento, entraremos em contato pela Ã¡rea de mensagens.",
+
+    primaryLabel:
+      "Mensagens",
+
+    primaryTarget:
+      "mensagens",
+
+    note:
+      "As informaÃ§Ãµes enviadas continuam disponÃ­veis para consulta.",
+  },
+
+  client_action_required: {
+    label:
+      "AÃ§Ã£o necessÃ¡ria",
+
+    description:
+      "Foi identificada uma pendÃªncia que precisa ser atendida para continuidade da anÃ¡lise.",
+
+    step:
+      3,
+
+    percentage:
+      75,
+
+    nextAction:
+      "Precisamos de uma informaÃ§Ã£o sua",
+
+    nextDescription:
+      "Consulte a solicitaÃ§Ã£o registrada nas mensagens e envie o complemento solicitado.",
+
+    primaryLabel:
+      "Ver solicitaÃ§Ã£o",
+
+    primaryTarget:
+      "mensagens",
+
+    note:
+      "ApÃ³s o atendimento da solicitaÃ§Ã£o, a anÃ¡lise poderÃ¡ ser retomada.",
+  },
+
+  awaiting_approval: {
+    label:
+      "RevisÃ£o final",
+
+    description:
+      "A anÃ¡lise tÃ©cnica foi concluÃ­da e estÃ¡ passando pela conferÃªncia final.",
+
+    step:
+      4,
+
+    percentage:
+      90,
+
+    nextAction:
+      "RevisÃ£o final",
+
+    nextDescription:
+      "O resultado estÃ¡ passando pela Ãºltima conferÃªncia antes de ser disponibilizado na sua Ãrea do Cliente.",
+
+    primaryLabel:
+      "Mensagens",
+
+    primaryTarget:
+      "mensagens",
+
+    note:
+      "O resultado serÃ¡ liberado nesta mesma Ã¡rea assim que a revisÃ£o for concluÃ­da.",
+  },
+
+  completed: {
+    label:
+      "ConcluÃ­do",
+
+    description:
+      "O diagnÃ³stico foi finalizado e o resultado estÃ¡ disponÃ­vel para consulta.",
+
+    step:
+      5,
+
+    percentage:
+      100,
+
+    nextAction:
+      "Consultar o resultado",
+
+    nextDescription:
+      "A anÃ¡lise foi concluÃ­da e o resultado final jÃ¡ estÃ¡ disponÃ­vel na sua Ãrea do Cliente.",
+
+    primaryLabel:
+      "Consultar resultado",
+
+    primaryTarget:
+      "resultado",
+
+    note:
+      "Suas informaÃ§Ãµes e documentos permanecem disponÃ­veis para consulta.",
+  },
+
+  cancelled: {
+    label:
+      "Cancelado",
+
+    description:
+      "Este diagnÃ³stico foi cancelado.",
+
+    step:
+      0,
+
+    percentage:
+      0,
+
+    nextAction:
+      "DiagnÃ³stico cancelado",
+
+    nextDescription:
+      "Entre em contato caso precise de esclarecimentos sobre esta contrataÃ§Ã£o.",
+
+    primaryLabel:
+      null,
+
+    primaryTarget:
+      null,
+
+    note:
+      "Atendimento: contato@dianavoltolini.com.br.",
+  },
+};
+
+const reviewReadyStatus: StatusInformation = {
+  label:
+    "Ãšltima revisÃ£o",
+
+  description:
+    "Seu questionÃ¡rio estÃ¡ preenchido. FaÃ§a a Ãºltima revisÃ£o antes de finalizar o envio para anÃ¡lise.",
+
+  step:
+    2,
+
+  percentage:
+    35,
+
+  nextAction:
+    "Revisar e finalizar",
+
+  nextDescription:
+    "Confira todas as respostas e os XMLs. Se precisar corrigir alguma informaÃ§Ã£o, volte Ã s etapas anteriores antes de finalizar.",
+
+  primaryLabel:
+    "Revisar e finalizar",
+
+  primaryTarget:
+    "revisao",
+
+  note:
+    "Depois da confirmaÃ§Ã£o final, as informaÃ§Ãµes permanecerÃ£o disponÃ­veis apenas para consulta.",
+};
+
+const taxRegimeLabels: Record<
+  string,
+  string
+> = {
+  mei:
+    "MEI",
+
+  simples_nacional:
+    "Simples Nacional",
+
+  lucro_presumido:
+    "Lucro Presumido",
+
+  lucro_real:
+    "Lucro Real",
+
+  outro:
+    "Outro",
+};
+
+const primaryButtonStyle: CSSProperties = {
+  display:
+    "flex",
+
+  minHeight:
+    "52px",
+
+  alignItems:
+    "center",
+
+  justifyContent:
+    "space-between",
+
+  gap:
+    "20px",
+
+  border:
+    "1px solid #C9A227",
+
+  borderRadius:
+    "7px",
+
+  background:
+    "#C9A227",
+
+  color:
+    "#0D1B2A",
+
+  padding:
+    "0 18px",
+
+  fontSize:
+    "0.82rem",
+
+  fontWeight:
+    800,
+
+  textDecoration:
+    "none",
+};
+
+const secondaryButtonStyle: CSSProperties = {
+  display:
+    "flex",
+
+  minHeight:
+    "48px",
+
+  alignItems:
+    "center",
+
+  justifyContent:
+    "space-between",
+
+  gap:
+    "20px",
+
+  border:
+    "1px solid #D7BD68",
+
+  borderRadius:
+    "7px",
+
+  background:
+    "#FFFFFF",
+
+  color:
+    "#0D1B2A",
+
+  padding:
+    "0 18px",
+
+  fontSize:
+    "0.79rem",
+
+  fontWeight:
+    750,
+
+  textDecoration:
+    "none",
+};
+
+function formatDate(
+  value:
+    | string
+    | null
+    | undefined,
+) {
+  if (!value) {
+    return "NÃ£o definido";
+  }
+
+  return new Intl.DateTimeFormat(
+    "pt-BR",
+    {
+      timeZone:
+        "America/Sao_Paulo",
+    },
+  ).format(
+    new Date(value),
+  );
+}
+
+function formatDateTime(
+  value:
+    | string
+    | null
+    | undefined,
+) {
+  if (!value) {
+    return "NÃ£o informado";
+  }
+
+  return new Intl.DateTimeFormat(
+    "pt-BR",
+    {
+      dateStyle:
+        "short",
+
+      timeStyle:
+        "short",
+
+      timeZone:
+        "America/Sao_Paulo",
+    },
+  ).format(
+    new Date(value),
+  );
+}
+
+function formatCurrency(
+  valueInCents:
+    | number
+    | null
+    | undefined,
+) {
+  if (
+    valueInCents ===
+      null ||
+    valueInCents ===
+      undefined
+  ) {
+    return "NÃ£o informado";
+  }
+
+  return new Intl.NumberFormat(
+    "pt-BR",
+    {
+      style:
+        "currency",
+
+      currency:
+        "BRL",
+    },
+  ).format(
+    valueInCents /
+      100,
+  );
+}
+
+function getActionHref(
+  diagnosticId: string,
+  target: ActionTarget,
+) {
+  if (
+    target ===
+    "questionario"
+  ) {
+    return `/painel/diagnosticos/${diagnosticId}/questionario-expresso`;
+  }
+
+  if (
+    target ===
+    "revisao"
+  ) {
+    return `/painel/diagnosticos/${diagnosticId}/questionario-expresso/revisao`;
+  }
+
+  if (
+    target ===
+    "documentos"
+  ) {
+    return `/painel/diagnosticos/${diagnosticId}/documentos`;
+  }
+
+  if (
+    target ===
+    "mensagens"
+  ) {
+    return `/painel/diagnosticos/${diagnosticId}#mensagens`;
+  }
+
+  if (
+    target ===
+    "resultado"
+  ) {
+    return `/painel/diagnosticos/${diagnosticId}/resultado`;
+  }
+
+  return null;
+}
+
+export default async function DiagnosticPage({
+  params,
+}: DiagnosticPageProps) {
+  const { id } =
+    await params;
+
+  const supabase =
+    await createClient();
+
+  const {
+    data:
+      claimsData,
+  } =
+    await supabase.auth
+      .getClaims();
+
+  const userId =
+    typeof claimsData?.claims?.sub ===
+    "string"
+      ? claimsData.claims.sub
+      : null;
+
+  if (!userId) {
+    redirect(
+      "/login",
+    );
+  }
+
+  const {
+    data:
+      diagnostic,
+
+    error:
+      diagnosticError,
+  } =
+    await supabase
+      .from(
+        "diagnostics",
+      )
+      .select(
+        `
+          id,
+          code,
+          status,
+          service_type,
+          document_limit,
+          client_deadline_at,
+          analysis_started_at,
+          created_at,
+          company_id,
+          order_id
+        `,
+      )
+      .eq(
+        "id",
+        id,
+      )
+      .eq(
+        "user_id",
+        userId,
+      )
+      .maybeSingle();
+
+  if (
+    diagnosticError ||
+    !diagnostic
+  ) {
+    notFound();
+  }
+
+  const [
+    {
+      data:
+        company,
+    },
+
+    {
+      data:
+        questionnaire,
+    },
+
+    {
+      count:
+        documentCount,
+    },
+
+    {
+      data:
+        messages,
+
+      error:
+        messagesError,
+    },
+  ] =
+    await Promise.all([
+      supabase
+        .from(
+          "companies",
+        )
+        .select(
+          `
+            legal_name,
+            trade_name,
+            cnpj,
+            tax_regime,
+            city,
+            state,
+            erp_name,
+            main_activity
+          `,
+        )
+        .eq(
+          "id",
+          diagnostic.company_id,
+        )
+        .maybeSingle(),
+
+      supabase
+        .from(
+          "diagnostic_questionnaires",
+        )
+        .select(
+          `
+            id,
+            answers,
+            submitted_at,
+            updated_at
+          `,
+        )
+        .eq(
+          "diagnostic_id",
+          diagnostic.id,
+        )
+        .maybeSingle(),
+
+      supabase
+        .from(
+          "diagnostic_documents",
+        )
+        .select(
+          "id",
+          {
+            count:
+              "exact",
+
+            head:
+              true,
+          },
+        )
+        .eq(
+          "diagnostic_id",
+          diagnostic.id,
+        )
+        .eq(
+          "counts_toward_limit",
+          true,
+        )
+        .neq(
+          "status",
+          "rejected",
+        ),
+
+      supabase
+        .from(
+          "diagnostic_messages",
+        )
+        .select(
+          `
+            id,
+            sender_role,
+            body,
+            visible_to_client,
+            created_at
+          `,
+        )
+        .eq(
+          "diagnostic_id",
+          diagnostic.id,
+        )
+        .eq(
+          "visible_to_client",
+          true,
+        )
+        .order(
+          "created_at",
+          {
+            ascending:
+              true,
+          },
+        ),
+    ]);
+
+  let order: {
+    amount_cents:
+      number;
+
+    status:
+      string;
+
+    product_id:
+      string;
+  } | null =
+    null;
+
+  if (
+    diagnostic.order_id
+  ) {
+    const {
+      data:
+        orderData,
+    } =
+      await supabase
+        .from(
+          "orders",
+        )
+        .select(
+          `
+            amount_cents,
+            status,
+            product_id
+          `,
+        )
+        .eq(
+          "id",
+          diagnostic.order_id,
+        )
+        .maybeSingle();
+
+    order =
+      orderData;
+  }
+
+  let productName =
+    "DiagnÃ³stico Expresso IBS/CBS";
+
+  if (
+    order?.product_id
+  ) {
+    const {
+      data:
+        product,
+    } =
+      await supabase
+        .from(
+          "products",
+        )
+        .select(
+          "name",
+        )
+        .eq(
+          "id",
+          order.product_id,
+        )
+        .maybeSingle();
+
+    if (
+      product?.name
+    ) {
+      productName =
+        product.name;
+    }
+  }
+
+  const questionnaireReadyForReview =
+    diagnostic.status ===
+      "awaiting_questionnaire" &&
+    isQuestionnaireReadyForReview(
+      questionnaire?.answers,
+      documentCount ??
+        0,
+    );
+
+  const currentStatus =
+    questionnaireReadyForReview
+      ? reviewReadyStatus
+      : statusInformation[
+          diagnostic.status
+        ] ??
+        statusInformation
+          .awaiting_questionnaire;
+
+  const primaryHref =
+    getActionHref(
+      diagnostic.id,
+      currentStatus.primaryTarget,
+    );
+
+  const questionnaireViewHref =
+    questionnaire?.submitted_at
+      ? `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/revisao`
+      : null;
+
+  const secondaryDocumentHref =
+    diagnostic.status ===
+      "client_action_required"
+      ? `/painel/diagnosticos/${diagnostic.id}/documentos`
+      : null;
+
+  const visibleMessages =
+    messages ??
+    [];
+
+  const latestAdminMessage =
+    [
+      ...visibleMessages,
+    ]
+      .reverse()
+      .find(
+        (
+          message,
+        ) =>
+          message.sender_role ===
+          "admin",
+      );
+
+  const actionRequired =
+    diagnostic.status ===
+    "client_action_required";
+
+  const questionnaireStatus =
+    questionnaireReadyForReview
+      ? "Pronto para revisÃ£o"
+      : questionnaire?.submitted_at
+        ? "Enviado"
+        : questionnaire
+          ? "Em preenchimento"
+          : "NÃ£o iniciado";
+
+  const canSendMessage =
+    ![
+      "completed",
+      "cancelled",
+    ].includes(
+      diagnostic.status,
+    );
+
+  return (
+    <main
+      className={
+        styles.page
+      }
+    >
+      <header
+        className={
+          styles.header
+        }
+      >
+        <div
+          className={`container ${styles.headerContent}`}
+        >
+          <a
+            href="https://dianavoltolini.com.br"
+            aria-label="Acessar o site Diana Voltolini"
+          >
+            <Image
+              className={
+                styles.logo
+              }
+              src="/brand/logo-light.png"
+              alt="Diana Voltolini"
+              width={1535}
+              height={538}
+              priority
+            />
+          </a>
+
+          <div
+            className={
+              styles.headerActions
+            }
+          >
+            <Link
+              className={
+                styles.backButton
+              }
+              href="/painel"
+            >
+              Voltar ao painel
+            </Link>
+
+            <form
+              action={
+                logout
+              }
+            >
+              <button
+                className={
+                  styles.logoutButton
+                }
+                type="submit"
+              >
+                Sair
+              </button>
+            </form>
+          </div>
+        </div>
+      </header>
+
+      <section
+        className={
+          styles.content
+        }
+      >
+        <div className="container">
+          <nav
+            className={
+              styles.breadcrumb
+            }
+          >
+            <Link href="/painel">
+              Meu painel
+            </Link>
+
+            <span>
+              /
+            </span>
+
+            <strong>
+              {diagnostic.code}
+            </strong>
+          </nav>
+
+          <section
+            className={
+              styles.hero
+            }
+          >
+            <div>
+              <p
+                className={
+                  styles.eyebrow
+                }
+              >
+                {productName}
+              </p>
+
+              <h1>
+                {diagnostic.code}
+              </h1>
+
+              <p
+                className={
+                  styles.heroDescription
+                }
+              >
+                Acompanhe o andamento,
+                as informaÃ§Ãµes enviadas,
+                as mensagens e o
+                resultado do seu
+                diagnÃ³stico.
+              </p>
+            </div>
+
+            <span
+              className={`${styles.status} ${
+                styles[
+                  `status_${diagnostic.status}`
+                ] ?? ""
+              }`}
+            >
+              {
+                currentStatus.label
+              }
+            </span>
+          </section>
+
+          {actionRequired ? (
+            <section
+              className={
+                styles.pendingBanner
+              }
+            >
+              <div>
+                <p
+                  className={
+                    styles.pendingEyebrow
+                  }
+                >
+                  Sua atenÃ§Ã£o Ã© necessÃ¡ria
+                </p>
+
+                <h2>
+                  Existe uma solicitaÃ§Ã£o
+                  pendente
+                </h2>
+
+                <p>
+                  {latestAdminMessage?.body ??
+                    "Consulte as mensagens para verificar o complemento solicitado."}
+                </p>
+              </div>
+
+              <div
+                className={
+                  styles.pendingBannerActions
+                }
+              >
+                <a
+                  href="#mensagens"
+                >
+                  Ver solicitaÃ§Ã£o
+                </a>
+              </div>
+            </section>
+          ) : null}
+
+          <section
+            className={
+              styles.progressCard
+            }
+          >
+            <div
+              className={
+                styles.progressHeader
+              }
+            >
+              <div>
+                <span>
+                  Etapa{" "}
+                  {
+                    currentStatus.step
+                  }{" "}
+                  de 5
+                </span>
+
+                <strong>
+                  {
+                    currentStatus.label
+                  }
+                </strong>
+              </div>
+
+              <b>
+                {
+                  currentStatus.percentage
+                }
+                %
+              </b>
+            </div>
+
+            <div
+              className={
+                styles.progressTrack
+              }
+            >
+              <span
+                style={{
+                  width:
+                    `${currentStatus.percentage}%`,
+                }}
+              />
+            </div>
+
+            <p>
+              {
+                currentStatus.description
+              }
+            </p>
+          </section>
+
+          <div
+            className={
+              styles.summaryGrid
+            }
+          >
+            <article>
+              <span>
+                Empresa analisada
+              </span>
+
+              <strong>
+                {company?.trade_name ||
+                  company?.legal_name ||
+                  "NÃ£o informada"}
+              </strong>
+
+              <small>
+                {company?.cnpj ||
+                  "CNPJ nÃ£o informado"}
+              </small>
+            </article>
+
+            <article>
+              <span>
+                QuestionÃ¡rio
+              </span>
+
+              <strong>
+                {
+                  questionnaireStatus
+                }
+              </strong>
+
+              <small>
+                {questionnaire?.updated_at
+                  ? `Atualizado em ${formatDate(
+                      questionnaire.updated_at,
+                    )}`
+                  : "Aguardando preenchimento"}
+              </small>
+            </article>
+
+            <article>
+              <span>
+                XMLs principais
+              </span>
+
+              <strong>
+                {documentCount ??
+                  0}{" "}
+                de{" "}
+                {
+                  diagnostic.document_limit
+                }
+              </strong>
+
+              <small>
+                Documentos do escopo
+                principal
+              </small>
+            </article>
+
+            <article>
+              <span>
+                Prazo da anÃ¡lise
+              </span>
+
+              <strong>
+                {formatDate(
+                  diagnostic.client_deadline_at,
+                )}
+              </strong>
+
+              <small>
+                {diagnostic.analysis_started_at
+                  ? `Iniciada em ${formatDate(
+                      diagnostic.analysis_started_at,
+                    )}`
+                  : "AnÃ¡lise nÃ£o iniciada"}
+              </small>
+            </article>
+          </div>
+
+          <div
+            className={
+              styles.mainGrid
+            }
+          >
+            <section
+              className={
+                styles.informationCard
+              }
+            >
+              <header
+                className={
+                  styles.cardHeader
+                }
+              >
+                <p
+                  className={
+                    styles.eyebrow
+                  }
+                >
+                  Dados do serviÃ§o
+                </p>
+
+                <h2>
+                  InformaÃ§Ãµes do
+                  diagnÃ³stico
+                </h2>
+              </header>
+
+              <dl
+                className={
+                  styles.informationList
+                }
+              >
+                <div>
+                  <dt>
+                    Produto
+                  </dt>
+
+                  <dd>
+                    {productName}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>
+                    Contratado em
+                  </dt>
+
+                  <dd>
+                    {formatDate(
+                      diagnostic.created_at,
+                    )}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>
+                    Investimento
+                  </dt>
+
+                  <dd>
+                    {formatCurrency(
+                      order?.amount_cents,
+                    )}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>
+                    Pagamento
+                  </dt>
+
+                  <dd>
+                    {order?.status ===
+                    "paid"
+                      ? "Confirmado"
+                      : order?.status ||
+                        "NÃ£o informado"}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>
+                    Regime tributÃ¡rio
+                  </dt>
+
+                  <dd>
+                    {company?.tax_regime
+                      ? taxRegimeLabels[
+                          company.tax_regime
+                        ] ??
+                        company.tax_regime
+                      : "NÃ£o informado"}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>
+                    LocalizaÃ§Ã£o
+                  </dt>
+
+                  <dd>
+                    {company?.city &&
+                    company?.state
+                      ? `${company.city} â€“ ${company.state}`
+                      : "NÃ£o informada"}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>
+                    Sistema ERP
+                  </dt>
+
+                  <dd>
+                    {company?.erp_name ||
+                      "NÃ£o informado"}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>
+                    Atividade principal
+                  </dt>
+
+                  <dd>
+                    {company?.main_activity ||
+                      "NÃ£o informada"}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+
+            <aside
+              className={
+                styles.nextStepCard
+              }
+            >
+              <p
+                className={
+                  styles.eyebrow
+                }
+              >
+                PrÃ³xima etapa
+              </p>
+
+              <h2>
+                {
+                  currentStatus.nextAction
+                }
+              </h2>
+
+              <p>
+                {
+                  currentStatus.nextDescription
+                }
+              </p>
+
+              <div
+                style={{
+                  display:
+                    "grid",
+
+                  gap:
+                    "10px",
+
+                  marginTop:
+                    "22px",
+                }}
+              >
+                {primaryHref &&
+                currentStatus.primaryLabel ? (
+                  <Link
+                    href={
+                      primaryHref
+                    }
+                    style={
+                      primaryButtonStyle
+                    }
+                  >
+                    <span>
+                      {
+                        currentStatus.primaryLabel
+                      }
+                    </span>
+
+                    <b
+                      aria-hidden="true"
+                    >
+                      â†’
+                    </b>
+                  </Link>
+                ) : null}
+
+                {secondaryDocumentHref ? (
+                  <Link
+                    href={
+                      secondaryDocumentHref
+                    }
+                    style={
+                      secondaryButtonStyle
+                    }
+                  >
+                    <span>
+                      Acessar documentos
+                    </span>
+
+                    <b
+                      aria-hidden="true"
+                    >
+                      â†’
+                    </b>
+                  </Link>
+                ) : questionnaireViewHref &&
+                  questionnaireViewHref !==
+                    primaryHref ? (
+                  <Link
+                    href={
+                      questionnaireViewHref
+                    }
+                    style={
+                      secondaryButtonStyle
+                    }
+                  >
+                    <span>
+                      Visualizar minhas
+                      informaÃ§Ãµes
+                    </span>
+
+                    <b
+                      aria-hidden="true"
+                    >
+                      â†’
+                    </b>
+                  </Link>
+                ) : null}
+              </div>
+
+              <small
+                style={{
+                  display:
+                    "block",
+
+                  marginTop:
+                    "20px",
+                }}
+              >
+                {
+                  currentStatus.note
+                }
+              </small>
+            </aside>
+          </div>
+
+          <section
+            id="mensagens"
+            className={
+              styles.communicationCard
+            }
+          >
+            <header
+              className={
+                styles.communicationHeader
+              }
+            >
+              <div>
+                <p
+                  className={
+                    styles.eyebrow
+                  }
+                >
+                  ComunicaÃ§Ã£o
+                </p>
+
+                <h2>
+                  Mensagens do
+                  diagnÃ³stico
+                </h2>
+
+                <p>
+                  Consulte solicitaÃ§Ãµes,
+                  orientaÃ§Ãµes e respostas
+                  registradas durante o
+                  atendimento.
+                </p>
+              </div>
+
+              <span>
+                {
+                  visibleMessages.length
+                }{" "}
+                {visibleMessages.length ===
+                1
+                  ? "mensagem"
+                  : "mensagens"}
+              </span>
+            </header>
+
+            {messagesError ? (
+              <div
+                className={
+                  styles.errorNotice
+                }
+              >
+                As mensagens nÃ£o puderam
+                ser carregadas. CÃ³digo:{" "}
+                {messagesError.code ||
+                  "nÃ£o informado"}.
+              </div>
+            ) : visibleMessages.length >
+              0 ? (
+              <div
+                className={
+                  styles.messageList
+                }
+              >
+                {visibleMessages.map(
+                  (
+                    message,
+                  ) => {
+                    const isClient =
+                      message.sender_role ===
+                      "client";
+
+                    return (
+                      <article
+                        key={
+                          message.id
+                        }
+                        className={`${styles.messageItem} ${
+                          isClient
+                            ? styles.clientMessage
+                            : styles.adminMessage
+                        }`}
+                      >
+                        <header>
+                          <strong>
+                            {isClient
+                              ? "VocÃª"
+                              : "Equipe Diana Voltolini"}
+                          </strong>
+
+                          <span>
+                            {formatDateTime(
+                              message.created_at,
+                            )}
+                          </span>
+                        </header>
+
+                        <p>
+                          {
+                            message.body
+                          }
+                        </p>
+                      </article>
+                    );
+                  },
+                )}
+              </div>
+            ) : (
+              <div
+                className={
+                  styles.emptyMessages
+                }
+              >
+                <strong>
+                  Nenhuma mensagem
+                  registrada
+                </strong>
+
+                <p>
+                  As comunicaÃ§Ãµes sobre
+                  o diagnÃ³stico aparecerÃ£o
+                  nesta Ã¡rea.
+                </p>
+              </div>
+            )}
+
+            {canSendMessage ? (
+              <MessageForm
+                diagnosticId={
+                  diagnostic.id
+                }
+                actionRequired={
+                  actionRequired
+                }
+              />
+            ) : null}
+          </section>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+========== LAYOUT QUESTIONARIO ==========
+// C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\app\painel\diagnosticos\[id]\questionario-expresso\layout.tsx
+
+import type {
+  ReactNode,
+} from "react";
+
+import Image from "next/image";
+import Link from "next/link";
+
+import {
+  notFound,
+  redirect,
+} from "next/navigation";
+
+import { createClient } from "@/lib/supabase/server";
+
+import { logout } from "../../../actions";
+
+import StepNavigation from "./step-navigation";
+
+import styles from "./questionario-expresso.module.css";
+
+export const dynamic =
+  "force-dynamic";
+
+type LayoutProps = {
+  children: ReactNode;
+
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+type JsonRecord =
+  Record<string, unknown>;
+
+function asRecord(
+  value: unknown,
+): JsonRecord {
+  return typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+    ? (value as JsonRecord)
+    : {};
+}
+
+function hasText(
+  value: unknown,
+) {
+  return (
+    typeof value === "string" &&
+    value.trim().length > 0
+  );
+}
+
+function calculateRatio(
+  values: unknown[],
+) {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  const completed =
+    values.filter(hasText).length;
+
+  return completed /
+    values.length;
+}
+
+export default async function ExpressQuestionnaireLayout({
+  children,
+  params,
+}: LayoutProps) {
+  const { id } =
+    await params;
+
+  const supabase =
+    await createClient();
+
+  const { data: claimsData } =
+    await supabase.auth.getClaims();
+
+  const userId =
+    typeof claimsData?.claims?.sub ===
+    "string"
+      ? claimsData.claims.sub
+      : null;
+
+  if (!userId) {
+    redirect("/login");
+  }
+
+  const {
+    data: diagnostic,
+    error: diagnosticError,
+  } = await supabase
+    .from("diagnostics")
+    .select(
+      `
+        id,
+        code,
+        status,
+        service_type,
+        user_id
+      `,
+    )
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (
+    diagnosticError ||
+    !diagnostic
+  ) {
+    notFound();
+  }
+
+  if (
+    diagnostic.service_type &&
+    diagnostic.service_type !==
+      "express"
+  ) {
+    redirect(
+      `/painel/diagnosticos/${diagnostic.id}`,
+    );
+  }
+
+  const isEditable =
+    diagnostic.status ===
+    "awaiting_questionnaire";
+
+  const reviewBasePath =
+    `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/revisao`;
+
+  const {
+    data: questionnaire,
+  } = await supabase
+    .from(
+      "diagnostic_questionnaires",
+    )
+    .select("answers")
+    .eq(
+      "diagnostic_id",
+      diagnostic.id,
+    )
+    .maybeSingle();
+
+  const answers =
+    asRecord(
+      questionnaire?.answers,
+    );
+
+  const express =
+    asRecord(
+      answers.express,
+    );
+
+  const company =
+    asRecord(
+      express.company,
+    );
+
+  const preparation =
+    asRecord(
+      express.preparation,
+    );
+
+  const documents =
+    Array.isArray(
+      express.documents,
+    )
+      ? express.documents
+      : [];
+
+  const guidance =
+    asRecord(
+      express.guidance,
+    );
+
+  const companyRatio =
+    calculateRatio([
+      company.legalName,
+      company.cnpj,
+      company.city,
+      company.state,
+      company.mainActivity,
+      company.taxRegime,
+      company.contactName,
+      company.contactValue,
+      company.businessContext,
+    ]);
+
+  const preparationRatio =
+    calculateRatio([
+      preparation.erpName,
+      preparation.ibsCbsConfiguration,
+      preparation.accountingGuidance,
+    ]);
+
+  const documentRatio =
+    documents.length > 0
+      ? 1
+      : 0;
+
+  const guidanceRatio =
+    guidance.completed === true &&
+    guidance.informationConfirmation ===
+      true
+      ? 1
+      : 0;
+
+  const companyComplete =
+    companyRatio >= 1;
+
+  const preparationComplete =
+    preparationRatio >= 1;
+
+  const documentsComplete =
+    documentRatio >= 1;
+
+  const guidanceComplete =
+    guidanceRatio >= 1;
+
+  const progress =
+    isEditable
+      ? Math.round(
+          companyRatio * 25 +
+            preparationRatio * 25 +
+            documentRatio * 25 +
+            guidanceRatio * 25,
+        )
+      : 100;
+
+  const reviewReady =
+    companyComplete &&
+    preparationComplete &&
+    documentsComplete &&
+    guidanceComplete;
+
+  const steps = isEditable
+    ? [
+        {
+          number: "1",
+          title: "Empresa",
+          description:
+            "IdentificaÃ§Ã£o e contexto",
+
+          href:
+            `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/empresa`,
+
+          ratio:
+            companyRatio,
+
+          enabled:
+            true,
+        },
+        {
+          number: "2",
+          title: "PreparaÃ§Ã£o",
+          description:
+            "ERP, IBS/CBS e contabilidade",
+
+          href:
+            `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/preparacao`,
+
+          ratio:
+            preparationRatio,
+
+          enabled:
+            companyComplete,
+        },
+        {
+          number: "3",
+          title: "NF-e para anÃ¡lise",
+          description:
+            "XMLs e contexto de cada nota",
+
+          href:
+            `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/documentos`,
+
+          ratio:
+            documentRatio,
+
+          enabled:
+            companyComplete &&
+            preparationComplete,
+        },
+        {
+          number: "4",
+          title: "DÃºvidas e orientaÃ§Ã£o",
+          description:
+            "QuestÃµes que deseja esclarecer",
+
+          href:
+            `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/orientacao`,
+
+          ratio:
+            guidanceRatio,
+
+          enabled:
+            companyComplete &&
+            preparationComplete &&
+            documentsComplete,
+        },
+        {
+          number: "5",
+          title: "RevisÃ£o e envio",
+          description:
+            "ConferÃªncia final",
+
+          href:
+            reviewBasePath,
+
+          ratio:
+            reviewReady
+              ? 0.5
+              : 0,
+
+          enabled:
+            reviewReady,
+
+          reviewReady,
+        },
+      ]
+    : [
+        {
+          number: "1",
+          title: "Empresa",
+          description:
+            "IdentificaÃ§Ã£o e contexto",
+          href:
+            `${reviewBasePath}#empresa`,
+          ratio: 1,
+          enabled: true,
+        },
+        {
+          number: "2",
+          title: "PreparaÃ§Ã£o",
+          description:
+            "ERP, IBS/CBS e contabilidade",
+          href:
+            `${reviewBasePath}#preparacao`,
+          ratio: 1,
+          enabled: true,
+        },
+        {
+          number: "3",
+          title: "NF-e para anÃ¡lise",
+          description:
+            "XMLs e contexto de cada nota",
+          href:
+            `${reviewBasePath}#documentos`,
+          ratio: 1,
+          enabled: true,
+        },
+        {
+          number: "4",
+          title: "DÃºvidas e orientaÃ§Ã£o",
+          description:
+            "QuestÃµes apresentadas",
+          href:
+            `${reviewBasePath}#orientacao`,
+          ratio: 1,
+          enabled: true,
+        },
+        {
+          number: "5",
+          title: "RevisÃ£o e envio",
+          description:
+            "InformaÃ§Ãµes enviadas",
+          href:
+            reviewBasePath,
+          ratio: 1,
+          enabled: true,
+        },
+      ];
+
+  return (
+    <main className={styles.page}>
+      <header className={styles.header}>
+        <div
+          className={`container ${styles.headerContent}`}
+        >
+          <Link
+            href="/painel"
+            aria-label="Voltar ao painel"
+          >
+            <Image
+              className={styles.logo}
+              src="/brand/logo-light.png"
+              alt="Diana Voltolini"
+              width={1535}
+              height={538}
+              priority
+            />
+          </Link>
+
+          <div
+            className={
+              styles.headerActions
+            }
+          >
+            <Link
+              className={
+                styles.backButton
+              }
+              href={`/painel/diagnosticos/${diagnostic.id}`}
+            >
+              Voltar ao diagnÃ³stico
+            </Link>
+
+            <form action={logout}>
+              <button
+                className={
+                  styles.logoutButton
+                }
+                type="submit"
+              >
+                Sair
+              </button>
+            </form>
+          </div>
+        </div>
+      </header>
+
+      <section
+        className={styles.content}
+      >
+        <div className="container">
+          <nav
+            className={
+              styles.breadcrumb
+            }
+          >
+            <Link href="/painel">
+              Meu painel
+            </Link>
+
+            <span>/</span>
+
+            <Link
+              href={`/painel/diagnosticos/${diagnostic.id}`}
+            >
+              {diagnostic.code}
+            </Link>
+
+            <span>/</span>
+
+            <strong>
+              QuestionÃ¡rio
+            </strong>
+          </nav>
+
+          <header
+            className={
+              styles.wizardHeader
+            }
+          >
+            <div>
+              <p
+                className={
+                  styles.eyebrow
+                }
+              >
+                DiagnÃ³stico Expresso
+                IBS/CBS
+              </p>
+
+              <h1>
+                {isEditable
+                  ? "InformaÃ§Ãµes para anÃ¡lise"
+                  : "InformaÃ§Ãµes enviadas"}
+              </h1>
+
+              <p>
+                {isEditable
+                  ? "Preencha uma etapa por vez. As informaÃ§Ãµes ficam salvas e podem ser revisadas antes do envio."
+                  : "Consulte as informaÃ§Ãµes que vocÃª enviou para este diagnÃ³stico. ApÃ³s a finalizaÃ§Ã£o, o conteÃºdo permanece disponÃ­vel para consulta."}
+              </p>
+            </div>
+
+            <div
+              className={
+                styles.progressSummary
+              }
+            >
+              <span>
+                {isEditable
+                  ? "Preenchimento"
+                  : "Envio"}
+              </span>
+
+              <strong>
+                {isEditable
+                  ? `${progress}%`
+                  : "ConcluÃ­do"}
+              </strong>
+            </div>
+          </header>
+
+          <section
+            className={
+              styles.progressCard
+            }
+          >
+            <div
+              className={
+                styles.progressTrack
+              }
+            >
+              <span
+                style={{
+                  width:
+                    `${progress}%`,
+                }}
+              />
+            </div>
+
+            <div
+              className={
+                styles.progressDetails
+              }
+            >
+              <strong>
+                {isEditable
+                  ? `${progress}% preenchido`
+                  : "InformaÃ§Ãµes enviadas"}
+              </strong>
+
+              <span>
+                {isEditable
+                  ? "VocÃª pode voltar Ã s etapas anteriores antes do envio final."
+                  : "Modo de consulta: as informaÃ§Ãµes finalizadas permanecem disponÃ­veis, sem possibilidade de alteraÃ§Ã£o."}
+              </span>
+            </div>
+          </section>
+
+          <div
+            className={
+              styles.wizardGrid
+            }
+          >
+            <aside
+              className={
+                styles.stepSidebar
+              }
+            >
+              <StepNavigation
+                steps={steps}
+                readOnly={!isEditable}
+              />
+
+              <div
+                className={
+                  styles.sidebarNotice
+                }
+              >
+                <strong>
+                  {isEditable
+                    ? "Salvamento por etapa"
+                    : "Consulta do envio"}
+                </strong>
+
+                <p>
+                  {isEditable
+                    ? "Ao clicar em salvar e continuar, suas informaÃ§Ãµes permanecem disponÃ­veis mesmo que vocÃª saia da pÃ¡gina."
+                    : "As informaÃ§Ãµes enviadas permanecem disponÃ­veis para consulta durante todo o andamento do diagnÃ³stico."}
+                </p>
+              </div>
+            </aside>
+
+            <section
+              className={
+                styles.formArea
+              }
+            >
+              {children}
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+
+========== REVISAO ==========
+// app/painel/diagnosticos/[id]/questionario-expresso/revisao/page.tsx
+
+import type {
+  Metadata,
+} from "next";
+
+import Link from "next/link";
+
+import {
+  notFound,
+  redirect,
+} from "next/navigation";
+
+import { createClient } from "@/lib/supabase/server";
+
+import {
+  finalizePendingExpressDocuments,
+  submitExpressQuestionnaire,
+} from "../actions";
+
+import styles from "./revisao.module.css";
+
+export const metadata: Metadata = {
+  title:
+    "RevisÃ£o e envio | QuestionÃ¡rio Expresso",
+};
+
+export const dynamic =
+  "force-dynamic";
+
+type PageProps = {
+  params: Promise<{
+    id: string;
+  }>;
+
+  searchParams: Promise<{
+    erro?: string;
+  }>;
+};
+
+type JsonRecord =
+  Record<string, unknown>;
+
+function asRecord(
+  value: unknown,
+): JsonRecord {
+  return typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+    ? (value as JsonRecord)
+    : {};
+}
+
+function asString(
+  value: unknown,
+) {
+  return typeof value === "string"
+    ? value
+    : "";
+}
+
+const taxRegimeLabels: Record<
+  string,
+  string
+> = {
+  mei:
+    "MEI",
+  simples_nacional:
+    "Simples Nacional",
+  lucro_presumido:
+    "Lucro Presumido",
+  lucro_real:
+    "Lucro Real",
+  outro:
+    "Outro",
+};
+
+const configurationLabels: Record<
+  string,
+  string
+> = {
+  sim:
+    "Sim",
+  nao:
+    "NÃ£o",
+  parcialmente:
+    "Parcialmente",
+  nao_sei:
+    "NÃ£o sei",
+};
+
+const accountingLabels: Record<
+  string,
+  string
+> = {
+  sim_por_escrito:
+    "Sim, por escrito",
+  sim_verbalmente:
+    "Sim, verbalmente",
+  parcialmente:
+    "Parcialmente",
+  ainda_nao:
+    "Ainda nÃ£o",
+  nao_sei:
+    "NÃ£o sei",
+};
+
+const operationLabels: Record<
+  string,
+  string
+> = {
+  venda_mercadoria:
+    "Venda de mercadoria",
+  venda_producao_propria:
+    "Venda de produÃ§Ã£o prÃ³pria",
+  devolucao_venda:
+    "DevoluÃ§Ã£o de venda",
+  devolucao_compra:
+    "DevoluÃ§Ã£o de compra",
+  remessa_conserto:
+    "Remessa para conserto",
+  retorno_conserto:
+    "Retorno de conserto",
+  demonstracao:
+    "DemonstraÃ§Ã£o",
+  industrializacao:
+    "IndustrializaÃ§Ã£o",
+  entrega_futura:
+    "Venda ou entrega futura",
+  outra:
+    "Outra operaÃ§Ã£o",
+};
+
+const testLabels: Record<
+  string,
+  string
+> = {
+  sim:
+    "Sim",
+  nao:
+    "NÃ£o",
+  parcialmente:
+    "Parcialmente",
+  nao_sei:
+    "NÃ£o sei",
+};
+
+const errorMessages: Record<
+  string,
+  string
+> = {
+  "confirmacao-obrigatoria":
+    "Confirme a revisÃ£o das informaÃ§Ãµes antes de enviar.",
+
+  "nao-foi-possivel-carregar":
+    "NÃ£o foi possÃ­vel carregar o questionÃ¡rio.",
+
+  "nao-foi-possivel-validar-documentos":
+    "NÃ£o foi possÃ­vel validar os XMLs enviados.",
+
+  "contexto-documento-incompleto":
+    "Existe um XML sem as informaÃ§Ãµes da operaÃ§Ã£o. Volte Ã  etapa de NF-e e revise os documentos.",
+
+  "nao-foi-possivel-enviar":
+    "NÃ£o foi possÃ­vel concluir o envio. Nenhuma nova anÃ¡lise foi iniciada.",
+};
+
+export default async function ReviewPage({
+  params,
+  searchParams,
+}: PageProps) {
+  const { id } =
+    await params;
+
+  const { erro } =
+    await searchParams;
+
+  const supabase =
+    await createClient();
+
+  const { data: claimsData } =
+    await supabase.auth.getClaims();
+
+  const userId =
+    typeof claimsData?.claims?.sub ===
+    "string"
+      ? claimsData.claims.sub
+      : null;
+
+  if (!userId) {
+    redirect("/login");
+  }
+
+  const {
+    data: diagnostic,
+    error: diagnosticError,
+  } = await supabase
+    .from("diagnostics")
+    .select(
+      `
+        id,
+        code,
+        status,
+        service_type,
+        document_limit,
+        user_id
+      `,
+    )
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (
+    diagnosticError ||
+    !diagnostic
+  ) {
+    notFound();
+  }
+
+  const canEdit =
+    diagnostic.status ===
+    "awaiting_questionnaire";
+
+  const canFinalize =
+    diagnostic.status ===
+      "awaiting_questionnaire" ||
+    diagnostic.status ===
+      "awaiting_documents";
+
+  const submissionAction =
+    diagnostic.status ===
+      "awaiting_documents"
+      ? finalizePendingExpressDocuments
+      : submitExpressQuestionnaire;
+
+  const {
+    data: questionnaire,
+  } = await supabase
+    .from(
+      "diagnostic_questionnaires",
+    )
+    .select("answers")
+    .eq(
+      "diagnostic_id",
+      diagnostic.id,
+    )
+    .maybeSingle();
+
+  const answers =
+    asRecord(
+      questionnaire?.answers,
+    );
+
+  const express =
+    asRecord(
+      answers.express,
+    );
+
+  const company =
+    asRecord(
+      express.company,
+    );
+
+  const preparation =
+    asRecord(
+      express.preparation,
+    );
+
+  const guidance =
+    asRecord(
+      express.guidance,
+    );
+
+  const documents =
+    Array.isArray(
+      express.documents,
+    )
+      ? express.documents.map(
+          asRecord,
+        )
+      : [];
+
+  if (
+    canEdit &&
+    (
+      !asString(
+        company.legalName,
+      ) ||
+      !asString(
+        company.cnpj,
+      )
+    )
+  ) {
+    redirect(
+      `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/empresa`,
+    );
+  }
+
+  if (
+    canEdit &&
+    !asString(
+      preparation.erpName,
+    )
+  ) {
+    redirect(
+      `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/preparacao`,
+    );
+  }
+
+  if (
+    canEdit &&
+    documents.length === 0
+  ) {
+    redirect(
+      `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/documentos`,
+    );
+  }
+
+  if (
+    canEdit &&
+    guidance.completed !== true
+  ) {
+    redirect(
+      `/painel/diagnosticos/${diagnostic.id}/questionario-expresso/orientacao`,
+    );
+  }
+
+  return (
+    <article
+      className={styles.card}
+    >
+      <header
+        className={
+          styles.header
+        }
+      >
+        <span>
+          Etapa 5 de 5
+        </span>
+
+        <h2>
+          {canFinalize
+            ? "RevisÃ£o e envio"
+            : "InformaÃ§Ãµes enviadas"}
+        </h2>
+
+        <p>
+          {canFinalize
+            ? "Confira os dados e os XMLs abaixo antes de finalizar o envio para anÃ¡lise."
+            : "Este questionÃ¡rio jÃ¡ foi finalizado. As informaÃ§Ãµes enviadas permanecem disponÃ­veis nesta Ã¡rea para consulta."}
+        </p>
+      </header>
+
+      {erro ? (
+        <div
+          className={
+            styles.error
+          }
+        >
+          {errorMessages[erro] ??
+            "NÃ£o foi possÃ­vel concluir a operaÃ§Ã£o."}
+        </div>
+      ) : null}
+
+      <section
+        id="empresa"
+        className={
+          styles.section
+        }
+      >
+        <header>
+          <div>
+            <span>01</span>
+
+            <div>
+              <h3>
+                Empresa
+              </h3>
+
+              <p>
+                IdentificaÃ§Ã£o e contexto
+              </p>
+            </div>
+          </div>
+
+          {canEdit ? (
+            <Link
+              href={`/painel/diagnosticos/${diagnostic.id}/questionario-expresso/empresa`}
+            >
+              Editar
+            </Link>
+          ) : null}
+        </header>
+
+        <dl
+          className={
+            styles.dataGrid
+          }
+        >
+          <div>
+            <dt>
+              RazÃ£o social
+            </dt>
+
+            <dd>
+              {asString(
+                company.legalName,
+              )}
+            </dd>
+          </div>
+
+          <div>
+            <dt>CNPJ</dt>
+
+            <dd>
+              {asString(
+                company.cnpj,
+              )}
+            </dd>
+          </div>
+
+          <div>
+            <dt>
+              MunicÃ­pio / UF
+            </dt>
+
+            <dd>
+              {asString(
+                company.city,
+              )}
+              {" / "}
+              {asString(
+                company.state,
+              )}
+            </dd>
+          </div>
+
+          <div>
+            <dt>
+              Regime tributÃ¡rio
+            </dt>
+
+            <dd>
+              {taxRegimeLabels[
+                asString(
+                  company.taxRegime,
+                )
+              ] ??
+                asString(
+                  company.taxRegime,
+                )}
+            </dd>
+          </div>
+
+          <div
+            className={
+              styles.full
+            }
+          >
+            <dt>
+              Atividade principal
+            </dt>
+
+            <dd>
+              {asString(
+                company.mainActivity,
+              )}
+            </dd>
+          </div>
+
+          <div
+            className={
+              styles.full
+            }
+          >
+            <dt>
+              Contexto informado
+            </dt>
+
+            <dd>
+              {asString(
+                company.businessContext,
+              )}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section
+        id="preparacao"
+        className={
+          styles.section
+        }
+      >
+        <header>
+          <div>
+            <span>02</span>
+
+            <div>
+              <h3>
+                PreparaÃ§Ã£o para IBS/CBS
+              </h3>
+
+              <p>
+                Sistema e orientaÃ§Ã£o
+                tributÃ¡ria
+              </p>
+            </div>
+          </div>
+
+          {canEdit ? (
+            <Link
+              href={`/painel/diagnosticos/${diagnostic.id}/questionario-expresso/preparacao`}
+            >
+              Editar
+            </Link>
+          ) : null}
+        </header>
+
+        <dl
+          className={
+            styles.dataGrid
+          }
+        >
+          <div>
+            <dt>
+              ERP / sistema
+            </dt>
+
+            <dd>
+              {asString(
+                preparation.erpName,
+              )}
+            </dd>
+          </div>
+
+          <div>
+            <dt>
+              VersÃ£o
+            </dt>
+
+            <dd>
+              {asString(
+                preparation.erpVersion,
+              ) ||
+                "NÃ£o informada"}
+            </dd>
+          </div>
+
+          <div>
+            <dt>
+              ConfiguraÃ§Ã£o IBS/CBS
+            </dt>
+
+            <dd>
+              {configurationLabels[
+                asString(
+                  preparation.ibsCbsConfiguration,
+                )
+              ] ??
+                asString(
+                  preparation.ibsCbsConfiguration,
+                )}
+            </dd>
+          </div>
+
+          <div>
+            <dt>
+              OrientaÃ§Ã£o da contabilidade
+            </dt>
+
+            <dd>
+              {accountingLabels[
+                asString(
+                  preparation.accountingGuidance,
+                )
+              ] ??
+                asString(
+                  preparation.accountingGuidance,
+                )}
+            </dd>
+          </div>
+
+          {asString(
+            preparation.preparationNotes,
+          ) ? (
+            <div
+              className={
+                styles.full
+              }
+            >
+              <dt>
+                ObservaÃ§Ãµes
+              </dt>
+
+              <dd>
+                {asString(
+                  preparation.preparationNotes,
+                )}
+              </dd>
+            </div>
+          ) : null}
+        </dl>
+      </section>
+
+      <section
+        id="documentos"
+        className={
+          styles.section
+        }
+      >
+        <header>
+          <div>
+            <span>03</span>
+
+            <div>
+              <h3>
+                NF-e para anÃ¡lise
+              </h3>
+
+              <p>
+                {documents.length}{" "}
+                {documents.length === 1
+                  ? "XML selecionado"
+                  : "XMLs selecionados"}
+              </p>
+            </div>
+          </div>
+
+          {canEdit ? (
+            <Link
+              href={`/painel/diagnosticos/${diagnostic.id}/questionario-expresso/documentos`}
+            >
+              Editar
+            </Link>
+          ) : null}
+        </header>
+
+        <div
+          className={
+            styles.documents
+          }
+        >
+          {documents.map(
+            (
+              document,
+              index,
+            ) => (
+              <article
+                key={
+                  asString(
+                    document.documentId,
+                  ) ||
+                  `${index}`
+                }
+              >
+                <span>
+                  NF-e {index + 1}
+                </span>
+
+                <strong>
+                  {asString(
+                    document.fileName,
+                  )}
+                </strong>
+
+                <dl>
+                  <div>
+                    <dt>
+                      OperaÃ§Ã£o
+                    </dt>
+
+                    <dd>
+                      {operationLabels[
+                        asString(
+                          document.operationType,
+                        )
+                      ] ??
+                        asString(
+                          document.operationType,
+                        )}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt>
+                      Testada com
+                      IBS/CBS
+                    </dt>
+
+                    <dd>
+                      {testLabels[
+                        asString(
+                          document.ibsCbsTested,
+                        )
+                      ] ??
+                        asString(
+                          document.ibsCbsTested,
+                        )}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt>
+                      Motivo da escolha
+                    </dt>
+
+                    <dd>
+                      {asString(
+                        document.whySelected,
+                      )}
+                    </dd>
+                  </div>
+                </dl>
+              </article>
+            ),
+          )}
+        </div>
+      </section>
+
+      <section
+        id="orientacao"
+        className={
+          styles.section
+        }
+      >
+        <header>
+          <div>
+            <span>04</span>
+
+            <div>
+              <h3>
+                DÃºvidas e orientaÃ§Ã£o
+              </h3>
+
+              <p>
+                Pontos apresentados pelo
+                cliente
+              </p>
+            </div>
+          </div>
+
+          {canEdit ? (
+            <Link
+              href={`/painel/diagnosticos/${diagnostic.id}/questionario-expresso/orientacao`}
+            >
+              Editar
+            </Link>
+          ) : null}
+        </header>
+
+        <dl
+          className={
+            styles.dataGrid
+          }
+        >
+          <div
+            className={
+              styles.full
+            }
+          >
+            <dt>
+              Principal dÃºvida
+            </dt>
+
+            <dd>
+              {asString(
+                guidance.mainQuestion,
+              ) ||
+                "Nenhuma dÃºvida especÃ­fica informada."}
+            </dd>
+          </div>
+
+          <div
+            className={
+              styles.full
+            }
+          >
+            <dt>
+              DecisÃ£o prÃ¡tica
+            </dt>
+
+            <dd>
+              {asString(
+                guidance.practicalDecision,
+              ) ||
+                "NÃ£o informada."}
+            </dd>
+          </div>
+
+          {asString(
+            guidance.additionalInformation,
+          ) ? (
+            <div
+              className={
+                styles.full
+              }
+            >
+              <dt>
+                InformaÃ§Ã£o adicional
+              </dt>
+
+              <dd>
+                {asString(
+                  guidance.additionalInformation,
+                )}
+              </dd>
+            </div>
+          ) : null}
+        </dl>
+      </section>
+
+      <section
+        className={
+          styles.scope
+        }
+      >
+        <h3>
+          Escopo do DiagnÃ³stico
+          Expresso
+        </h3>
+
+        <p>
+          A anÃ¡lise serÃ¡ limitada Ã s
+          informaÃ§Ãµes, operaÃ§Ãµes e XMLs
+          enviados neste diagnÃ³stico.
+          A orientaÃ§Ã£o profissional
+          complementar nÃ£o substitui a
+          definiÃ§Ã£o tributÃ¡ria da
+          contabilidade, parecer jurÃ­dico
+          ou auditoria fiscal.
+        </p>
+      </section>
+
+      {canFinalize ? (
+        <>
+          <section
+            className={
+              styles.scope
+            }
+          >
+            <h3>
+              Antes de finalizar
+            </h3>
+
+            <p>
+              VocÃª estÃ¡ enviando{" "}
+              <strong>
+                {documents.length}{" "}
+                {documents.length === 1
+                  ? "XML"
+                  : "XMLs"}
+              </strong>{" "}
+              de atÃ©{" "}
+              <strong>
+                {diagnostic.document_limit}
+              </strong>{" "}
+              permitidos neste diagnÃ³stico.
+            </p>
+
+            {documents.length <
+            diagnostic.document_limit ? (
+              <p>
+                VocÃª nÃ£o Ã© obrigado a utilizar todas as vagas. Se finalizar agora, o diagnÃ³stico seguirÃ¡ para anÃ¡lise somente com os arquivos jÃ¡ enviados e nÃ£o serÃ¡ possÃ­vel adicionar novos XMLs por conta prÃ³pria depois desta confirmaÃ§Ã£o.
+              </p>
+            ) : (
+              <p>
+                VocÃª atingiu o limite de XMLs contratado. Confira os arquivos antes de finalizar o envio.
+              </p>
+            )}
+
+            <p>
+              {canEdit
+                ? "Antes de finalizar, vocÃª pode voltar a qualquer uma das etapas anteriores para revisar ou corrigir informaÃ§Ãµes, excluir um XML ou adicionar outros arquivos dentro do limite contratado."
+                : "FaÃ§a esta Ãºltima conferÃªncia antes de encaminhar definitivamente o material para anÃ¡lise."}
+            </p>
+          </section>
+
+          <form
+            className={
+              styles.submitArea
+            }
+            action={
+              submissionAction
+            }
+          >
+            <input
+              type="hidden"
+              name="diagnosticId"
+              value={diagnostic.id}
+            />
+
+            <label>
+              <input
+                type="checkbox"
+                name="confirmSubmission"
+                required
+              />
+
+              <span>
+                Revisei as informaÃ§Ãµes e os XMLs enviados e confirmo que desejo finalizar este diagnÃ³stico e encaminhÃ¡-lo para anÃ¡lise. Estou ciente de que, apÃ³s esta confirmaÃ§Ã£o, nÃ£o poderei adicionar, substituir ou excluir XMLs por conta prÃ³pria. Se houver necessidade de complemento durante a anÃ¡lise, receberei uma solicitaÃ§Ã£o pela Ãrea do Cliente.
+              </span>
+            </label>
+
+            <div>
+              {canEdit ? (
+                <Link
+                  href={`/painel/diagnosticos/${diagnostic.id}/questionario-expresso/orientacao`}
+                >
+                  Voltar
+                </Link>
+              ) : (
+                <Link
+                  href={`/painel/diagnosticos/${diagnostic.id}`}
+                >
+                  Voltar ao diagnÃ³stico
+                </Link>
+              )}
+
+              <button type="submit">
+                Finalizar e enviar para anÃ¡lise
+              </button>
+            </div>
+          </form>
+        </>
+      ) : (
+        <section
+          className={
+            styles.scope
+          }
+        >
+          <h3>
+            Envio finalizado
+          </h3>
+
+          <p>
+            Estas sÃ£o as informaÃ§Ãµes que foram encaminhadas para anÃ¡lise. Elas permanecem disponÃ­veis nesta Ã¡rea para consulta durante todo o andamento do diagnÃ³stico.
+          </p>
+
+          <p>
+            ApÃ³s a finalizaÃ§Ã£o, os dados e XMLs nÃ£o podem ser alterados por conta prÃ³pria. Caso seja necessÃ¡rio algum complemento, vocÃª receberÃ¡ uma solicitaÃ§Ã£o pela Ãrea do Cliente.
+          </p>
+        </section>
+      )}
+
+    </article>
+  );
+}
+
+========== ACTIONS QUESTIONARIO ==========
+// app/painel/diagnosticos/[id]/questionario-expresso/actions.ts
+
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+import { createClient } from "@/lib/supabase/server";
+
+type JsonRecord = Record<string, unknown>;
+
+type StepName =
+  | "empresa"
+  | "preparacao"
+  | "orientacao"
+  | "revisao";
+
+function asRecord(
+  value: unknown,
+): JsonRecord {
+  return typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+    ? (value as JsonRecord)
+    : {};
+}
+
+function asRecordArray(
+  value: unknown,
+): JsonRecord[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.map((item) =>
+    asRecord(item),
+  );
+}
+
+function readText(
+  formData: FormData,
+  fieldName: string,
+) {
+  return String(
+    formData.get(fieldName) ?? "",
+  ).trim();
+}
+
+function readRecordText(
+  record: JsonRecord,
+  fieldName: string,
+) {
+  const value =
+    record[fieldName];
+
+  return typeof value === "string"
+    ? value.trim()
+    : "";
+}
+
+function createStepPath(
+  diagnosticId: string,
+  step: StepName,
+  parameter?: string,
+) {
+  const path =
+    `/painel/diagnosticos/${diagnosticId}/questionario-expresso/${step}`;
+
+  return parameter
+    ? `${path}?${parameter}`
+    : path;
+}
+
+function revalidateExpressPaths(
+  diagnosticId: string,
+) {
+  revalidatePath("/painel");
+
+  revalidatePath(
+    `/painel/diagnosticos/${diagnosticId}`,
+  );
+
+  revalidatePath(
+    `/painel/diagnosticos/${diagnosticId}/questionario-expresso`,
+    "layout",
+  );
+}
+
+async function getDiagnosticContext(
+  diagnosticId: string,
+) {
+  const supabase =
+    await createClient();
+
+  const { data: claimsData } =
+    await supabase.auth.getClaims();
+
+  const userId =
+    typeof claimsData?.claims?.sub ===
+    "string"
+      ? claimsData.claims.sub
+      : null;
+
+  if (!userId) {
+    redirect("/login");
+  }
+
+  const {
+    data: diagnostic,
+    error: diagnosticError,
+  } = await supabase
+    .from("diagnostics")
+    .select(
+      `
+        id,
+        status,
+        service_type,
+        company_id,
+        user_id,
+        document_limit
+      `,
+    )
+    .eq("id", diagnosticId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (
+    diagnosticError ||
+    !diagnostic
+  ) {
+    redirect("/painel");
+  }
+
+  if (
+    diagnostic.status !==
+    "awaiting_questionnaire"
+  ) {
+    redirect(
+      `/painel/diagnosticos/${diagnostic.id}`,
+    );
+  }
+
+  if (
+    diagnostic.service_type &&
+    diagnostic.service_type !==
+      "express"
+  ) {
+    redirect(
+      `/painel/diagnosticos/${diagnostic.id}`,
+    );
+  }
+
+  return {
+    supabase,
+    userId,
+    diagnostic,
+  };
+}
+
+async function getQuestionnaireData(
+  supabase: Awaited<
+    ReturnType<typeof createClient>
+  >,
+  diagnosticId: string,
+) {
+  const {
+    data: questionnaire,
+    error,
+  } = await supabase
+    .from(
+      "diagnostic_questionnaires",
+    )
+    .select(
+      `
+        id,
+        answers,
+        submitted_at
+      `,
+    )
+    .eq(
+      "diagnostic_id",
+      diagnosticId,
+    )
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return {
+    questionnaireId:
+      questionnaire?.id ?? null,
+
+    answers:
+      asRecord(
+        questionnaire?.answers,
+      ),
+
+    submittedAt:
+      questionnaire?.submitted_at ??
+      null,
+  };
+}
+
+async function persistQuestionnaireAnswers(
+  supabase: Awaited<
+    ReturnType<typeof createClient>
+  >,
+  diagnosticId: string,
+  questionnaireId: string | null,
+  answers: JsonRecord,
+) {
+  const now =
+    new Date().toISOString();
+
+  if (questionnaireId) {
+    return supabase
+      .from(
+        "diagnostic_questionnaires",
+      )
+      .update({
+        answers,
+        updated_at: now,
+      })
+      .eq(
+        "id",
+        questionnaireId,
+      )
+      .eq(
+        "diagnostic_id",
+        diagnosticId,
+      );
+  }
+
+  return supabase
+    .from(
+      "diagnostic_questionnaires",
+    )
+    .insert({
+      diagnostic_id:
+        diagnosticId,
+
+      answers,
+
+      updated_at:
+        now,
+    });
+}
+
+export async function saveCompanyStep(
+  formData: FormData,
+) {
+  const diagnosticId =
+    readText(
+      formData,
+      "diagnosticId",
+    );
+
+  const legalName =
+    readText(
+      formData,
+      "legalName",
+    );
+
+  const cnpj =
+    readText(
+      formData,
+      "cnpj",
+    );
+
+  const city =
+    readText(
+      formData,
+      "city",
+    );
+
+  const state =
+    readText(
+      formData,
+      "state",
+    ).toUpperCase();
+
+  const mainActivity =
+    readText(
+      formData,
+      "mainActivity",
+    );
+
+  const taxRegime =
+    readText(
+      formData,
+      "taxRegime",
+    );
+
+  const contactName =
+    readText(
+      formData,
+      "contactName",
+    );
+
+  const contactValue =
+    readText(
+      formData,
+      "contactValue",
+    );
+
+  const businessContext =
+    readText(
+      formData,
+      "businessContext",
+    );
+
+  if (!diagnosticId) {
+    redirect("/painel");
+  }
+
+  if (
+    !legalName ||
+    !cnpj ||
+    !city ||
+    state.length !== 2 ||
+    !mainActivity ||
+    !taxRegime ||
+    !contactName ||
+    !contactValue ||
+    !businessContext
+  ) {
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "empresa",
+        "erro=campos-obrigatorios",
+      ),
+    );
+  }
+
+  const {
+    supabase,
+    diagnostic,
+  } =
+    await getDiagnosticContext(
+      diagnosticId,
+    );
+
+  let questionnaireData;
+
+  try {
+    questionnaireData =
+      await getQuestionnaireData(
+        supabase,
+        diagnosticId,
+      );
+  } catch (error) {
+    console.error(
+      "Erro ao carregar o questionÃ¡rio expresso:",
+      error,
+    );
+
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "empresa",
+        "erro=nao-foi-possivel-carregar",
+      ),
+    );
+  }
+
+  const currentAnswers =
+    questionnaireData.answers;
+
+  const currentExpress =
+    asRecord(
+      currentAnswers.express,
+    );
+
+  const nextAnswers: JsonRecord = {
+    ...currentAnswers,
+
+    express: {
+      ...currentExpress,
+
+      version:
+        "express-v1",
+
+      company: {
+        legalName,
+        cnpj,
+        city,
+        state,
+        mainActivity,
+        taxRegime,
+        contactName,
+        contactValue,
+        businessContext,
+      },
+    },
+  };
+
+  const {
+    error: companyError,
+  } = await supabase
+    .from("companies")
+    .update({
+      legal_name:
+        legalName,
+
+      cnpj,
+
+      city,
+
+      state,
+
+      main_activity:
+        mainActivity,
+
+      tax_regime:
+        taxRegime,
+
+      updated_at:
+        new Date().toISOString(),
+    })
+    .eq(
+      "id",
+      diagnostic.company_id,
+    );
+
+  if (companyError) {
+    console.error(
+      "Erro ao atualizar os dados da empresa:",
+      companyError,
+    );
+
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "empresa",
+        "erro=nao-foi-possivel-salvar",
+      ),
+    );
+  }
+
+  const {
+    error: questionnaireError,
+  } =
+    await persistQuestionnaireAnswers(
+      supabase,
+      diagnosticId,
+      questionnaireData.questionnaireId,
+      nextAnswers,
+    );
+
+  if (questionnaireError) {
+    console.error(
+      "Erro ao salvar a etapa Empresa:",
+      questionnaireError,
+    );
+
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "empresa",
+        "erro=nao-foi-possivel-salvar",
+      ),
+    );
+  }
+
+  revalidateExpressPaths(
+    diagnosticId,
+  );
+
+  redirect(
+    createStepPath(
+      diagnosticId,
+      "preparacao",
+    ),
+  );
+}
+
+export async function savePreparationStep(
+  formData: FormData,
+) {
+  const diagnosticId =
+    readText(
+      formData,
+      "diagnosticId",
+    );
+
+  const erpName =
+    readText(
+      formData,
+      "erpName",
+    );
+
+  const erpVersion =
+    readText(
+      formData,
+      "erpVersion",
+    );
+
+  const ibsCbsConfiguration =
+    readText(
+      formData,
+      "ibsCbsConfiguration",
+    );
+
+  const accountingGuidance =
+    readText(
+      formData,
+      "accountingGuidance",
+    );
+
+  const preparationNotes =
+    readText(
+      formData,
+      "preparationNotes",
+    );
+
+  if (!diagnosticId) {
+    redirect("/painel");
+  }
+
+  if (
+    !erpName ||
+    !ibsCbsConfiguration ||
+    !accountingGuidance
+  ) {
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "preparacao",
+        "erro=campos-obrigatorios",
+      ),
+    );
+  }
+
+  const {
+    supabase,
+    diagnostic,
+  } =
+    await getDiagnosticContext(
+      diagnosticId,
+    );
+
+  let questionnaireData;
+
+  try {
+    questionnaireData =
+      await getQuestionnaireData(
+        supabase,
+        diagnosticId,
+      );
+  } catch (error) {
+    console.error(
+      "Erro ao carregar o questionÃ¡rio expresso:",
+      error,
+    );
+
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "preparacao",
+        "erro=nao-foi-possivel-carregar",
+      ),
+    );
+  }
+
+  const currentAnswers =
+    questionnaireData.answers;
+
+  const currentExpress =
+    asRecord(
+      currentAnswers.express,
+    );
+
+  const nextAnswers: JsonRecord = {
+    ...currentAnswers,
+
+    express: {
+      ...currentExpress,
+
+      version:
+        "express-v1",
+
+      preparation: {
+        erpName,
+        erpVersion,
+        ibsCbsConfiguration,
+        accountingGuidance,
+        preparationNotes,
+      },
+    },
+  };
+
+  const {
+    error: companyError,
+  } = await supabase
+    .from("companies")
+    .update({
+      erp_name:
+        erpName,
+
+      updated_at:
+        new Date().toISOString(),
+    })
+    .eq(
+      "id",
+      diagnostic.company_id,
+    );
+
+  if (companyError) {
+    console.error(
+      "Erro ao atualizar o ERP da empresa:",
+      companyError,
+    );
+
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "preparacao",
+        "erro=nao-foi-possivel-salvar",
+      ),
+    );
+  }
+
+  const {
+    error: questionnaireError,
+  } =
+    await persistQuestionnaireAnswers(
+      supabase,
+      diagnosticId,
+      questionnaireData.questionnaireId,
+      nextAnswers,
+    );
+
+  if (questionnaireError) {
+    console.error(
+      "Erro ao salvar a etapa PreparaÃ§Ã£o:",
+      questionnaireError,
+    );
+
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "preparacao",
+        "erro=nao-foi-possivel-salvar",
+      ),
+    );
+  }
+
+  revalidateExpressPaths(
+    diagnosticId,
+  );
+
+  redirect(
+    `/painel/diagnosticos/${diagnosticId}/questionario-expresso/documentos`,
+  );
+}
+
+export async function saveGuidanceStep(
+  formData: FormData,
+) {
+  const diagnosticId =
+    readText(
+      formData,
+      "diagnosticId",
+    );
+
+  const mainQuestion =
+    readText(
+      formData,
+      "mainQuestion",
+    );
+
+  const practicalDecision =
+    readText(
+      formData,
+      "practicalDecision",
+    );
+
+  const additionalInformation =
+    readText(
+      formData,
+      "additionalInformation",
+    );
+
+  const informationConfirmation =
+    formData.get(
+      "informationConfirmation",
+    ) === "on";
+
+  if (!diagnosticId) {
+    redirect("/painel");
+  }
+
+  if (
+    !informationConfirmation
+  ) {
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "orientacao",
+        "erro=confirmacao-obrigatoria",
+      ),
+    );
+  }
+
+  const {
+    supabase,
+  } =
+    await getDiagnosticContext(
+      diagnosticId,
+    );
+
+  let questionnaireData;
+
+  try {
+    questionnaireData =
+      await getQuestionnaireData(
+        supabase,
+        diagnosticId,
+      );
+  } catch (error) {
+    console.error(
+      "Erro ao carregar o questionÃ¡rio expresso:",
+      error,
+    );
+
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "orientacao",
+        "erro=nao-foi-possivel-carregar",
+      ),
+    );
+  }
+
+  const currentAnswers =
+    questionnaireData.answers;
+
+  const currentExpress =
+    asRecord(
+      currentAnswers.express,
+    );
+
+  const nextAnswers: JsonRecord = {
+    ...currentAnswers,
+
+    express: {
+      ...currentExpress,
+
+      version:
+        "express-v1",
+
+      guidance: {
+        mainQuestion,
+        practicalDecision,
+        additionalInformation,
+
+        informationConfirmation:
+          true,
+
+        completed:
+          true,
+      },
+    },
+  };
+
+  const {
+    error: questionnaireError,
+  } =
+    await persistQuestionnaireAnswers(
+      supabase,
+      diagnosticId,
+      questionnaireData.questionnaireId,
+      nextAnswers,
+    );
+
+  if (questionnaireError) {
+    console.error(
+      "Erro ao salvar a etapa DÃºvidas e orientaÃ§Ã£o:",
+      questionnaireError,
+    );
+
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "orientacao",
+        "erro=nao-foi-possivel-salvar",
+      ),
+    );
+  }
+
+  revalidateExpressPaths(
+    diagnosticId,
+  );
+
+  redirect(
+    createStepPath(
+      diagnosticId,
+      "revisao",
+    ),
+  );
+}
+
+export async function submitExpressQuestionnaire(
+  formData: FormData,
+) {
+  const diagnosticId =
+    readText(
+      formData,
+      "diagnosticId",
+    );
+
+  const confirmSubmission =
+    formData.get(
+      "confirmSubmission",
+    ) === "on";
+
+  if (!diagnosticId) {
+    redirect("/painel");
+  }
+
+  if (
+    !confirmSubmission
+  ) {
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "revisao",
+        "erro=confirmacao-obrigatoria",
+      ),
+    );
+  }
+
+  const {
+    supabase,
+    diagnostic,
+  } =
+    await getDiagnosticContext(
+      diagnosticId,
+    );
+
+  let questionnaireData;
+
+  try {
+    questionnaireData =
+      await getQuestionnaireData(
+        supabase,
+        diagnosticId,
+      );
+  } catch (error) {
+    console.error(
+      "Erro ao carregar o questionÃ¡rio para envio:",
+      error,
+    );
+
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "revisao",
+        "erro=nao-foi-possivel-carregar",
+      ),
+    );
+  }
+
+  if (
+    questionnaireData.submittedAt
+  ) {
+    redirect(
+      `/painel/diagnosticos/${diagnosticId}`,
+    );
+  }
+
+  const express =
+    asRecord(
+      questionnaireData.answers
+        .express,
+    );
+
+  const company =
+    asRecord(
+      express.company,
+    );
+
+  const preparation =
+    asRecord(
+      express.preparation,
+    );
+
+  const guidance =
+    asRecord(
+      express.guidance,
+    );
+
+  const documentContexts =
+    asRecordArray(
+      express.documents,
+    );
+
+  const companyComplete =
+    Boolean(
+      readRecordText(
+        company,
+        "legalName",
+      ) &&
+        readRecordText(
+          company,
+          "cnpj",
+        ) &&
+        readRecordText(
+          company,
+          "city",
+        ) &&
+        readRecordText(
+          company,
+          "state",
+        ) &&
+        readRecordText(
+          company,
+          "mainActivity",
+        ) &&
+        readRecordText(
+          company,
+          "taxRegime",
+        ) &&
+        readRecordText(
+          company,
+          "contactName",
+        ) &&
+        readRecordText(
+          company,
+          "contactValue",
+        ) &&
+        readRecordText(
+          company,
+          "businessContext",
+        ),
+    );
+
+  if (!companyComplete) {
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "empresa",
+        "erro=campos-obrigatorios",
+      ),
+    );
+  }
+
+  const preparationComplete =
+    Boolean(
+      readRecordText(
+        preparation,
+        "erpName",
+      ) &&
+        readRecordText(
+          preparation,
+          "ibsCbsConfiguration",
+        ) &&
+        readRecordText(
+          preparation,
+          "accountingGuidance",
+        ),
+    );
+
+  if (!preparationComplete) {
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "preparacao",
+        "erro=campos-obrigatorios",
+      ),
+    );
+  }
+
+  if (
+    guidance.completed !== true ||
+    guidance.informationConfirmation !==
+      true
+  ) {
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "orientacao",
+        "erro=etapa-incompleta",
+      ),
+    );
+  }
+
+  const {
+    data: documents,
+    error: documentsError,
+  } = await supabase
+    .from(
+      "diagnostic_documents",
+    )
+    .select(
+      `
+        id,
+        file_name,
+        status
+      `,
+    )
+    .eq(
+      "diagnostic_id",
+      diagnosticId,
+    )
+    .eq(
+      "category",
+      "xml",
+    )
+    .eq(
+      "counts_toward_limit",
+      true,
+    )
+    .neq(
+      "status",
+      "rejected",
+    );
+
+  if (documentsError) {
+    console.error(
+      "Erro ao validar os XMLs enviados:",
+      documentsError,
+    );
+
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "revisao",
+        "erro=nao-foi-possivel-validar-documentos",
+      ),
+    );
+  }
+
+  if (
+    !documents ||
+    documents.length === 0
+  ) {
+    redirect(
+      `/painel/diagnosticos/${diagnosticId}/questionario-expresso/documentos?erro=adicione-xml`,
+    );
+  }
+
+  if (
+    documents.length >
+    diagnostic.document_limit
+  ) {
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "revisao",
+        "erro=limite-documentos",
+      ),
+    );
+  }
+
+  const contextIds =
+    new Set(
+      documentContexts
+        .map((item) =>
+          readRecordText(
+            item,
+            "documentId",
+          ),
+        )
+        .filter(
+          (value) =>
+            value.length > 0,
+        ),
+    );
+
+  const hasDocumentWithoutContext =
+    documents.some(
+      (document) =>
+        !contextIds.has(
+          document.id,
+        ),
+    );
+
+  if (
+    hasDocumentWithoutContext
+  ) {
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "revisao",
+        "erro=contexto-documento-incompleto",
+      ),
+    );
+  }
+
+  /*
+   * FinalizaÃ§Ã£o Ãºnica do DiagnÃ³stico Expresso.
+   *
+   * Neste ponto o cliente jÃ¡ revisou todas as
+   * etapas e confirmou expressamente o envio.
+   * Primeiro concluÃ­mos o questionÃ¡rio:
+   *
+   * awaiting_questionnaire
+   *          â†“
+   * awaiting_documents
+   */
+  const {
+    error:
+      questionnaireSubmitError,
+  } = await supabase.rpc(
+    "submit_diagnostic_questionnaire",
+    {
+      requested_diagnostic_id:
+        diagnosticId,
+    },
+  );
+
+  if (
+    questionnaireSubmitError
+  ) {
+    console.error(
+      "Erro ao concluir o questionÃ¡rio expresso:",
+      questionnaireSubmitError,
+    );
+
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "revisao",
+        "erro=nao-foi-possivel-enviar",
+      ),
+    );
+  }
+
+  /*
+   * Em seguida confirmamos definitivamente os
+   * XMLs jÃ¡ enviados:
+   *
+   * awaiting_documents
+   *          â†“
+   * documents_received
+   *
+   * A partir daqui o cliente nÃ£o pode adicionar,
+   * substituir ou excluir XMLs por conta prÃ³pria.
+   * Se a anÃ¡lise exigir complemento, a equipe poderÃ¡
+   * solicitar uma nova aÃ§Ã£o ao cliente.
+   */
+  const {
+    error:
+      documentsSubmitError,
+  } = await supabase.rpc(
+    "submit_diagnostic_documents",
+    {
+      requested_diagnostic_id:
+        diagnosticId,
+    },
+  );
+
+  if (
+    documentsSubmitError
+  ) {
+    console.error(
+      "QuestionÃ¡rio concluÃ­do, mas nÃ£o foi possÃ­vel finalizar os documentos:",
+      documentsSubmitError,
+    );
+
+    revalidateExpressPaths(
+      diagnosticId,
+    );
+
+    revalidatePath(
+      `/painel/diagnosticos/${diagnosticId}/documentos`,
+    );
+
+    redirect(
+      `/painel/diagnosticos/${diagnosticId}`,
+    );
+  }
+
+  revalidateExpressPaths(
+    diagnosticId,
+  );
+
+  revalidatePath(
+    `/painel/diagnosticos/${diagnosticId}/documentos`,
+  );
+
+  redirect(
+    `/painel/diagnosticos/${diagnosticId}`,
+  );
+}
+
+export async function finalizePendingExpressDocuments(
+  formData: FormData,
+) {
+  const diagnosticId =
+    readText(
+      formData,
+      "diagnosticId",
+    );
+
+  const confirmSubmission =
+    formData.get(
+      "confirmSubmission",
+    ) === "on";
+
+  if (!diagnosticId) {
+    redirect("/painel");
+  }
+
+  if (!confirmSubmission) {
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "revisao",
+        "erro=confirmacao-obrigatoria",
+      ),
+    );
+  }
+
+  const supabase =
+    await createClient();
+
+  const { data: claimsData } =
+    await supabase.auth.getClaims();
+
+  const userId =
+    typeof claimsData?.claims?.sub ===
+    "string"
+      ? claimsData.claims.sub
+      : null;
+
+  if (!userId) {
+    redirect("/login");
+  }
+
+  const {
+    data: diagnostic,
+    error: diagnosticError,
+  } = await supabase
+    .from("diagnostics")
+    .select(
+      `
+        id,
+        status,
+        user_id
+      `,
+    )
+    .eq(
+      "id",
+      diagnosticId,
+    )
+    .eq(
+      "user_id",
+      userId,
+    )
+    .maybeSingle();
+
+  if (
+    diagnosticError ||
+    !diagnostic
+  ) {
+    redirect("/painel");
+  }
+
+  if (
+    diagnostic.status !==
+    "awaiting_documents"
+  ) {
+    redirect(
+      `/painel/diagnosticos/${diagnostic.id}`,
+    );
+  }
+
+  const {
+    error,
+  } = await supabase.rpc(
+    "submit_diagnostic_documents",
+    {
+      requested_diagnostic_id:
+        diagnosticId,
+    },
+  );
+
+  if (error) {
+    console.error(
+      "Erro ao finalizar documentos pendentes:",
+      error,
+    );
+
+    redirect(
+      createStepPath(
+        diagnosticId,
+        "revisao",
+        "erro=nao-foi-possivel-enviar",
+      ),
+    );
+  }
+
+  revalidateExpressPaths(
+    diagnosticId,
+  );
+
+  revalidatePath(
+    `/painel/diagnosticos/${diagnosticId}/documentos`,
+  );
+
+  redirect(
+    `/painel/diagnosticos/${diagnosticId}`,
+  );
+}
+
+
+========== PAGINA XML ==========
+// app/painel/diagnosticos/[id]/questionario-expresso/documentos/page.tsx
+
+import type {
+  Metadata,
+} from "next";
+
+import {
+  notFound,
+  redirect,
+} from "next/navigation";
+
+import { createClient } from "@/lib/supabase/server";
+
+import DocumentsStep from "./documents-step";
+
+export const metadata: Metadata = {
+  title:
+    "NF-e para anÃ¡lise | QuestionÃ¡rio Expresso",
+};
+
+export const dynamic =
+  "force-dynamic";
+
+type DocumentsPageProps = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+type JsonRecord =
+  Record<string, unknown>;
+
+function asRecord(
+  value: unknown,
+): JsonRecord {
+  return typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+    ? (value as JsonRecord)
+    : {};
+}
+
+function asString(
+  value: unknown,
+) {
+  return typeof value === "string"
+    ? value
+    : "";
+}
+
+function asBoolean(
+  value: unknown,
+) {
+  return value === true;
+}
+
+export default async function DocumentsPage({
+  params,
+}: DocumentsPageProps) {
+  const { id } = await params;
+
+  const supabase =
+    await createClient();
+
+  const { data: claimsData } =
+    await supabase.auth.getClaims();
+
+  const userId =
+    typeof claimsData?.claims?.sub ===
+    "string"
+      ? claimsData.claims.sub
+      : null;
+
+  if (!userId) {
+    redirect("/login");
+  }
+
+  const {
+    data: diagnostic,
+    error: diagnosticError,
+  } = await supabase
+    .from("diagnostics")
+    .select(
+      `
+        id,
+        status,
+        user_id,
+        document_limit
+      `,
+    )
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (
+    diagnosticError ||
+    !diagnostic
+  ) {
+    notFound();
+  }
+
+  if (
+    diagnostic.status !==
+    "awaiting_questionnaire"
+  ) {
+    redirect(
+      `/painel/diagnosticos/${diagnostic.id}`,
+    );
+  }
+
+  const [
+    {
+      data: questionnaire,
+    },
+    {
+      data: documents,
+      error: documentsError,
+    },
+  ] = await Promise.all([
+    supabase
+      .from(
+        "diagnostic_questionnaires",
+      )
+      .select("answers")
+      .eq(
+        "diagnostic_id",
+        diagnostic.id,
+      )
+      .maybeSingle(),
+
+    supabase
+      .from(
+        "diagnostic_documents",
+      )
+      .select(
+        `
+          id,
+          file_name,
+          storage_path,
+          size_bytes,
+          status,
+          created_at
+        `,
+      )
+      .eq(
+        "diagnostic_id",
+        diagnostic.id,
+      )
+      .eq("category", "xml")
+      .eq(
+        "counts_toward_limit",
+        true,
+      )
+      .neq("status", "rejected")
+      .order("created_at", {
+        ascending: true,
+      }),
+  ]);
+
+  if (documentsError) {
+    console.error(
+      "Erro ao carregar XMLs:",
+      documentsError,
+    );
+  }
+
+  const answers =
+    asRecord(
+      questionnaire?.answers,
+    );
+
+  const express =
+    asRecord(
+      answers.express,
+    );
+
+  const contextEntries =
+    Array.isArray(
+      express.documents,
+    )
+      ? express.documents.map(
+          asRecord,
+        )
+      : [];
+
+  const contextByDocumentId =
+    new Map(
+      contextEntries.map(
+        (entry) => [
+          asString(
+            entry.documentId,
+          ),
+          entry,
+        ],
+      ),
+    );
+
+  const documentsWithContext =
+    await Promise.all(
+      (documents ?? []).map(
+        async (document) => {
+          const context =
+            contextByDocumentId.get(
+              document.id,
+            ) ?? {};
+
+          const { data } =
+            await supabase.storage
+              .from(
+                "diagnostic-documents",
+              )
+              .createSignedUrl(
+                document.storage_path,
+                600,
+              );
+
+          return {
+            id:
+              document.id,
+
+            fileName:
+              document.file_name,
+
+            sizeBytes:
+              document.size_bytes,
+
+            signedUrl:
+              data?.signedUrl ??
+              null,
+
+            operationType:
+              asString(
+                context.operationType,
+              ),
+
+            whySelected:
+              asString(
+                context.whySelected,
+              ),
+
+            ibsCbsTested:
+              asString(
+                context.ibsCbsTested,
+              ),
+
+            importantNotes:
+              asString(
+                context.importantNotes,
+              ),
+
+            hasRejection:
+              asBoolean(
+                context.hasRejection,
+              ),
+
+            rejectionDescription:
+              asString(
+                context.rejectionDescription,
+              ),
+          };
+        },
+      ),
+    );
+
+  return (
+    <DocumentsStep
+      diagnosticId={
+        diagnostic.id
+      }
+      userId={userId}
+      documentLimit={
+        Number(
+          diagnostic.document_limit ??
+            5,
+        )
+      }
+      documents={
+        documentsWithContext
+      }
+    />
+  );
+}
+
+========== ACTIONS XML ==========
+// app/painel/diagnosticos/[id]/questionario-expresso/documentos/actions.ts
+
+"use server";
+
+import { revalidatePath } from "next/cache";
+
+import { createClient } from "@/lib/supabase/server";
+
+type JsonRecord =
+  Record<string, unknown>;
+
+export type RegisterExpressDocumentInput = {
+  diagnosticId: string;
+  fileName: string;
+  storagePath: string;
+  mimeType: string;
+  sizeBytes: number;
+  operationType: string;
+  whySelected: string;
+  ibsCbsTested: string;
+  importantNotes: string;
+  hasRejection: boolean;
+  rejectionDescription: string;
+};
+
+type RemoveExpressDocumentInput = {
+  diagnosticId: string;
+  documentId: string;
+};
+
+type ActionResult = {
+  ok: boolean;
+  error?: string;
+  documentId?: string;
+};
+
+function asRecord(
+  value: unknown,
+): JsonRecord {
+  return typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+    ? (value as JsonRecord)
+    : {};
+}
+
+function asDocumentArray(
+  value: unknown,
+): JsonRecord[] {
+  return Array.isArray(value)
+    ? value.map(asRecord)
+    : [];
+}
+
+async function getContext(
+  diagnosticId: string,
+) {
+  const supabase =
+    await createClient();
+
+  const { data: claimsData } =
+    await supabase.auth.getClaims();
+
+  const userId =
+    typeof claimsData?.claims?.sub ===
+    "string"
+      ? claimsData.claims.sub
+      : null;
+
+  if (!userId) {
+    return {
+      supabase,
+      userId: null,
+      diagnostic: null,
+    };
+  }
+
+  const {
+    data: diagnostic,
+    error,
+  } = await supabase
+    .from("diagnostics")
+    .select(
+      `
+        id,
+        status,
+        user_id,
+        document_limit
+      `,
+    )
+    .eq("id", diagnosticId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error(
+      "Erro ao carregar diagnÃ³stico:",
+      error,
+    );
+  }
+
+  return {
+    supabase,
+    userId,
+    diagnostic,
+  };
+}
+
+async function getQuestionnaire(
+  supabase: Awaited<
+    ReturnType<typeof createClient>
+  >,
+  diagnosticId: string,
+) {
+  const {
+    data,
+    error,
+  } = await supabase
+    .from("diagnostic_questionnaires")
+    .select("id, answers")
+    .eq(
+      "diagnostic_id",
+      diagnosticId,
+    )
+    .maybeSingle();
+
+  return {
+    data,
+    error,
+  };
+}
+
+async function saveAnswers(
+  supabase: Awaited<
+    ReturnType<typeof createClient>
+  >,
+  diagnosticId: string,
+  questionnaireId: string | null,
+  answers: JsonRecord,
+) {
+  const updatedAt =
+    new Date().toISOString();
+
+  if (questionnaireId) {
+    return supabase
+      .from("diagnostic_questionnaires")
+      .update({
+        answers,
+        updated_at: updatedAt,
+      })
+      .eq("id", questionnaireId)
+      .eq(
+        "diagnostic_id",
+        diagnosticId,
+      );
+  }
+
+  return supabase
+    .from("diagnostic_questionnaires")
+    .insert({
+      diagnostic_id:
+        diagnosticId,
+      answers,
+      updated_at:
+        updatedAt,
+    });
+}
+
+function revalidateExpressPaths(
+  diagnosticId: string,
+) {
+  revalidatePath(
+    `/painel/diagnosticos/${diagnosticId}`,
+  );
+
+  revalidatePath(
+    `/painel/diagnosticos/${diagnosticId}/questionario-expresso`,
+    "layout",
+  );
+
+  revalidatePath(
+    `/painel/diagnosticos/${diagnosticId}/questionario-expresso/documentos`,
+  );
+}
+
+export async function registerExpressDocument(
+  input: RegisterExpressDocumentInput,
+): Promise<ActionResult> {
+  if (
+    !input.diagnosticId ||
+    !input.fileName ||
+    !input.storagePath ||
+    !input.operationType ||
+    !input.whySelected ||
+    !input.ibsCbsTested
+  ) {
+    return {
+      ok: false,
+      error:
+        "Preencha os campos obrigatÃ³rios e selecione o XML.",
+    };
+  }
+
+  if (
+    input.hasRejection &&
+    !input.rejectionDescription.trim()
+  ) {
+    return {
+      ok: false,
+      error:
+        "Informe o erro ou a rejeiÃ§Ã£o apresentada.",
+    };
+  }
+
+  if (
+    !input.fileName
+      .toLowerCase()
+      .endsWith(".xml")
+  ) {
+    return {
+      ok: false,
+      error:
+        "O arquivo principal deve estar no formato XML.",
+    };
+  }
+
+  if (
+    input.sizeBytes <= 0 ||
+    input.sizeBytes >
+      15 * 1024 * 1024
+  ) {
+    return {
+      ok: false,
+      error:
+        "O arquivo deve possuir no mÃ¡ximo 15 MB.",
+    };
+  }
+
+  const {
+    supabase,
+    userId,
+    diagnostic,
+  } =
+    await getContext(
+      input.diagnosticId,
+    );
+
+  if (!userId) {
+    return {
+      ok: false,
+      error:
+        "Sua sessÃ£o expirou. Entre novamente.",
+    };
+  }
+
+  if (!diagnostic) {
+    return {
+      ok: false,
+      error:
+        "O diagnÃ³stico nÃ£o foi encontrado.",
+    };
+  }
+
+  if (
+    diagnostic.status !==
+    "awaiting_questionnaire"
+  ) {
+    return {
+      ok: false,
+      error:
+        "O formulÃ¡rio nÃ£o estÃ¡ disponÃ­vel para ediÃ§Ã£o.",
+    };
+  }
+
+  const { count } =
+    await supabase
+      .from("diagnostic_documents")
+      .select("id", {
+        count: "exact",
+        head: true,
+      })
+      .eq(
+        "diagnostic_id",
+        input.diagnosticId,
+      )
+      .eq("category", "xml")
+      .eq(
+        "counts_toward_limit",
+        true,
+      )
+      .neq("status", "rejected");
+
+  const documentLimit =
+    Number(
+      diagnostic.document_limit ??
+        5,
+    );
+
+  if (
+    (count ?? 0) >=
+    documentLimit
+  ) {
+    return {
+      ok: false,
+      error:
+        "O limite de XMLs do diagnÃ³stico jÃ¡ foi atingido.",
+    };
+  }
+
+  const {
+    data: insertedDocument,
+    error: insertError,
+  } = await supabase
+    .from("diagnostic_documents")
+    .insert({
+      diagnostic_id:
+        input.diagnosticId,
+
+      uploaded_by:
+        userId,
+
+      category:
+        "xml",
+
+      file_name:
+        input.fileName,
+
+      storage_path:
+        input.storagePath,
+
+      mime_type:
+        input.mimeType ||
+        "application/xml",
+
+      size_bytes:
+        input.sizeBytes,
+
+      counts_toward_limit:
+        true,
+
+      status:
+        "uploaded",
+    })
+    .select("id, created_at")
+    .single();
+
+  if (
+    insertError ||
+    !insertedDocument
+  ) {
+    console.error(
+      "Erro ao registrar XML:",
+      insertError,
+    );
+
+    return {
+      ok: false,
+      error:
+        "NÃ£o foi possÃ­vel registrar o XML.",
+    };
+  }
+
+  const {
+    data: questionnaire,
+    error: questionnaireError,
+  } =
+    await getQuestionnaire(
+      supabase,
+      input.diagnosticId,
+    );
+
+  if (questionnaireError) {
+    await supabase
+      .from("diagnostic_documents")
+      .delete()
+      .eq(
+        "id",
+        insertedDocument.id,
+      );
+
+    return {
+      ok: false,
+      error:
+        "NÃ£o foi possÃ­vel carregar o questionÃ¡rio.",
+    };
+  }
+
+  const currentAnswers =
+    asRecord(
+      questionnaire?.answers,
+    );
+
+  const currentExpress =
+    asRecord(
+      currentAnswers.express,
+    );
+
+  const currentDocuments =
+    asDocumentArray(
+      currentExpress.documents,
+    );
+
+  const nextDocuments = [
+    ...currentDocuments,
+
+    {
+      documentId:
+        insertedDocument.id,
+
+      fileName:
+        input.fileName,
+
+      operationType:
+        input.operationType,
+
+      whySelected:
+        input.whySelected,
+
+      ibsCbsTested:
+        input.ibsCbsTested,
+
+      importantNotes:
+        input.importantNotes,
+
+      hasRejection:
+        input.hasRejection,
+
+      rejectionDescription:
+        input.rejectionDescription,
+
+      createdAt:
+        insertedDocument.created_at,
+    },
+  ];
+
+  const nextAnswers: JsonRecord = {
+    ...currentAnswers,
+
+    express: {
+      ...currentExpress,
+
+      version:
+        "express-v1",
+
+      documents:
+        nextDocuments,
+    },
+  };
+
+  const {
+    error: saveError,
+  } = await saveAnswers(
+    supabase,
+    input.diagnosticId,
+    questionnaire?.id ?? null,
+    nextAnswers,
+  );
+
+  if (saveError) {
+    console.error(
+      "Erro ao vincular XML ao questionÃ¡rio:",
+      saveError,
+    );
+
+    await supabase
+      .from("diagnostic_documents")
+      .delete()
+      .eq(
+        "id",
+        insertedDocument.id,
+      );
+
+    return {
+      ok: false,
+      error:
+        "O arquivo foi enviado, mas nÃ£o foi possÃ­vel salvar as informaÃ§Ãµes da operaÃ§Ã£o.",
+    };
+  }
+
+  revalidateExpressPaths(
+    input.diagnosticId,
+  );
+
+  return {
+    ok: true,
+    documentId:
+      insertedDocument.id,
+  };
+}
+
+export async function removeExpressDocument(
+  input: RemoveExpressDocumentInput,
+): Promise<ActionResult> {
+  const {
+    supabase,
+    userId,
+    diagnostic,
+  } =
+    await getContext(
+      input.diagnosticId,
+    );
+
+  if (!userId) {
+    return {
+      ok: false,
+      error:
+        "Sua sessÃ£o expirou. Entre novamente.",
+    };
+  }
+
+  if (
+    !diagnostic ||
+    diagnostic.status !==
+      "awaiting_questionnaire"
+  ) {
+    return {
+      ok: false,
+      error:
+        "O XML nÃ£o pode ser excluÃ­do nesta etapa.",
+    };
+  }
+
+  const {
+    data: document,
+    error: documentError,
+  } = await supabase
+    .from("diagnostic_documents")
+    .select(
+      `
+        id,
+        storage_path
+      `,
+    )
+    .eq(
+      "id",
+      input.documentId,
+    )
+    .eq(
+      "diagnostic_id",
+      input.diagnosticId,
+    )
+    .eq("category", "xml")
+    .maybeSingle();
+
+  if (
+    documentError ||
+    !document
+  ) {
+    return {
+      ok: false,
+      error:
+        "O XML nÃ£o foi encontrado.",
+    };
+  }
+
+  const {
+    error: storageError,
+  } = await supabase.storage
+    .from("diagnostic-documents")
+    .remove([
+      document.storage_path,
+    ]);
+
+  if (storageError) {
+    return {
+      ok: false,
+      error:
+        "NÃ£o foi possÃ­vel excluir o arquivo armazenado.",
+    };
+  }
+
+  const {
+    error: deleteError,
+  } = await supabase
+    .from("diagnostic_documents")
+    .delete()
+    .eq(
+      "id",
+      document.id,
+    );
+
+  if (deleteError) {
+    return {
+      ok: false,
+      error:
+        "O arquivo foi removido, mas o registro nÃ£o pÃ´de ser excluÃ­do.",
+    };
+  }
+
+  const {
+    data: questionnaire,
+  } =
+    await getQuestionnaire(
+      supabase,
+      input.diagnosticId,
+    );
+
+  if (questionnaire) {
+    const currentAnswers =
+      asRecord(
+        questionnaire.answers,
+      );
+
+    const currentExpress =
+      asRecord(
+        currentAnswers.express,
+      );
+
+    const currentDocuments =
+      asDocumentArray(
+        currentExpress.documents,
+      );
+
+    const nextDocuments =
+      currentDocuments.filter(
+        (item) =>
+          item.documentId !==
+          input.documentId,
+      );
+
+    const nextAnswers: JsonRecord = {
+      ...currentAnswers,
+
+      express: {
+        ...currentExpress,
+
+        documents:
+          nextDocuments,
+      },
+    };
+
+    const {
+      error: questionnaireUpdateError,
+    } = await saveAnswers(
+      supabase,
+      input.diagnosticId,
+      questionnaire.id,
+      nextAnswers,
+    );
+
+    if (
+      questionnaireUpdateError
+    ) {
+      console.error(
+        "Erro ao remover vÃ­nculo do XML:",
+        questionnaireUpdateError,
+      );
+    }
+  }
+
+  revalidateExpressPaths(
+    input.diagnosticId,
+  );
+
+  return {
+    ok: true,
+  };
+}

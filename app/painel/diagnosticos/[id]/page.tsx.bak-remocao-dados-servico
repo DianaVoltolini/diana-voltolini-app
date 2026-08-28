@@ -564,6 +564,36 @@ function formatDateTime(
   );
 }
 
+function formatCurrency(
+  valueInCents:
+    | number
+    | null
+    | undefined,
+) {
+  if (
+    valueInCents ===
+      null ||
+    valueInCents ===
+      undefined
+  ) {
+    return "Não informado";
+  }
+
+  return new Intl.NumberFormat(
+    "pt-BR",
+    {
+      style:
+        "currency",
+
+      currency:
+        "BRL",
+    },
+  ).format(
+    valueInCents /
+      100,
+  );
+}
+
 function getActionHref(
   diagnosticId: string,
   target: ActionTarget,
@@ -654,6 +684,7 @@ export default async function DiagnosticPage({
           document_limit,
           client_deadline_at,
           analysis_started_at,
+          created_at,
           company_id,
           order_id
         `,
@@ -798,6 +829,12 @@ export default async function DiagnosticPage({
     ]);
 
   let order: {
+    amount_cents:
+      number;
+
+    status:
+      string;
+
     product_id:
       string;
   } | null =
@@ -816,6 +853,8 @@ export default async function DiagnosticPage({
         )
         .select(
           `
+            amount_cents,
+            status,
             product_id
           `,
         )
@@ -1274,6 +1313,54 @@ export default async function DiagnosticPage({
                   styles.informationList
                 }
               >
+                <div>
+                  <dt>
+                    Produto
+                  </dt>
+
+                  <dd>
+                    {productName}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>
+                    Contratado em
+                  </dt>
+
+                  <dd>
+                    {formatDate(
+                      diagnostic.created_at,
+                    )}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>
+                    Investimento
+                  </dt>
+
+                  <dd>
+                    {formatCurrency(
+                      order?.amount_cents,
+                    )}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>
+                    Pagamento
+                  </dt>
+
+                  <dd>
+                    {order?.status ===
+                    "paid"
+                      ? "Confirmado"
+                      : order?.status ||
+                        "Não informado"}
+                  </dd>
+                </div>
+
                 <div>
                   <dt>
                     Regime tributário

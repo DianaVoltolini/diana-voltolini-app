@@ -1,4 +1,4 @@
-// app/painel/diagnosticos/[id]/questionario-expresso/documentos/page.tsx
+// C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\app\painel\diagnosticos\[id]\questionario-expresso\documentos\page.tsx
 
 import type {
   Metadata,
@@ -100,8 +100,12 @@ export default async function DocumentsPage({
   }
 
   if (
-    diagnostic.status !==
-    "awaiting_questionnaire"
+    ![
+      "awaiting_questionnaire",
+      "awaiting_documents",
+    ].includes(
+      diagnostic.status,
+    )
   ) {
     redirect(
       `/painel/diagnosticos/${diagnostic.id}`,

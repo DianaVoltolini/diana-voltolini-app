@@ -1,4 +1,4 @@
-// app/painel/diagnosticos/[id]/questionario-expresso/revisao/page.tsx
+// C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\app\painel\diagnosticos\[id]\questionario-expresso\revisao\page.tsx
 
 import type {
   Metadata,
@@ -219,7 +219,9 @@ export default async function ReviewPage({
 
   const canEdit =
     diagnostic.status ===
-    "awaiting_questionnaire";
+      "awaiting_questionnaire" ||
+    diagnostic.status ===
+      "awaiting_documents";
 
   const canFinalize =
     diagnostic.status ===
@@ -339,15 +341,19 @@ export default async function ReviewPage({
         </span>
 
         <h2>
-          {canFinalize
+          {canEdit
             ? "Revisão e envio"
-            : "Informações enviadas"}
+            : canFinalize
+              ? "Concluir envio"
+              : "Informações enviadas"}
         </h2>
 
         <p>
-          {canFinalize
-            ? "Confira os dados e os XMLs abaixo antes de finalizar o envio para análise."
-            : "Este questionário já foi finalizado. As informações enviadas permanecem disponíveis nesta área para consulta."}
+          {canEdit
+            ? "Confira todas as informações e os XMLs abaixo. Se precisar corrigir alguma resposta ou arquivo, use os botões Editar ou volte às etapas anteriores antes de finalizar."
+            : canFinalize
+              ? "O questionário já foi registrado. Falta apenas concluir a confirmação dos documentos para encaminhar o diagnóstico para análise."
+              : "Este questionário já foi finalizado. As informações enviadas permanecem disponíveis nesta área para consulta."}
         </p>
       </header>
 

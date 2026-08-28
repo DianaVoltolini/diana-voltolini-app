@@ -1,10 +1,11 @@
-// app/painel/diagnosticos/[id]/questionario-expresso/actions.ts
+// C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\app\painel\diagnosticos\[id]\questionario-expresso\actions.ts
 
 "use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 type JsonRecord = Record<string, unknown>;
@@ -74,15 +75,41 @@ function createStepPath(
 function revalidateExpressPaths(
   diagnosticId: string,
 ) {
+  const basePath =
+    `/painel/diagnosticos/${diagnosticId}`;
+
+  const questionnaireBasePath =
+    `${basePath}/questionario-expresso`;
+
   revalidatePath("/painel");
 
   revalidatePath(
-    `/painel/diagnosticos/${diagnosticId}`,
+    basePath,
   );
 
   revalidatePath(
-    `/painel/diagnosticos/${diagnosticId}/questionario-expresso`,
+    questionnaireBasePath,
     "layout",
+  );
+
+  revalidatePath(
+    `${questionnaireBasePath}/empresa`,
+  );
+
+  revalidatePath(
+    `${questionnaireBasePath}/preparacao`,
+  );
+
+  revalidatePath(
+    `${questionnaireBasePath}/documentos`,
+  );
+
+  revalidatePath(
+    `${questionnaireBasePath}/orientacao`,
+  );
+
+  revalidatePath(
+    `${questionnaireBasePath}/revisao`,
   );
 }
 
@@ -132,8 +159,12 @@ async function getDiagnosticContext(
   }
 
   if (
-    diagnostic.status !==
-    "awaiting_questionnaire"
+    ![
+      "awaiting_questionnaire",
+      "awaiting_documents",
+    ].includes(
+      diagnostic.status,
+    )
   ) {
     redirect(
       `/painel/diagnosticos/${diagnostic.id}`,
@@ -203,18 +234,32 @@ async function getQuestionnaireData(
 }
 
 async function persistQuestionnaireAnswers(
-  supabase: Awaited<
-    ReturnType<typeof createClient>
-  >,
   diagnosticId: string,
   questionnaireId: string | null,
   answers: JsonRecord,
 ) {
+  /*
+   * A edição em awaiting_documents ocorre depois que o
+   * questionário já recebeu submitted_at. Nessa fase, as
+   * políticas RLS do cliente podem impedir UPDATE mesmo
+   * quando a action já validou que o diagnóstico pertence
+   * ao usuário autenticado.
+   *
+   * Por isso a persistência é feita com o cliente admin
+   * SOMENTE depois da validação de propriedade realizada
+   * em getDiagnosticContext().
+   */
+  const admin =
+    getSupabaseAdmin();
+
   const now =
     new Date().toISOString();
 
   if (questionnaireId) {
-    return supabase
+    const {
+      data,
+      error,
+    } = await admin
       .from(
         "diagnostic_questionnaires",
       )
@@ -229,10 +274,34 @@ async function persistQuestionnaireAnswers(
       .eq(
         "diagnostic_id",
         diagnosticId,
-      );
+      )
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      return {
+        error,
+      };
+    }
+
+    if (!data) {
+      return {
+        error:
+          new Error(
+            "O questionário não foi atualizado.",
+          ),
+      };
+    }
+
+    return {
+      error: null,
+    };
   }
 
-  return supabase
+  const {
+    data,
+    error,
+  } = await admin
     .from(
       "diagnostic_questionnaires",
     )
@@ -244,7 +313,28 @@ async function persistQuestionnaireAnswers(
 
       updated_at:
         now,
-    });
+    })
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    return {
+      error,
+    };
+  }
+
+  if (!data) {
+    return {
+      error:
+        new Error(
+          "O questionário não foi criado.",
+        ),
+    };
+  }
+
+  return {
+    error: null,
+  };
 }
 
 export async function saveCompanyStep(
@@ -396,9 +486,12 @@ export async function saveCompanyStep(
     },
   };
 
+  const admin =
+    getSupabaseAdmin();
+
   const {
     error: companyError,
-  } = await supabase
+  } = await admin
     .from("companies")
     .update({
       legal_name:
@@ -443,7 +536,6 @@ export async function saveCompanyStep(
     error: questionnaireError,
   } =
     await persistQuestionnaireAnswers(
-      supabase,
       diagnosticId,
       questionnaireData.questionnaireId,
       nextAnswers,
@@ -591,9 +683,12 @@ export async function savePreparationStep(
     },
   };
 
+  const admin =
+    getSupabaseAdmin();
+
   const {
     error: companyError,
-  } = await supabase
+  } = await admin
     .from("companies")
     .update({
       erp_name:
@@ -626,7 +721,6 @@ export async function savePreparationStep(
     error: questionnaireError,
   } =
     await persistQuestionnaireAnswers(
-      supabase,
       diagnosticId,
       questionnaireData.questionnaireId,
       nextAnswers,
@@ -769,7 +863,6 @@ export async function saveGuidanceStep(
     error: questionnaireError,
   } =
     await persistQuestionnaireAnswers(
-      supabase,
       diagnosticId,
       questionnaireData.questionnaireId,
       nextAnswers,

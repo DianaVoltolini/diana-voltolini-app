@@ -246,14 +246,7 @@ function getCompletionForecast(
     };
   }
 
-  const awaitingFinalSubmission =
-    diagnostic.status ===
-      "awaiting_questionnaire" ||
-    diagnostic.status ===
-      "awaiting_documents";
-
   if (
-    !awaitingFinalSubmission &&
     diagnostic.submitted_at
   ) {
     return {
@@ -536,11 +529,11 @@ export default async function PainelPage() {
                 styles.eyebrow
               }
             >
-              Painel do Cliente
+              Área do Cliente
             </p>
 
             <h1>
-              Olá, {displayName}
+              Olá, {displayName}.
             </h1>
 
             <p
@@ -548,16 +541,11 @@ export default async function PainelPage() {
                 styles.welcomeText
               }
             >
-              Aqui você encontra tudo 
-              que precisa para gerenciar 
-              sua experiência de forma eficiente.   
-              Acompanhe o seu
-              diagnóstico, consulte as
+              Acompanhe seus
+              diagnósticos, consulte
               informações enviadas,
-              acompanhe suas mensagens e
+              acompanhe mensagens e
               acesse seus resultados.
-              Tudo ao seu alcance para 
-              facilitar sua jornada!
             </p>
           </header>
 
@@ -566,6 +554,37 @@ export default async function PainelPage() {
               styles.guidanceCard
             }
           >
+            <header
+              className={
+                styles.guidanceHeading
+              }
+            >
+              <div>
+                <p
+                  className={
+                    styles.eyebrow
+                  }
+                >
+                  Como funciona seu painel
+                </p>
+
+                <h2>
+                  Tudo o que você precisa
+                  acompanhar está aqui.
+                </h2>
+              </div>
+
+              <p>
+                Cada contratação possui
+                seu próprio quadro. É por
+                ele que você acompanha o
+                andamento, consulta as
+                informações enviadas,
+                conversa conosco e recebe
+                o resultado final.
+              </p>
+            </header>
+
             <div
               className={
                 styles.guidanceList

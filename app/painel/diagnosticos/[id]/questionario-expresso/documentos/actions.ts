@@ -1,4 +1,4 @@
-// app/painel/diagnosticos/[id]/questionario-expresso/documentos/actions.ts
+// C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\app\painel\diagnosticos\[id]\questionario-expresso\documentos\actions.ts
 
 "use server";
 
@@ -262,8 +262,12 @@ export async function registerExpressDocument(
   }
 
   if (
-    diagnostic.status !==
-    "awaiting_questionnaire"
+    ![
+      "awaiting_questionnaire",
+      "awaiting_documents",
+    ].includes(
+      diagnostic.status,
+    )
   ) {
     return {
       ok: false,
@@ -510,8 +514,12 @@ export async function removeExpressDocument(
 
   if (
     !diagnostic ||
-    diagnostic.status !==
-      "awaiting_questionnaire"
+    ![
+      "awaiting_questionnaire",
+      "awaiting_documents",
+    ].includes(
+      diagnostic.status,
+    )
   ) {
     return {
       ok: false,
