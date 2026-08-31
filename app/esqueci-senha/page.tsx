@@ -1,54 +1,52 @@
-// C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\app\login\page.tsx
+// C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\app\esqueci-senha\page.tsx
 
-import type { Metadata } from "next";
+import type {
+  Metadata,
+} from "next";
 import Image from "next/image";
 
-import { login } from "./actions";
-import styles from "./login.module.css";
+import {
+  requestPasswordReset,
+} from "./actions";
+
+import styles from "../login/login.module.css";
 
 export const metadata: Metadata = {
-  title: "Entrar",
+  title:
+    "Recuperar senha",
 };
 
-type LoginPageProps = {
+type ForgotPasswordPageProps = {
   searchParams: Promise<{
     erro?: string;
     sucesso?: string;
     email?: string;
-    retorno?: string;
   }>;
 };
 
-const errorMessages: Record<string, string> = {
-  "campos-obrigatorios":
-    "Preencha o e-mail e a senha para continuar.",
+const errorMessages:
+  Record<
+    string,
+    string
+  > = {
+  "email-obrigatorio":
+    "Informe seu e-mail para continuar.",
 
-  "credenciais-invalidas":
-    "E-mail ou senha inválidos. Confira os dados e tente novamente.",
-
-  "email-nao-confirmado":
-    "Seu e-mail ainda não foi confirmado. Abra a mensagem enviada para seu e-mail antes de entrar.",
-
-  "vinculo-indisponivel":
-    "Não foi possível vincular sua contratação à conta neste momento. Tente novamente.",
-
-  "confirmacao-invalida":
-    "Não foi possível concluir a confirmação do acesso. Tente entrar com seu e-mail e senha.",
-
-  "recuperacao-invalida":
-    "O link de recuperação é inválido ou expirou. Solicite um novo link para redefinir sua senha.",
+  "envio-falhou":
+    "Não foi possível enviar o e-mail de recuperação neste momento. Tente novamente.",
 };
 
-const successMessages: Record<string, string> = {
-  "senha-atualizada":
-    "Senha atualizada com sucesso. Entre utilizando sua nova senha.",
-};
-
-export default async function LoginPage({
+export default async function ForgotPasswordPage({
   searchParams,
-}: LoginPageProps) {
+}: ForgotPasswordPageProps) {
   const params =
     await searchParams;
+
+  const email =
+    params.email
+      ?.trim()
+      .toLowerCase() ??
+    "";
 
   const errorMessage =
     params.erro
@@ -57,29 +55,9 @@ export default async function LoginPage({
         ]
       : null;
 
-  const successMessage =
-    params.sucesso
-      ? successMessages[
-          params.sucesso
-        ]
-      : null;
-
-  const email =
-    params.email
-      ?.trim()
-      .toLowerCase() ??
-    "";
-
-  const retorno =
-    params.retorno ??
-    "/painel";
-
-  const forgotPasswordHref =
-    email
-      ? `/esqueci-senha?email=${encodeURIComponent(
-          email,
-        )}`
-      : "/esqueci-senha";
+  const success =
+    params.sucesso ===
+    "1";
 
   return (
     <main
@@ -130,12 +108,11 @@ export default async function LoginPage({
             </p>
 
             <h1>
-              Acompanhe seus serviços com clareza e segurança.
+              Recupere o acesso à sua conta.
             </h1>
 
             <p>
-              Consulte cobranças, pagamentos, questionários,
-              documentos, pendências e o andamento das análises.
+              Solicite um link seguro para cadastrar uma nova senha.
             </p>
           </div>
 
@@ -169,16 +146,15 @@ export default async function LoginPage({
                 styles.eyebrow
               }
             >
-              Acesso do cliente
+              Recuperação de acesso
             </p>
 
             <h2>
-              Entre na sua conta
+              Esqueceu sua senha?
             </h2>
 
             <p>
-              Utilize o e-mail e a senha cadastrados para acessar
-              seu painel.
+              Informe o e-mail utilizado no cadastro.
             </p>
           </header>
 
@@ -188,7 +164,7 @@ export default async function LoginPage({
             }
           >
             {
-              successMessage
+              success
                 ? (
                     <div
                       className={
@@ -197,13 +173,18 @@ export default async function LoginPage({
                       role="status"
                     >
                       <strong>
-                        Tudo certo.
+                        Verifique seu e-mail.
                       </strong>
 
                       <p>
-                        {
-                          successMessage
-                        }
+                        Se o endereço informado estiver cadastrado,
+                        você receberá uma mensagem com o link para
+                        criar uma nova senha.
+                      </p>
+
+                      <p>
+                        Verifique também as pastas de spam e lixo
+                        eletrônico.
                       </p>
                     </div>
                   )
@@ -232,17 +213,9 @@ export default async function LoginPage({
                 styles.form
               }
               action={
-                login
+                requestPasswordReset
               }
             >
-              <input
-                type="hidden"
-                name="retorno"
-                value={
-                  retorno
-                }
-              />
-
               <div
                 className={
                   styles.field
@@ -267,45 +240,13 @@ export default async function LoginPage({
                 />
               </div>
 
-              <div
-                className={
-                  styles.field
-                }
-              >
-                <label
-                  htmlFor="password"
-                >
-                  Senha
-                </label>
-
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="Digite sua senha"
-                  required
-                />
-              </div>
-
-              <a
-                className={
-                  styles.backLink
-                }
-                href={
-                  forgotPasswordHref
-                }
-              >
-                Esqueci minha senha
-              </a>
-
               <button
                 className={
                   styles.submitButton
                 }
                 type="submit"
               >
-                Entrar na área do cliente
+                Enviar link de recuperação
               </button>
             </form>
           </div>
@@ -319,9 +260,9 @@ export default async function LoginPage({
               className={
                 styles.backLink
               }
-              href="https://dianavoltolini.com.br"
+              href="/login"
             >
-              ← Voltar para o site
+              ← Voltar para o login
             </a>
           </div>
         </div>

@@ -111,8 +111,9 @@ export async function updateSession(
 
   const isPublicRoute =
     pathname === "/login" ||
-    pathname ===
-      "/criar-acesso" ||
+    pathname === "/criar-acesso" ||
+    pathname === "/esqueci-senha" ||
+    pathname === "/redefinir-senha" ||
     pathname.startsWith(
       "/auth/",
     );
@@ -130,7 +131,9 @@ export async function updateSession(
     redirectUrl.search =
       "";
 
-    if (pathname !== "/") {
+    if (
+      pathname !== "/"
+    ) {
       redirectUrl.searchParams.set(
         "retorno",
         pathname,

@@ -8,6 +8,7 @@ import {
 import {
   ensureClientAccess,
 } from "@/lib/supabase/client-access";
+
 import {
   createClient,
 } from "@/lib/supabase/server";
@@ -16,8 +17,18 @@ function safeNextPath(
   value: string | null,
 ) {
   if (
-    value === "/painel" ||
-    value?.startsWith("/painel/")
+    value ===
+    "/redefinir-senha"
+  ) {
+    return value;
+  }
+
+  if (
+    value ===
+      "/painel" ||
+    value?.startsWith(
+      "/painel/",
+    )
   ) {
     return value;
   }
@@ -29,7 +40,9 @@ export async function GET(
   request: NextRequest,
 ) {
   const requestUrl =
-    new URL(request.url);
+    new URL(
+      request.url,
+    );
 
   const code =
     requestUrl.searchParams.get(
@@ -49,11 +62,15 @@ export async function GET(
   errorUrl.pathname =
     "/login";
 
-  errorUrl.search = "";
+  errorUrl.search =
+    "";
 
   errorUrl.searchParams.set(
     "erro",
-    "confirmacao-invalida",
+    next ===
+      "/redefinir-senha"
+      ? "recuperacao-invalida"
+      : "confirmacao-invalida",
   );
 
   if (!code) {
@@ -89,9 +106,28 @@ export async function GET(
     );
   }
 
+  if (
+    next ===
+    "/redefinir-senha"
+  ) {
+    const destination =
+      request.nextUrl.clone();
+
+    destination.pathname =
+      "/redefinir-senha";
+
+    destination.search =
+      "";
+
+    return NextResponse.redirect(
+      destination,
+    );
+  }
+
   const fullName =
     typeof data.user.user_metadata
-      ?.full_name === "string"
+      ?.full_name ===
+      "string"
       ? data.user.user_metadata
           .full_name
       : null;
@@ -112,7 +148,8 @@ export async function GET(
       linkError,
     );
 
-    await supabase.auth.signOut();
+    await supabase.auth
+      .signOut();
 
     errorUrl.searchParams.set(
       "erro",
