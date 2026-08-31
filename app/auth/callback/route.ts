@@ -13,6 +13,9 @@ import {
   createClient,
 } from "@/lib/supabase/server";
 
+const PRODUCTION_ORIGIN =
+  "https://app.dianavoltolini.com.br";
+
 function safeNextPath(
   value: string | null,
 ) {
@@ -24,8 +27,7 @@ function safeNextPath(
   }
 
   if (
-    value ===
-      "/painel" ||
+    value === "/painel" ||
     value?.startsWith(
       "/painel/",
     )
@@ -34,6 +36,17 @@ function safeNextPath(
   }
 
   return "/painel";
+}
+
+function getAppOrigin() {
+  if (
+    process.env.NODE_ENV ===
+    "development"
+  ) {
+    return "http://localhost:3000";
+  }
+
+  return PRODUCTION_ORIGIN;
 }
 
 export async function GET(
@@ -56,14 +69,14 @@ export async function GET(
       ),
     );
 
+  const appOrigin =
+    getAppOrigin();
+
   const errorUrl =
-    request.nextUrl.clone();
-
-  errorUrl.pathname =
-    "/login";
-
-  errorUrl.search =
-    "";
+    new URL(
+      "/login",
+      appOrigin,
+    );
 
   errorUrl.searchParams.set(
     "erro",
@@ -110,17 +123,11 @@ export async function GET(
     next ===
     "/redefinir-senha"
   ) {
-    const destination =
-      request.nextUrl.clone();
-
-    destination.pathname =
-      "/redefinir-senha";
-
-    destination.search =
-      "";
-
     return NextResponse.redirect(
-      destination,
+      new URL(
+        "/redefinir-senha",
+        appOrigin,
+      ),
     );
   }
 
@@ -151,26 +158,26 @@ export async function GET(
     await supabase.auth
       .signOut();
 
-    errorUrl.searchParams.set(
+    const linkErrorUrl =
+      new URL(
+        "/login",
+        appOrigin,
+      );
+
+    linkErrorUrl.searchParams.set(
       "erro",
       "vinculo-indisponivel",
     );
 
     return NextResponse.redirect(
-      errorUrl,
+      linkErrorUrl,
     );
   }
 
-  const destination =
-    request.nextUrl.clone();
-
-  destination.pathname =
-    next;
-
-  destination.search =
-    "";
-
   return NextResponse.redirect(
-    destination,
+    new URL(
+      next,
+      appOrigin,
+    ),
   );
 }
