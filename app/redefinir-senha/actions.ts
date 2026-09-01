@@ -90,6 +90,21 @@ export async function updatePassword(
       error,
     );
 
+    const samePassword =
+      error.code ===
+        "same_password" ||
+      /new password should be different from the old password/i.test(
+        error.message,
+      );
+
+    if (
+      samePassword
+    ) {
+      redirect(
+        "/redefinir-senha?erro=senha-igual",
+      );
+    }
+
     redirect(
       "/redefinir-senha?erro=alteracao-falhou",
     );

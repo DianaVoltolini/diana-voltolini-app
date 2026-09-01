@@ -4,6 +4,7 @@ import type {
   Metadata,
 } from "next";
 import Image from "next/image";
+
 import {
   redirect,
 } from "next/navigation";
@@ -13,8 +14,8 @@ import {
 } from "@/lib/supabase/server";
 
 import {
-  updatePassword,
-} from "./actions";
+  PasswordResetForm,
+} from "./password-reset-form";
 
 import styles from "../login/login.module.css";
 
@@ -42,6 +43,9 @@ const errorMessages:
 
   "senhas-diferentes":
     "As senhas informadas não são iguais.",
+
+  "senha-igual":
+    "A nova senha precisa ser diferente da senha atual. Escolha uma senha que ainda não esteja sendo utilizada nesta conta.",
 
   "alteracao-falhou":
     "Não foi possível alterar sua senha. Solicite um novo link de recuperação e tente novamente.",
@@ -173,7 +177,8 @@ export default async function ResetPasswordPage({
             </h2>
 
             <p>
-              Utilize pelo menos 8 caracteres e confirme a senha abaixo.
+              Utilize pelo menos 8 caracteres. A nova senha deve ser
+              diferente da senha que você utiliza atualmente.
             </p>
           </header>
 
@@ -199,73 +204,7 @@ export default async function ResetPasswordPage({
                 : null
             }
 
-            <form
-              className={
-                styles.form
-              }
-              action={
-                updatePassword
-              }
-            >
-              <div
-                className={
-                  styles.passwordGrid
-                }
-              >
-                <div
-                  className={
-                    styles.field
-                  }
-                >
-                  <label
-                    htmlFor="password"
-                  >
-                    Nova senha
-                  </label>
-
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="new-password"
-                    minLength={8}
-                    placeholder="Digite a nova senha"
-                    required
-                  />
-                </div>
-
-                <div
-                  className={
-                    styles.field
-                  }
-                >
-                  <label
-                    htmlFor="passwordConfirmation"
-                  >
-                    Confirmar senha
-                  </label>
-
-                  <input
-                    id="passwordConfirmation"
-                    name="passwordConfirmation"
-                    type="password"
-                    autoComplete="new-password"
-                    minLength={8}
-                    placeholder="Digite novamente"
-                    required
-                  />
-                </div>
-              </div>
-
-              <button
-                className={
-                  styles.submitButton
-                }
-                type="submit"
-              >
-                Salvar nova senha
-              </button>
-            </form>
+            <PasswordResetForm />
           </div>
 
           <div
