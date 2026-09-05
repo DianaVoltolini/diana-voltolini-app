@@ -103,6 +103,27 @@ const resultLabels:
     "Risco crítico",
 };
 
+const preparationLabels:
+  Record<
+    string,
+    string
+  > = {
+  pending:
+    "Não avaliada",
+
+  proven:
+    "Comprovada para esta operação",
+
+  partially_proven:
+    "Parcialmente comprovada",
+
+  not_proven:
+    "Não comprovada",
+
+  not_applicable:
+    "Não aplicável para o cenário/data analisado",
+};
+
 const testedLabels:
   Record<
     string,
@@ -127,13 +148,16 @@ const errorMessages:
     string
   > = {
   "resultado-obrigatorio":
-    "Selecione o resultado da análise desta NF-e.",
+    "Selecione a conformidade documental deste XML.",
 
-  "analise-tecnica-obrigatoria":
-    "Preencha o que foi encontrado nesta NF-e.",
+  "preparacao-obrigatoria":
+    "Selecione a situação da preparação IBS/CBS para este XML.",
+
+  "analise-detalhada-incompleta":
+    "Preencha todos os campos obrigatórios da análise detalhada deste XML.",
 
   "analise-xml-incompleta":
-    "Conclua a análise desta NF-e antes de seguir para a conclusão.",
+    "Conclua a análise detalhada deste XML antes de seguir para a conclusão.",
 
   "nao-foi-possivel-salvar-analise":
     "Não foi possível salvar a análise. Tente novamente.",
@@ -148,10 +172,10 @@ const successMessages:
     string
   > = {
   "xml-analisado":
-    "A análise da NF-e anterior foi salva.",
+    "A análise do XML anterior foi salva.",
 
   "analise-iniciada":
-    "A análise foi iniciada. Comece pela primeira NF-e.",
+    "A análise foi iniciada. Comece pelo primeiro XML.",
 
   "analise-retomada":
     "A análise foi retomada.",
@@ -388,19 +412,6 @@ export default async function AnalysisPage({
       currentIndex
     ];
 
-  /*
-   * IMPORTANTE:
-   *
-   * A URL assinada é criada para download
-   * utilizando explicitamente o nome
-   * original registrado no banco.
-   *
-   * Exemplo:
-   * Autorizacao.xml
-   *
-   * Dessa forma o navegador não precisa
-   * inferir a extensão do arquivo.
-   */
   const {
     data:
       downloadData,
@@ -453,7 +464,19 @@ export default async function AnalysisPage({
       asRecord,
     );
 
-  const savedOperation =
+  /*
+   * Primeiro procura SEMPRE pelo
+   * document_id real.
+   *
+   * O fallback por posição somente é
+   * permitido para registros antigos
+   * que ainda não possuam document_id.
+   *
+   * Nunca usamos por índice uma
+   * operação que já pertença a outro
+   * documento.
+   */
+  const savedOperationById =
     operations.find(
       (
         operation,
@@ -462,11 +485,27 @@ export default async function AnalysisPage({
           operation.document_id,
         ) ===
         document.id,
-    ) ??
+    );
+
+  const indexedOperation =
     operations[
       currentIndex
-    ] ??
-    {};
+    ] ?? {};
+
+  const indexedOperationHasDocumentId =
+    Boolean(
+      asString(
+        indexedOperation.document_id,
+      ),
+    );
+
+  const savedOperation =
+    savedOperationById ??
+    (
+      !indexedOperationHasDocumentId
+        ? indexedOperation
+        : {}
+    );
 
   const operationType =
     asString(
@@ -485,12 +524,55 @@ export default async function AnalysisPage({
     ) ||
     "pending";
 
+  const preparationStatus =
+    asString(
+      savedOperation.preparation_status,
+    ) ||
+    "pending";
+
   const isSaved =
     result !==
       "pending" &&
+    preparationStatus !==
+      "pending" &&
     Boolean(
       asString(
-        savedOperation.technical_analysis,
+        savedOperation.operation_identification,
+      ),
+    ) &&
+    Boolean(
+      asString(
+        savedOperation.evidence_found,
+      ),
+    ) &&
+    Boolean(
+      asString(
+        savedOperation.calculation_review,
+      ),
+    ) &&
+    Boolean(
+      asString(
+        savedOperation.technical_finding,
+      ),
+    ) &&
+    Boolean(
+      asString(
+        savedOperation.risk_impact,
+      ),
+    ) &&
+    Boolean(
+      asString(
+        savedOperation.recommended_action,
+      ),
+    ) &&
+    Boolean(
+      asString(
+        savedOperation.responsible_party,
+      ),
+    ) &&
+    Boolean(
+      asString(
+        savedOperation.closure_evidence,
       ),
     );
 
@@ -642,7 +724,7 @@ export default async function AnalysisPage({
               </h1>
 
               <p>
-                Analise uma NF-e por vez.
+                Analise um XML por vez.
                 Salve a análise e avance
                 até concluir todos os
                 arquivos.
@@ -708,7 +790,18 @@ export default async function AnalysisPage({
             </div>
           ) : null}
 
+          {/*
+            O key do documento força o React
+            a desmontar e recriar todo o
+            formulário quando muda de XML.
+
+            Isso é essencial porque os campos
+            abaixo utilizam defaultValue.
+          */}
           <article
+            key={
+              document.id
+            }
             className={
               styles.xmlAnalysisCard
             }
@@ -720,7 +813,7 @@ export default async function AnalysisPage({
             >
               <div>
                 <span>
-                  NF-e{" "}
+                  XML{" "}
                   {
                     currentIndex +
                     1
@@ -844,6 +937,7 @@ export default async function AnalysisPage({
             </section>
 
             <form
+              key={`form-${document.id}`}
               className={
                 styles.xmlAnalysisForm
               }
@@ -930,7 +1024,7 @@ export default async function AnalysisPage({
 
                 <label>
                   <span>
-                    Resultado da NF-e *
+                    Conformidade do documento *
                   </span>
 
                   <select
@@ -964,8 +1058,9 @@ export default async function AnalysisPage({
                   </select>
 
                   <small>
-                    Classifique após
-                    conferir o arquivo.
+                    Classifique o XML como
+                    conforme, requer atenção
+                    ou risco crítico.
                   </small>
                 </label>
 
@@ -975,24 +1070,100 @@ export default async function AnalysisPage({
                   }
                 >
                   <span>
-                    O que foi encontrado
-                    nesta NF-e? *
+                    Preparação IBS/CBS *
+                  </span>
+
+                  <select
+                    name="preparationStatus"
+                    defaultValue={
+                      preparationStatus
+                    }
+                    required
+                  >
+                    {Object.entries(
+                      preparationLabels,
+                    ).map(
+                      ([
+                        value,
+                        label,
+                      ]) => (
+                        <option
+                          key={
+                            value
+                          }
+                          value={
+                            value
+                          }
+                        >
+                          {
+                            label
+                          }
+                        </option>
+                      ),
+                    )}
+                  </select>
+
+                  <small>
+                    Avalie somente a preparação
+                    comprovada por esta operação
+                    e pelas evidências disponíveis.
+                  </small>
+                </label>
+
+                <label
+                  className={
+                    styles.analysisWideField
+                  }
+                >
+                  <span>
+                    1. Identificação da operação *
                   </span>
 
                   <textarea
-                    name="technicalAnalysis"
+                    name="operationIdentification"
                     defaultValue={
+                      asString(
+                        savedOperation.operation_identification,
+                      )
+                    }
+                    required
+                    placeholder="Registre modelo do documento, data, regime do emitente, natureza da operação, destino, CFOP, produto/NCM quando relevante, valor e situação de autorização."
+                  />
+
+                  <small>
+                    Use somente informações
+                    efetivamente verificadas no XML
+                    ou no contexto documentado.
+                  </small>
+                </label>
+
+                <label
+                  className={
+                    styles.analysisWideField
+                  }
+                >
+                  <span>
+                    2. Evidências encontradas *
+                  </span>
+
+                  <textarea
+                    name="evidenceFound"
+                    defaultValue={
+                      asString(
+                        savedOperation.evidence_found,
+                      ) ||
                       asString(
                         savedOperation.technical_analysis,
                       )
                     }
                     required
-                    placeholder="Registre os pontos efetivamente conferidos no XML: CFOP, CST, cClassTrib, IBS, CBS, base de cálculo, alíquotas, valores, totalização, rejeições e parametrizações relevantes."
+                    placeholder="Registre os campos efetivamente localizados: CST IBS/CBS, cClassTrib, grupo IBSCBS/gIBSCBS, base, alíquotas, valores, totalizações, protocolo, rejeições e outros elementos relevantes."
                   />
 
                   <small>
-                    Este é o registro
-                    técnico desta NF-e.
+                    Diferencie claramente
+                    o que está presente,
+                    ausente ou não aplicável.
                   </small>
                 </label>
 
@@ -1002,18 +1173,188 @@ export default async function AnalysisPage({
                   }
                 >
                   <span>
-                    O que o cliente deve
-                    fazer?
+                    3. Conferência dos cálculos *
                   </span>
 
                   <textarea
-                    name="recommendation"
+                    name="calculationReview"
                     defaultValue={
+                      asString(
+                        savedOperation.calculation_review,
+                      )
+                    }
+                    required
+                    placeholder="Demonstre a conferência da base, IBS, CBS e totalizações quando aplicável. Se não houver cálculo IBS/CBS aplicável ao cenário/data, registre expressamente o motivo."
+                  />
+
+                  <small>
+                    Não deixe este campo vazio.
+                    Quando não aplicável,
+                    explique por quê.
+                  </small>
+                </label>
+
+                <label
+                  className={
+                    styles.analysisWideField
+                  }
+                >
+                  <span>
+                    4. Achado técnico *
+                  </span>
+
+                  <textarea
+                    name="technicalFinding"
+                    defaultValue={
+                      asString(
+                        savedOperation.technical_finding,
+                      ) ||
+                      asString(
+                        savedOperation.technical_analysis,
+                      )
+                    }
+                    required
+                    placeholder="Descreva a conclusão técnica decorrente das evidências: o que está correto, o que está incorreto ou o que não pôde ser comprovado."
+                  />
+
+                  <small>
+                    O achado deve ser objetivo
+                    e sustentado pelas evidências
+                    registradas acima.
+                  </small>
+                </label>
+
+                <label
+                  className={
+                    styles.analysisWideField
+                  }
+                >
+                  <span>
+                    5. Fundamentação técnica
+                  </span>
+
+                  <textarea
+                    name="technicalBasis"
+                    defaultValue={
+                      asString(
+                        savedOperation.technical_basis,
+                      )
+                    }
+                    placeholder="Quando aplicável, registre regra de validação, rejeição, Nota Técnica, orientação oficial ou outro fundamento relacionado diretamente ao achado."
+                  />
+
+                  <small>
+                    Campo opcional. Use quando
+                    houver fundamento específico
+                    pertinente ao documento.
+                  </small>
+                </label>
+
+                <label
+                  className={
+                    styles.analysisWideField
+                  }
+                >
+                  <span>
+                    6. Risco ou impacto *
+                  </span>
+
+                  <textarea
+                    name="riskImpact"
+                    defaultValue={
+                      asString(
+                        savedOperation.risk_impact,
+                      )
+                    }
+                    required
+                    placeholder="Informe a consequência prática: rejeição, inconsistência documental, parametrização inadequada, retrabalho, risco tributário, ausência de evidência ou ausência de risco identificado."
+                  />
+                </label>
+
+                <label
+                  className={
+                    styles.analysisWideField
+                  }
+                >
+                  <span>
+                    7. Ação recomendada *
+                  </span>
+
+                  <textarea
+                    name="recommendedAction"
+                    defaultValue={
+                      asString(
+                        savedOperation.recommended_action,
+                      ) ||
                       asString(
                         savedOperation.recommendation,
                       )
                     }
-                    placeholder="Registre a recomendação prática decorrente desta NF-e. Se estiver conforme, informe que não foi identificado ajuste específico no escopo analisado."
+                    required
+                    placeholder="Informe exatamente o que deve ser feito. Se não houver ajuste, registre que nenhuma correção específica foi identificada no escopo analisado."
+                  />
+                </label>
+
+                <label>
+                  <span>
+                    8. Responsável sugerido *
+                  </span>
+
+                  <input
+                    type="text"
+                    name="responsibleParty"
+                    defaultValue={
+                      asString(
+                        savedOperation.responsible_party,
+                      )
+                    }
+                    required
+                    placeholder="Ex.: ERP + Faturamento"
+                  />
+
+                  <small>
+                    Exemplos: Faturamento,
+                    Contabilidade, ERP/TI
+                    ou responsáveis combinados.
+                  </small>
+                </label>
+
+                <label>
+                  <span>
+                    Situação para encerramento
+                  </span>
+
+                  <input
+                    type="text"
+                    value="Definida pela evidência abaixo"
+                    disabled
+                  />
+
+                  <small>
+                    O item somente deve ser
+                    considerado resolvido quando
+                    a evidência indicada existir.
+                  </small>
+                </label>
+
+                <label
+                  className={
+                    styles.analysisWideField
+                  }
+                >
+                  <span>
+                    9. Evidência para encerramento *
+                  </span>
+
+                  <textarea
+                    name="closureEvidence"
+                    defaultValue={
+                      asString(
+                        savedOperation.closure_evidence,
+                      )
+                    }
+                    required
+                    placeholder="Informe o que precisa existir para considerar este ponto encerrado: novo XML de teste, confirmação formal da contabilidade, evidência do ERP, correção de parametrização ou outra comprovação objetiva."
                   />
                 </label>
               </div>

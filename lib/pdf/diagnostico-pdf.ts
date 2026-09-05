@@ -13,7 +13,24 @@ export type DiagnosticPdfOperation = {
   fileName?: string;
   operation?: string;
   result?: string;
+  documentConformity?: string;
+  preparationStatus?: string;
   cfop?: string;
+
+  operationIdentification?: string;
+  evidenceFound?: string;
+  calculationReview?: string;
+  technicalFinding?: string;
+  technicalBasis?: string;
+  riskImpact?: string;
+  recommendedAction?: string;
+  responsibleParty?: string;
+  closureEvidence?: string;
+
+  /*
+   * Compatibilidade com diagnósticos
+   * produzidos antes da análise detalhada.
+   */
   technicalAnalysis?: string;
   recommendation?: string;
 };
@@ -50,7 +67,12 @@ type ParagraphOptions = {
   lineHeight?: number;
   maxWidth?: number;
   gapAfter?: number;
+  paragraphGap?: number;
 };
+
+type DetailVariant =
+  | "neutral"
+  | "action";
 
 const PAGE_WIDTH =
   595.28;
@@ -65,7 +87,7 @@ const CONTENT_TOP =
   700;
 
 const BOTTOM_Y =
-  74;
+  76;
 
 const CONTENT_WIDTH =
   PAGE_WIDTH -
@@ -150,6 +172,51 @@ const operationResultLabels:
 
   critical:
     "Risco crítico",
+};
+
+const preparationStatusLabels:
+  Record<string, string> = {
+  pending:
+    "Não avaliada",
+
+  proven:
+    "Comprovada para esta operação",
+
+  partially_proven:
+    "Parcialmente comprovada",
+
+  not_proven:
+    "Não comprovada",
+
+  not_applicable:
+    "Não aplicável para o cenário/data analisado",
+};
+
+const taxRegimeLabels:
+  Record<string, string> = {
+  mei:
+    "MEI",
+
+  simples:
+    "Simples Nacional",
+
+  simples_nacional:
+    "Simples Nacional",
+
+  lucro_presumido:
+    "Lucro Presumido",
+
+  lucro_real:
+    "Lucro Real",
+
+  normal:
+    "Regime Normal",
+
+  regime_normal:
+    "Regime Normal",
+
+  outro:
+    "Outro",
 };
 
 const defaultLimitation =
@@ -254,15 +321,111 @@ function formatCnpj(
   );
 }
 
+function formatTaxRegime(
+  value:
+    | string
+    | null
+    | undefined,
+) {
+  const normalized =
+    normalizeText(
+      value,
+    );
+
+  if (!normalized) {
+    return "";
+  }
+
+  const key =
+    normalized
+      .toLocaleLowerCase(
+        "pt-BR",
+      )
+      .replace(
+        /\s+/g,
+        "_",
+      );
+
+  return (
+    taxRegimeLabels[
+      key
+    ] ||
+    normalized
+      .replaceAll(
+        "_",
+        " ",
+      )
+      .replace(
+        /^\w/,
+        (
+          character,
+        ) =>
+          character.toUpperCase(),
+      )
+  );
+}
+
+function extractNatureOperation(
+  value:
+    | string
+    | null
+    | undefined,
+) {
+  const normalized =
+    normalizeText(
+      value,
+    );
+
+  if (!normalized) {
+    return "";
+  }
+
+  const lines =
+    normalized
+      .split(
+        /\r?\n/,
+      )
+      .map(
+        (
+          line,
+        ) =>
+          line.trim(),
+      )
+      .filter(
+        Boolean,
+      );
+
+  const natureLine =
+    lines.find(
+      (
+        line,
+      ) =>
+        line
+          .toLocaleLowerCase(
+            "pt-BR",
+          )
+          .startsWith(
+            "natureza da operação:",
+          ),
+    );
+
+  if (!natureLine) {
+    return "";
+  }
+
+  return natureLine
+    .replace(
+      /^natureza da operação:\s*/i,
+      "",
+    )
+    .trim();
+}
+
 function breakLongWord(
-  word:
-    string,
-  font:
-    PDFFont,
-  size:
-    number,
-  maxWidth:
-    number,
+  word: string,
+  font: PDFFont,
+  size: number,
+  maxWidth: number,
 ) {
   const parts:
     string[] = [];
@@ -307,14 +470,10 @@ function breakLongWord(
 }
 
 function wrapText(
-  value:
-    string,
-  font:
-    PDFFont,
-  size:
-    number,
-  maxWidth:
-    number,
+  value: string,
+  font: PDFFont,
+  size: number,
+  maxWidth: number,
 ) {
   const text =
     normalizeText(
@@ -330,19 +489,45 @@ function wrapText(
   const lines:
     string[] = [];
 
-  const paragraphs =
+  const sourceLines =
     text.split(
       /\r?\n/,
     );
 
-  paragraphs.forEach(
+  sourceLines.forEach(
     (
-      paragraph,
-      paragraphIndex,
+      sourceLine,
     ) => {
+      const paragraph =
+        sourceLine.trim();
+
+      /*
+       * Uma linha vazia real do texto gera
+       * apenas um marcador de respiro.
+       *
+       * Não adicionamos mais uma linha vazia
+       * depois de TODA quebra de linha.
+       */
+      if (!paragraph) {
+        if (
+          lines.length >
+            0 &&
+          lines[
+            lines.length -
+              1
+          ] !==
+            ""
+        ) {
+          lines.push(
+            "",
+          );
+        }
+
+        return;
+      }
+
       const words =
         paragraph
-          .trim()
           .split(
             /\s+/,
           )
@@ -395,9 +580,7 @@ function wrapText(
                 return;
               }
 
-              if (
-                current
-              ) {
+              if (current) {
                 lines.push(
                   current,
                 );
@@ -410,27 +593,32 @@ function wrapText(
         },
       );
 
-      if (
-        current
-      ) {
+      if (current) {
         lines.push(
           current,
-        );
-      }
-
-      if (
-        paragraphIndex <
-        paragraphs.length -
-          1
-      ) {
-        lines.push(
-          "",
         );
       }
     },
   );
 
-  return lines;
+  while (
+    lines.length >
+      0 &&
+    lines[
+      lines.length -
+        1
+    ] ===
+      ""
+  ) {
+    lines.pop();
+  }
+
+  return lines.length >
+    0
+    ? lines
+    : [
+        "Não informado.",
+      ];
 }
 
 export async function generateDiagnosticPdf({
@@ -475,9 +663,7 @@ export async function generateDiagnosticPdf({
     currentPage:
       PDFPage,
   ) {
-    if (
-      logo
-    ) {
+    if (logo) {
       const dimensions =
         logo.scale(
           1,
@@ -672,7 +858,7 @@ export async function generateDiagnosticPdf({
 
     const size =
       options?.size ??
-      9.4;
+      9.2;
 
     const selectedFont =
       options?.font ??
@@ -684,7 +870,7 @@ export async function generateDiagnosticPdf({
 
     const lineHeight =
       options?.lineHeight ??
-      14;
+      12.2;
 
     const maxWidth =
       options?.maxWidth ??
@@ -692,7 +878,11 @@ export async function generateDiagnosticPdf({
 
     const gapAfter =
       options?.gapAfter ??
-      12;
+      8;
+
+    const paragraphGap =
+      options?.paragraphGap ??
+      4;
 
     const lines =
       wrapText(
@@ -707,30 +897,38 @@ export async function generateDiagnosticPdf({
       const line
       of lines
     ) {
+      if (!line) {
+        ensureSpace(
+          paragraphGap +
+            2,
+        );
+
+        y -=
+          paragraphGap;
+
+        continue;
+      }
+
       ensureSpace(
         lineHeight +
           2,
       );
 
-      if (
-        line
-      ) {
-        page.drawText(
-          line,
-          {
-            x,
+      page.drawText(
+        line,
+        {
+          x,
 
-            y,
+          y,
 
-            size,
+          size,
 
-            font:
-              selectedFont,
+          font:
+            selectedFont,
 
-            color,
-          },
-        );
-      }
+          color,
+        },
+      );
 
       y -=
         lineHeight;
@@ -748,8 +946,8 @@ export async function generateDiagnosticPdf({
   ) {
     ensureSpace(
       subtitle
-        ? 64
-        : 48,
+        ? 60
+        : 46,
     );
 
     page.drawText(
@@ -787,7 +985,7 @@ export async function generateDiagnosticPdf({
       end: {
         x:
           MARGIN_X +
-          38,
+          40,
 
         y,
       },
@@ -815,10 +1013,13 @@ export async function generateDiagnosticPdf({
             MUTED,
 
           lineHeight:
-            12,
+            11.2,
 
           gapAfter:
-            8,
+            7,
+
+          paragraphGap:
+            3,
         },
       );
     }
@@ -915,6 +1116,10 @@ export async function generateDiagnosticPdf({
         line,
         index,
       ) => {
+        if (!line) {
+          return;
+        }
+
         page.drawText(
           line,
           {
@@ -964,11 +1169,16 @@ export async function generateDiagnosticPdf({
       );
     }
 
+    const formattedTaxRegime =
+      formatTaxRegime(
+        data.taxRegime,
+      );
+
     if (
-      data.taxRegime
+      formattedTaxRegime
     ) {
       items.push(
-        `Regime: ${data.taxRegime}`,
+        `Regime: ${formattedTaxRegime}`,
       );
     }
 
@@ -996,19 +1206,21 @@ export async function generateDiagnosticPdf({
       wrapText(
         text,
         regular,
-        7.5,
+        7.8,
         CONTENT_WIDTH -
           28,
+      ).filter(
+        Boolean,
       );
 
     const boxHeight =
-      26 +
+      25 +
       lines.length *
         10;
 
     ensureSpace(
       boxHeight +
-        18,
+        16,
     );
 
     page.drawRectangle({
@@ -1054,7 +1266,7 @@ export async function generateDiagnosticPdf({
                 10,
 
             size:
-              7.5,
+              7.8,
 
             font:
               regular,
@@ -1068,75 +1280,21 @@ export async function generateDiagnosticPdf({
 
     y -=
       boxHeight +
-      18;
+      16;
   }
 
-  function drawTextCard(
-    title:
-      string,
-    value:
-      | string
-      | null
-      | undefined,
-    variant:
-      | "neutral"
-      | "gold" =
-      "neutral",
-  ) {
-    const normalized =
-      normalizeText(
-        value ||
-          "Não informado.",
-      );
-
-    const lines =
-      wrapText(
-        normalized,
-        regular,
-        9.2,
-        CONTENT_WIDTH -
-          36,
-      );
-
-    const lineHeight =
-      13.5;
-
-    const cardHeight =
-      50 +
-      lines.length *
-        lineHeight;
-
-    if (
-      cardHeight >
-      360
-    ) {
-      drawSectionTitle(
-        title,
-      );
-
-      drawParagraph(
-        normalized,
-      );
-
-      return;
-    }
-
+  function drawClassification() {
     ensureSpace(
-      cardHeight +
-        16,
+      90,
     );
 
-    const fill =
-      variant ===
-      "gold"
-        ? LIGHT_GOLD
-        : LIGHT;
-
-    const accent =
-      variant ===
-      "gold"
-        ? GOLD
-        : NAVY;
+    const classification =
+      classificationLabels[
+        data.classification ||
+          ""
+      ] ||
+      data.classification ||
+      "Classificação não informada";
 
     page.drawRectangle({
       x:
@@ -1144,22 +1302,22 @@ export async function generateDiagnosticPdf({
 
       y:
         y -
-        cardHeight,
+        70,
 
       width:
         CONTENT_WIDTH,
 
       height:
-        cardHeight,
+        70,
 
       borderWidth:
         1,
 
       borderColor:
-        BORDER,
+        GOLD,
 
       color:
-        fill,
+        LIGHT_GOLD,
     });
 
     page.drawRectangle({
@@ -1168,21 +1326,43 @@ export async function generateDiagnosticPdf({
 
       y:
         y -
-        cardHeight,
+        70,
 
       width:
-        4,
+        5,
 
       height:
-        cardHeight,
+        70,
 
       color:
-        accent,
+        GOLD,
     });
 
     page.drawText(
+      "CLASSIFICAÇÃO GERAL",
+      {
+        x:
+          MARGIN_X +
+          18,
+
+        y:
+          y -
+          23,
+
+        size:
+          6.7,
+
+        font:
+          bold,
+
+        color:
+          GOLD_DARK,
+      },
+    );
+
+    page.drawText(
       normalizeText(
-        title,
+        classification,
       ),
       {
         x:
@@ -1191,10 +1371,10 @@ export async function generateDiagnosticPdf({
 
         y:
           y -
-          24,
+          49,
 
         size:
-          11.2,
+          15,
 
         font:
           bold,
@@ -1204,125 +1384,50 @@ export async function generateDiagnosticPdf({
       },
     );
 
-    lines.forEach(
-      (
-        line,
-        index,
-      ) => {
-        page.drawText(
-          line,
-          {
-            x:
-              MARGIN_X +
-              18,
-
-            y:
-              y -
-              48 -
-              index *
-                lineHeight,
-
-            size:
-              9.2,
-
-            font:
-              regular,
-
-            color:
-              TEXT,
-          },
-        );
-      },
-    );
-
     y -=
-      cardHeight +
-      16;
+      90;
   }
 
-  function drawOperationTextBlock(
-    title:
-      string,
-    value:
-      | string
-      | null
-      | undefined,
-    variant:
-      | "neutral"
-      | "gold",
-  ) {
-    const normalized =
-      normalizeText(
-        value ||
-          "Não informado.",
-      );
-
-    const lines =
-      wrapText(
-        normalized,
-        regular,
-        8.8,
-        CONTENT_WIDTH -
-          32,
-      );
-
-    const lineHeight =
-      13;
-
-    const blockHeight =
-      42 +
-      lines.length *
-        lineHeight;
-
+  function drawOverviewTable() {
     if (
-      blockHeight >
-      300
+      data.operations.length ===
+      0
     ) {
-      ensureSpace(
-        34,
-      );
-
-      page.drawText(
-        title,
-        {
-          x:
-            MARGIN_X,
-
-          y,
-
-          size:
-            9.4,
-
-          font:
-            bold,
-
-          color:
-            NAVY,
-        },
-      );
-
-      y -=
-        18;
-
       drawParagraph(
-        normalized,
-        {
-          size:
-            8.8,
-
-          lineHeight,
-
-          gapAfter:
-            12,
-        },
+        "Nenhum XML foi apresentado no resultado.",
       );
 
       return;
     }
 
+    const documentWidth =
+      190;
+
+    const conformityWidth =
+      112;
+
+    const preparationWidth =
+      CONTENT_WIDTH -
+      documentWidth -
+      conformityWidth;
+
+    const x1 =
+      MARGIN_X;
+
+    const x2 =
+      x1 +
+      documentWidth;
+
+    const x3 =
+      x2 +
+      conformityWidth;
+
+    const headerHeight =
+      28;
+
     ensureSpace(
-      blockHeight +
-        10,
+      headerHeight +
+        50,
     );
 
     page.drawRectangle({
@@ -1331,13 +1436,1220 @@ export async function generateDiagnosticPdf({
 
       y:
         y -
-        blockHeight,
+        headerHeight,
 
       width:
         CONTENT_WIDTH,
 
       height:
-        blockHeight,
+        headerHeight,
+
+      color:
+        NAVY,
+    });
+
+    const headers = [
+      {
+        x:
+          x1,
+
+        label:
+          "DOCUMENTO",
+      },
+      {
+        x:
+          x2,
+
+        label:
+          "CONFORMIDADE",
+      },
+      {
+        x:
+          x3,
+
+        label:
+          "PREPARAÇÃO IBS/CBS",
+      },
+    ];
+
+    headers.forEach(
+      (
+        item,
+      ) => {
+        page.drawText(
+          item.label,
+          {
+            x:
+              item.x +
+              10,
+
+            y:
+              y -
+              18,
+
+            size:
+              6.3,
+
+            font:
+              bold,
+
+            color:
+              WHITE,
+          },
+        );
+      },
+    );
+
+    y -=
+      headerHeight;
+
+    data.operations.forEach(
+      (
+        operation,
+        index,
+      ) => {
+        const resultValue =
+          operation.documentConformity ||
+          operation.result ||
+          "";
+
+        const conformity =
+          operationResultLabels[
+            resultValue
+          ] ||
+          resultValue ||
+          "Não informado";
+
+        const preparation =
+          preparationStatusLabels[
+            operation.preparationStatus ||
+              ""
+          ] ||
+          operation.preparationStatus ||
+          "Não informado";
+
+        const documentText =
+          normalizeText(
+            operation.fileName ||
+              `XML ${index + 1}`,
+          );
+
+        const documentLines =
+          wrapText(
+            documentText,
+            bold,
+            7.7,
+            documentWidth -
+              20,
+          ).filter(
+            Boolean,
+          );
+
+        const conformityLines =
+          wrapText(
+            conformity,
+            regular,
+            7.5,
+            conformityWidth -
+              20,
+          ).filter(
+            Boolean,
+          );
+
+        const preparationLines =
+          wrapText(
+            preparation,
+            regular,
+            7.5,
+            preparationWidth -
+              20,
+          ).filter(
+            Boolean,
+          );
+
+        const maxLines =
+          Math.max(
+            documentLines.length,
+            conformityLines.length,
+            preparationLines.length,
+          );
+
+        const rowHeight =
+          Math.max(
+            38,
+            19 +
+            maxLines *
+              10,
+          );
+
+        if (
+          y -
+            rowHeight <
+          BOTTOM_Y
+        ) {
+          addPage();
+
+          page.drawRectangle({
+            x:
+              MARGIN_X,
+
+            y:
+              y -
+              headerHeight,
+
+            width:
+              CONTENT_WIDTH,
+
+            height:
+              headerHeight,
+
+            color:
+              NAVY,
+          });
+
+          headers.forEach(
+            (
+              item,
+            ) => {
+              page.drawText(
+                item.label,
+                {
+                  x:
+                    item.x +
+                    10,
+
+                  y:
+                    y -
+                    18,
+
+                  size:
+                    6.3,
+
+                  font:
+                    bold,
+
+                  color:
+                    WHITE,
+                },
+              );
+            },
+          );
+
+          y -=
+            headerHeight;
+        }
+
+        page.drawRectangle({
+          x:
+            MARGIN_X,
+
+          y:
+            y -
+            rowHeight,
+
+          width:
+            CONTENT_WIDTH,
+
+          height:
+            rowHeight,
+
+          borderWidth:
+            1,
+
+          borderColor:
+            BORDER,
+
+          color:
+            index %
+              2 ===
+            0
+              ? LIGHT
+              : WHITE,
+        });
+
+        page.drawLine({
+          start: {
+            x:
+              x2,
+
+            y:
+              y,
+          },
+
+          end: {
+            x:
+              x2,
+
+            y:
+              y -
+              rowHeight,
+          },
+
+          thickness:
+            1,
+
+          color:
+            BORDER,
+        });
+
+        page.drawLine({
+          start: {
+            x:
+              x3,
+
+            y:
+              y,
+          },
+
+          end: {
+            x:
+              x3,
+
+            y:
+              y -
+              rowHeight,
+          },
+
+          thickness:
+            1,
+
+          color:
+            BORDER,
+        });
+
+        documentLines.forEach(
+          (
+            line,
+            lineIndex,
+          ) => {
+            page.drawText(
+              line,
+              {
+                x:
+                  x1 +
+                  10,
+
+                y:
+                  y -
+                  19 -
+                  lineIndex *
+                    10,
+
+                size:
+                  7.7,
+
+                font:
+                  bold,
+
+                color:
+                  NAVY,
+              },
+            );
+          },
+        );
+
+        conformityLines.forEach(
+          (
+            line,
+            lineIndex,
+          ) => {
+            page.drawText(
+              line,
+              {
+                x:
+                  x2 +
+                  10,
+
+                y:
+                  y -
+                  19 -
+                  lineIndex *
+                    10,
+
+                size:
+                  7.5,
+
+                font:
+                  regular,
+
+                color:
+                  TEXT,
+              },
+            );
+          },
+        );
+
+        preparationLines.forEach(
+          (
+            line,
+            lineIndex,
+          ) => {
+            page.drawText(
+              line,
+              {
+                x:
+                  x3 +
+                  10,
+
+                y:
+                  y -
+                  19 -
+                  lineIndex *
+                    10,
+
+                size:
+                  7.5,
+
+                font:
+                  regular,
+
+                color:
+                  TEXT,
+              },
+            );
+          },
+        );
+
+        y -=
+          rowHeight;
+      },
+    );
+
+    y -=
+      16;
+  }
+
+  function drawXmlHeader(
+    operation:
+      DiagnosticPdfOperation,
+    index:
+      number,
+  ) {
+    const fileName =
+      normalizeText(
+        operation.fileName ||
+          `Documento ${index + 1}`,
+      );
+
+    const fileLines =
+      wrapText(
+        fileName,
+        bold,
+        12.5,
+        CONTENT_WIDTH -
+          32,
+      )
+        .filter(
+          Boolean,
+        )
+        .slice(
+          0,
+          2,
+        );
+
+    const bandHeight =
+      Math.max(
+        58,
+        36 +
+        fileLines.length *
+          15,
+      );
+
+    ensureSpace(
+      bandHeight +
+        16,
+    );
+
+    page.drawRectangle({
+      x:
+        MARGIN_X,
+
+      y:
+        y -
+        bandHeight,
+
+      width:
+        CONTENT_WIDTH,
+
+      height:
+        bandHeight,
+
+      color:
+        NAVY,
+    });
+
+    page.drawText(
+      `XML ${index + 1}`,
+      {
+        x:
+          MARGIN_X +
+          16,
+
+        y:
+          y -
+          20,
+
+        size:
+          6.8,
+
+        font:
+          bold,
+
+        color:
+          GOLD,
+      },
+    );
+
+    fileLines.forEach(
+      (
+        line,
+        lineIndex,
+      ) => {
+        page.drawText(
+          line,
+          {
+            x:
+              MARGIN_X +
+              16,
+
+            y:
+              y -
+              42 -
+              lineIndex *
+                15,
+
+            size:
+              12.5,
+
+            font:
+              bold,
+
+            color:
+              WHITE,
+          },
+        );
+      },
+    );
+
+    y -=
+      bandHeight +
+      15;
+  }
+
+  function drawLabelValue(
+    label:
+      string,
+    value:
+      string,
+  ) {
+    if (!value) {
+      return;
+    }
+
+    ensureSpace(
+      38,
+    );
+
+    page.drawText(
+      normalizeText(
+        label,
+      ).toUpperCase(),
+      {
+        x:
+          MARGIN_X,
+
+        y,
+
+        size:
+          6.4,
+
+        font:
+          bold,
+
+        color:
+          MUTED,
+      },
+    );
+
+    y -=
+      12;
+
+    drawParagraph(
+      value,
+      {
+        size:
+          8.8,
+
+        lineHeight:
+          11.5,
+
+        gapAfter:
+          7,
+
+        paragraphGap:
+          3,
+      },
+    );
+  }
+
+  function drawOperationMetaGrid(
+    operation:
+      DiagnosticPdfOperation,
+  ) {
+    const resultValue =
+      operation.documentConformity ||
+      operation.result ||
+      "";
+
+    const conformity =
+      operationResultLabels[
+        resultValue
+      ] ||
+      resultValue ||
+      "Não informado";
+
+    const preparation =
+      preparationStatusLabels[
+        operation.preparationStatus ||
+          ""
+      ] ||
+      operation.preparationStatus ||
+      "Não informado";
+
+    const items = [
+      {
+        label:
+          "CFOP identificado",
+
+        value:
+          operation.cfop ||
+          "Não informado",
+      },
+      {
+        label:
+          "Conformidade do documento",
+
+        value:
+          conformity,
+      },
+      {
+        label:
+          "Preparação IBS/CBS",
+
+        value:
+          preparation,
+      },
+    ];
+
+    const gap =
+      8;
+
+    const boxWidth =
+      (
+        CONTENT_WIDTH -
+        gap * 2
+      ) /
+      3;
+
+    const prepared =
+      items.map(
+        (
+          item,
+        ) => ({
+          ...item,
+
+          lines:
+            wrapText(
+              item.value,
+              bold,
+              7.4,
+              boxWidth -
+                20,
+            ).filter(
+              Boolean,
+            ),
+        }),
+      );
+
+    const maxLines =
+      Math.max(
+        ...prepared.map(
+          (
+            item,
+          ) =>
+            item.lines.length,
+        ),
+      );
+
+    const boxHeight =
+      Math.max(
+        62,
+        38 +
+        maxLines *
+          10,
+      );
+
+    ensureSpace(
+      boxHeight +
+        16,
+    );
+
+    prepared.forEach(
+      (
+        item,
+        index,
+      ) => {
+        const x =
+          MARGIN_X +
+          index *
+            (
+              boxWidth +
+              gap
+            );
+
+        page.drawRectangle({
+          x,
+
+          y:
+            y -
+            boxHeight,
+
+          width:
+            boxWidth,
+
+          height:
+            boxHeight,
+
+          borderWidth:
+            1,
+
+          borderColor:
+            BORDER,
+
+          color:
+            WHITE,
+        });
+
+        page.drawRectangle({
+          x,
+
+          y:
+            y -
+            boxHeight,
+
+          width:
+            3,
+
+          height:
+            boxHeight,
+
+          color:
+            index ===
+            2
+              ? GOLD
+              : NAVY,
+        });
+
+        page.drawText(
+          normalizeText(
+            item.label,
+          ).toUpperCase(),
+          {
+            x:
+              x +
+              11,
+
+            y:
+              y -
+              18,
+
+            size:
+              5.7,
+
+            font:
+              bold,
+
+            color:
+              MUTED,
+          },
+        );
+
+        item.lines.forEach(
+          (
+            line,
+            lineIndex,
+          ) => {
+            page.drawText(
+              line,
+              {
+                x:
+                  x +
+                  11,
+
+                y:
+                  y -
+                  39 -
+                  lineIndex *
+                    10,
+
+                size:
+                  7.4,
+
+                font:
+                  bold,
+
+                color:
+                  NAVY,
+              },
+            );
+          },
+        );
+      },
+    );
+
+    y -=
+      boxHeight +
+      17;
+  }
+
+  function drawGroupBanner(
+    label:
+      string,
+    variant:
+      "neutral"
+      | "action" =
+      "neutral",
+  ) {
+    ensureSpace(
+      43,
+    );
+
+    const height =
+      30;
+
+    page.drawRectangle({
+      x:
+        MARGIN_X,
+
+      y:
+        y -
+        height,
+
+      width:
+        CONTENT_WIDTH,
+
+      height,
+
+      borderWidth:
+        1,
+
+      borderColor:
+        variant ===
+        "action"
+          ? GOLD
+          : BORDER,
+
+      color:
+        variant ===
+        "action"
+          ? LIGHT_GOLD
+          : LIGHT,
+    });
+
+    page.drawRectangle({
+      x:
+        MARGIN_X,
+
+      y:
+        y -
+        height,
+
+      width:
+        4,
+
+      height,
+
+      color:
+        variant ===
+        "action"
+          ? GOLD
+          : NAVY,
+    });
+
+    page.drawText(
+      normalizeText(
+        label,
+      ).toUpperCase(),
+      {
+        x:
+          MARGIN_X +
+          16,
+
+        y:
+          y -
+          19,
+
+        size:
+          7.3,
+
+        font:
+          bold,
+
+        color:
+          variant ===
+          "action"
+            ? GOLD_DARK
+            : NAVY,
+      },
+    );
+
+    y -=
+      height +
+      13;
+  }
+
+  function drawDetailField(
+    title:
+      string,
+    value:
+      | string
+      | null
+      | undefined,
+    variant:
+      DetailVariant =
+      "neutral",
+  ) {
+    const normalized =
+      normalizeText(
+        value ||
+          "Não informado.",
+      );
+
+    ensureSpace(
+      40,
+    );
+
+    page.drawText(
+      normalizeText(
+        title,
+      ),
+      {
+        x:
+          MARGIN_X,
+
+        y,
+
+        size:
+          9.7,
+
+        font:
+          bold,
+
+        color:
+          variant ===
+          "action"
+            ? GOLD_DARK
+            : NAVY,
+      },
+    );
+
+    y -=
+      7;
+
+    page.drawLine({
+      start: {
+        x:
+          MARGIN_X,
+
+        y,
+      },
+
+      end: {
+        x:
+          MARGIN_X +
+          30,
+
+        y,
+      },
+
+      thickness:
+        1.7,
+
+      color:
+        variant ===
+        "action"
+          ? GOLD
+          : BORDER,
+    });
+
+    y -=
+      12;
+
+    drawParagraph(
+      normalized,
+      {
+        size:
+          8.9,
+
+        lineHeight:
+          12,
+
+        gapAfter:
+          12,
+
+        paragraphGap:
+          4,
+      },
+    );
+  }
+
+  function drawLegacyOperation(
+    operation:
+      DiagnosticPdfOperation,
+  ) {
+    drawGroupBanner(
+      "Análise do documento",
+    );
+
+    drawDetailField(
+      "Análise técnica",
+      operation.technicalAnalysis ||
+        "Não informada.",
+    );
+
+    drawGroupBanner(
+      "Providências",
+      "action",
+    );
+
+    drawDetailField(
+      "Recomendação",
+      operation.recommendation ||
+        "Não foi registrada recomendação específica para este XML.",
+      "action",
+    );
+  }
+
+  function drawDetailedOperation(
+    operation:
+      DiagnosticPdfOperation,
+  ) {
+    drawGroupBanner(
+      "A. Documento e evidências",
+    );
+
+    drawDetailField(
+      "1. Identificação da operação",
+      operation.operationIdentification ||
+        "Não informada.",
+    );
+
+    drawDetailField(
+      "2. Evidências encontradas",
+      operation.evidenceFound ||
+        "Não informadas.",
+    );
+
+    drawDetailField(
+      "3. Conferência dos cálculos",
+      operation.calculationReview ||
+        "Não informada.",
+    );
+
+    drawGroupBanner(
+      "B. Diagnóstico técnico",
+    );
+
+    drawDetailField(
+      "4. Achado técnico",
+      operation.technicalFinding ||
+        "Não informado.",
+    );
+
+    if (
+      normalizeText(
+        operation.technicalBasis,
+      )
+    ) {
+      drawDetailField(
+        "5. Fundamentação técnica",
+        operation.technicalBasis,
+      );
+    }
+
+    drawDetailField(
+      "6. Risco ou impacto",
+      operation.riskImpact ||
+        "Não informado.",
+    );
+
+    drawGroupBanner(
+      "C. Providências e encerramento",
+      "action",
+    );
+
+    drawDetailField(
+      "7. Ação recomendada",
+      operation.recommendedAction ||
+        "Não informada.",
+      "action",
+    );
+
+    drawDetailField(
+      "8. Responsável sugerido",
+      operation.responsibleParty ||
+        "Não informado.",
+      "action",
+    );
+
+    drawDetailField(
+      "9. Evidência para encerramento",
+      operation.closureEvidence ||
+        "Não informada.",
+      "action",
+    );
+  }
+
+  function drawSummarySection(
+    title:
+      string,
+    value:
+      | string
+      | null
+      | undefined,
+    variant:
+      "neutral"
+      | "gold" =
+      "neutral",
+  ) {
+    ensureSpace(
+      48,
+    );
+
+    page.drawText(
+      normalizeText(
+        title,
+      ),
+      {
+        x:
+          MARGIN_X,
+
+        y,
+
+        size:
+          12.2,
+
+        font:
+          bold,
+
+        color:
+          NAVY,
+      },
+    );
+
+    y -=
+      9;
+
+    page.drawLine({
+      start: {
+        x:
+          MARGIN_X,
+
+        y,
+      },
+
+      end: {
+        x:
+          MARGIN_X +
+          42,
+
+        y,
+      },
+
+      thickness:
+        2,
+
+      color:
+        variant ===
+        "gold"
+          ? GOLD
+          : NAVY,
+    });
+
+    y -=
+      15;
+
+    drawParagraph(
+      value ||
+        "Não informado.",
+      {
+        size:
+          9.2,
+
+        lineHeight:
+          12.5,
+
+        gapAfter:
+          16,
+
+        paragraphGap:
+          4,
+      },
+    );
+  }
+
+  function drawLimitationBox(
+    value:
+      string,
+  ) {
+    const normalized =
+      normalizeText(
+        value,
+      );
+
+    const lines =
+      wrapText(
+        normalized,
+        regular,
+        8.2,
+        CONTENT_WIDTH -
+          34,
+      );
+
+    const visibleLines =
+      lines.filter(
+        Boolean,
+      );
+
+    const lineHeight =
+      11.4;
+
+    const boxHeight =
+      46 +
+      visibleLines.length *
+        lineHeight;
+
+    if (
+      y -
+        boxHeight <
+      BOTTOM_Y
+    ) {
+      addPage();
+    }
+
+    page.drawRectangle({
+      x:
+        MARGIN_X,
+
+      y:
+        y -
+        boxHeight,
+
+      width:
+        CONTENT_WIDTH,
+
+      height:
+        boxHeight,
 
       borderWidth:
         1,
@@ -1346,38 +2658,32 @@ export async function generateDiagnosticPdf({
         BORDER,
 
       color:
-        variant ===
-        "gold"
-          ? LIGHT_GOLD
-          : LIGHT,
+        LIGHT,
     });
 
     page.drawText(
-      title,
+      "Escopo e limitações",
       {
         x:
           MARGIN_X +
-          15,
+          16,
 
         y:
           y -
-          21,
+          23,
 
         size:
-          8.8,
+          10.3,
 
         font:
           bold,
 
         color:
-          variant ===
-          "gold"
-            ? GOLD_DARK
-            : NAVY,
+          NAVY,
       },
     );
 
-    lines.forEach(
+    visibleLines.forEach(
       (
         line,
         index,
@@ -1387,31 +2693,110 @@ export async function generateDiagnosticPdf({
           {
             x:
               MARGIN_X +
-              15,
+              16,
 
             y:
               y -
-              42 -
+              45 -
               index *
                 lineHeight,
 
             size:
-              8.8,
+              8.2,
 
             font:
               regular,
 
             color:
-              TEXT,
+              MUTED,
           },
         );
       },
     );
 
     y -=
-      blockHeight +
-      10;
+      boxHeight +
+      22;
   }
+
+  function drawSignature() {
+    ensureSpace(
+      72,
+    );
+
+    page.drawLine({
+      start: {
+        x:
+          MARGIN_X,
+
+        y,
+      },
+
+      end: {
+        x:
+          MARGIN_X +
+          150,
+
+        y,
+      },
+
+      thickness:
+        1,
+
+      color:
+        BORDER,
+    });
+
+    y -=
+      20;
+
+    page.drawText(
+      "Diana Voltolini",
+      {
+        x:
+          MARGIN_X,
+
+        y,
+
+        size:
+          11,
+
+        font:
+          bold,
+
+        color:
+          NAVY,
+      },
+    );
+
+    y -=
+      16;
+
+    page.drawText(
+      "Especialista em Faturamento e Inteligência Fiscal",
+      {
+        x:
+          MARGIN_X,
+
+        y,
+
+        size:
+          7.6,
+
+        font:
+          regular,
+
+        color:
+          MUTED,
+      },
+    );
+  }
+
+  /*
+   * =========================================================
+   * 1. RESULTADO EXECUTIVO
+   * =========================================================
+   */
 
   page.drawText(
     "RESULTADO DO DIAGNÓSTICO",
@@ -1486,13 +2871,16 @@ export async function generateDiagnosticPdf({
         10.2,
 
       lineHeight:
-        15,
+        13.5,
 
       maxWidth:
         455,
 
       gapAfter:
-        22,
+        20,
+
+      paragraphGap:
+        4,
     },
   );
 
@@ -1563,108 +2951,14 @@ export async function generateDiagnosticPdf({
 
   drawContextRow();
 
-  ensureSpace(
-    92,
+  drawClassification();
+
+  drawSectionTitle(
+    "Visão geral dos XMLs",
+    "Resultado resumido dos documentos incluídos no escopo.",
   );
 
-  const classification =
-    classificationLabels[
-      data.classification ||
-        ""
-    ] ||
-    data.classification ||
-    "Classificação não informada";
-
-  page.drawRectangle({
-    x:
-      MARGIN_X,
-
-    y:
-      y -
-      70,
-
-    width:
-      CONTENT_WIDTH,
-
-    height:
-      70,
-
-    borderWidth:
-      1,
-
-    borderColor:
-      GOLD,
-
-    color:
-      LIGHT_GOLD,
-  });
-
-  page.drawRectangle({
-    x:
-      MARGIN_X,
-
-    y:
-      y -
-      70,
-
-    width:
-      5,
-
-    height:
-      70,
-
-    color:
-      GOLD,
-  });
-
-  page.drawText(
-    "CLASSIFICAÇÃO GERAL",
-    {
-      x:
-        MARGIN_X +
-        18,
-
-      y:
-        y -
-        23,
-
-      size:
-        6.7,
-
-      font:
-        bold,
-
-      color:
-        GOLD_DARK,
-    },
-  );
-
-  page.drawText(
-    normalizeText(
-      classification,
-    ),
-    {
-      x:
-        MARGIN_X +
-        18,
-
-      y:
-        y -
-        49,
-
-      size:
-        15,
-
-      font:
-        bold,
-
-      color:
-        NAVY,
-    },
-  );
-
-  y -=
-    92;
+  drawOverviewTable();
 
   drawSectionTitle(
     "Resumo executivo",
@@ -1675,492 +2969,209 @@ export async function generateDiagnosticPdf({
       "Resumo não informado.",
     {
       size:
-        9.6,
+        9.5,
 
       lineHeight:
-        14.5,
+        12.8,
 
       gapAfter:
-        18,
+        13,
+
+      paragraphGap:
+        4,
     },
   );
 
-  drawSectionTitle(
-    "XMLs analisados",
-    `${data.operations.length} ${
-      data.operations.length ===
-      1
-        ? "documento incluído"
-        : "documentos incluídos"
-    } na análise.`,
-  );
-
-  if (
-    data.operations.length ===
-    0
-  ) {
-    drawParagraph(
-      "Nenhum XML foi apresentado no resultado.",
-    );
-  }
+  /*
+   * =========================================================
+   * 2. ANÁLISE INDIVIDUAL DOS XMLs
+   * Cada XML começa obrigatoriamente em uma nova página.
+   * =========================================================
+   */
 
   data.operations.forEach(
     (
       operation,
       index,
     ) => {
-      ensureSpace(
-        150,
+      addPage();
+
+      drawXmlHeader(
+        operation,
+        index,
       );
 
-      const cardTop =
-        y;
-
-      const result =
-        operationResultLabels[
-          operation.result ||
-            ""
-        ] ||
-        operation.result ||
-        "Não informado";
-
-      const normalizedResult =
+      drawLabelValue(
+        "Operação informada pelo cliente",
         normalizeText(
-          result,
-        );
-
-      const statusWidth =
-        bold.widthOfTextAtSize(
-          normalizedResult,
-          7.4,
-        );
-
-      page.drawRectangle({
-        x:
-          MARGIN_X,
-
-        y:
-          cardTop -
-          38,
-
-        width:
-          CONTENT_WIDTH,
-
-        height:
-          38,
-
-        color:
-          NAVY,
-      });
-
-      page.drawText(
-        `XML ${index + 1}`,
-        {
-          x:
-            MARGIN_X +
-            14,
-
-          y:
-            cardTop -
-            23,
-
-          size:
-            7,
-
-          font:
-            bold,
-
-          color:
-            GOLD,
-        },
+          operation.operation,
+        ),
       );
 
-      page.drawText(
-        normalizedResult,
-        {
-          x:
-            PAGE_WIDTH -
-            MARGIN_X -
-            14 -
-            statusWidth,
-
-          y:
-            cardTop -
-            23,
-
-          size:
-            7.4,
-
-          font:
-            bold,
-
-          color:
-            WHITE,
-        },
+      drawLabelValue(
+        "Natureza da operação no XML",
+        extractNatureOperation(
+          operation.operationIdentification,
+        ),
       );
 
-      y -=
-        55;
+      drawOperationMetaGrid(
+        operation,
+      );
 
-      const fileName =
-        normalizeText(
-          operation.fileName ||
-            `Documento ${index + 1}`,
-        );
-
-      const fileNameLines =
-        wrapText(
-          fileName,
-          bold,
-          10.8,
-          CONTENT_WIDTH,
-        );
-
-      fileNameLines
-        .slice(
-          0,
-          2,
-        )
-        .forEach(
-          (
-            line,
-          ) => {
-            page.drawText(
-              line,
-              {
-                x:
-                  MARGIN_X,
-
-                y,
-
-                size:
-                  10.8,
-
-                font:
-                  bold,
-
-                color:
-                  NAVY,
-              },
-            );
-
-            y -=
-              14;
-          },
+      const hasDetailedAnalysis =
+        Boolean(
+          normalizeText(
+            operation.operationIdentification,
+          ) ||
+          normalizeText(
+            operation.evidenceFound,
+          ) ||
+          normalizeText(
+            operation.calculationReview,
+          ) ||
+          normalizeText(
+            operation.technicalFinding,
+          ) ||
+          normalizeText(
+            operation.technicalBasis,
+          ) ||
+          normalizeText(
+            operation.riskImpact,
+          ) ||
+          normalizeText(
+            operation.recommendedAction,
+          ) ||
+          normalizeText(
+            operation.responsibleParty,
+          ) ||
+          normalizeText(
+            operation.closureEvidence,
+          ),
         );
 
       if (
-        operation.operation
+        hasDetailedAnalysis
       ) {
-        drawParagraph(
-          operation.operation,
-          {
-            size:
-              8.5,
-
-            color:
-              MUTED,
-
-            lineHeight:
-              12,
-
-            gapAfter:
-              8,
-          },
+        drawDetailedOperation(
+          operation,
         );
       } else {
-        y -=
-          4;
-      }
-
-      ensureSpace(
-        30,
-      );
-
-      const cfopValue =
-        normalizeText(
-          operation.cfop ||
-            "Não informado",
+        drawLegacyOperation(
+          operation,
         );
-
-      page.drawRectangle({
-        x:
-          MARGIN_X,
-
-        y:
-          y -
-          25,
-
-        width:
-          96,
-
-        height:
-          25,
-
-        borderWidth:
-          1,
-
-        borderColor:
-          BORDER,
-
-        color:
-          WHITE,
-      });
-
-      page.drawText(
-        "CFOP",
-        {
-          x:
-            MARGIN_X +
-            10,
-
-          y:
-            y -
-            16,
-
-          size:
-            6.4,
-
-          font:
-            bold,
-
-          color:
-            MUTED,
-        },
-      );
-
-      page.drawText(
-        cfopValue,
-        {
-          x:
-            MARGIN_X +
-            44,
-
-          y:
-            y -
-            16,
-
-          size:
-            8,
-
-          font:
-            bold,
-
-          color:
-            NAVY,
-        },
-      );
-
-      y -=
-        37;
-
-      drawOperationTextBlock(
-        "Análise técnica",
-        operation.technicalAnalysis ||
-          "Não informada.",
-        "neutral",
-      );
-
-      drawOperationTextBlock(
-        "Recomendação",
-        operation.recommendation ||
-          "Não foi registrada recomendação específica para este XML.",
-        "gold",
-      );
-
-      ensureSpace(
-        18,
-      );
-
-      page.drawLine({
-        start: {
-          x:
-            MARGIN_X,
-
-          y,
-        },
-
-        end: {
-          x:
-            PAGE_WIDTH -
-            MARGIN_X,
-
-          y,
-        },
-
-        thickness:
-          1,
-
-        color:
-          BORDER,
-      });
-
-      y -=
-        18;
+      }
     },
   );
 
-  drawTextCard(
+  /*
+   * =========================================================
+   * 3. SÍNTESE CONSOLIDADA
+   * =========================================================
+   */
+
+  addPage();
+
+  drawSectionTitle(
+    "Síntese do diagnóstico",
+    "Consolidação dos principais achados da análise realizada.",
+  );
+
+  drawSummarySection(
     "Pontos positivos",
     data.strengths ||
       "Não informado.",
-    "neutral",
   );
 
-  drawTextCard(
+  drawSummarySection(
     "Riscos identificados",
     data.risks ||
       "Não informado.",
-    "neutral",
+    "gold",
   );
 
-  drawTextCard(
+  /*
+   * =========================================================
+   * 4. PLANO DE AÇÃO
+   * =========================================================
+   */
+
+  addPage();
+
+  drawSectionTitle(
     "Plano de ação",
+    "Providências recomendadas a partir dos documentos e evidências analisados.",
+  );
+
+  drawParagraph(
     data.actionPlan ||
       "Não informado.",
-    "gold",
+    {
+      size:
+        9.5,
+
+      lineHeight:
+        12.8,
+
+      gapAfter:
+        14,
+
+      paragraphGap:
+        4,
+    },
   );
 
-  drawTextCard(
-    "Parecer final",
-    data.finalOpinion ||
-      "Parecer não informado.",
-    "gold",
-  );
+  /*
+   * =========================================================
+   * 5. PARECER FINAL
+   * =========================================================
+   */
 
-  const limitation =
-    data.limitation ||
-    defaultLimitation;
+  addPage();
 
-  const limitationLines =
-    wrapText(
-      limitation,
-      regular,
-      8.2,
-      CONTENT_WIDTH -
-        30,
-    );
-
-  const limitationHeight =
-    44 +
-    limitationLines.length *
-      12.2;
-
-  if (
-    limitationHeight <=
-    280
-  ) {
-    ensureSpace(
-      limitationHeight +
-        20,
-    );
-
-    page.drawRectangle({
+  page.drawText(
+    "CONCLUSÃO PROFISSIONAL",
+    {
       x:
         MARGIN_X,
 
-      y:
-        y -
-        limitationHeight,
+      y,
 
-      width:
-        CONTENT_WIDTH,
+      size:
+        7,
 
-      height:
-        limitationHeight,
-
-      borderWidth:
-        1,
-
-      borderColor:
-        BORDER,
+      font:
+        bold,
 
       color:
-        WHITE,
-    });
-
-    page.drawText(
-      "Escopo e limitações",
-      {
-        x:
-          MARGIN_X +
-          15,
-
-        y:
-          y -
-          22,
-
-        size:
-          10.2,
-
-        font:
-          bold,
-
-        color:
-          NAVY,
-      },
-    );
-
-    limitationLines.forEach(
-      (
-        line,
-        index,
-      ) => {
-        page.drawText(
-          line,
-          {
-            x:
-              MARGIN_X +
-              15,
-
-            y:
-              y -
-              44 -
-              index *
-                12.2,
-
-            size:
-              8.2,
-
-            font:
-              regular,
-
-            color:
-              MUTED,
-          },
-        );
-      },
-    );
-
-    y -=
-      limitationHeight +
-      22;
-  } else {
-    drawSectionTitle(
-      "Escopo e limitações",
-    );
-
-    drawParagraph(
-      limitation,
-      {
-        size:
-          8.2,
-
-        lineHeight:
-          12.2,
-
-        color:
-          MUTED,
-
-        gapAfter:
-          22,
-      },
-    );
-  }
-
-  ensureSpace(
-    78,
+        GOLD_DARK,
+    },
   );
+
+  y -=
+    28;
+
+  page.drawText(
+    "Parecer final",
+    {
+      x:
+        MARGIN_X,
+
+      y,
+
+      size:
+        18,
+
+      font:
+        bold,
+
+      color:
+        NAVY,
+    },
+  );
+
+  y -=
+    12;
 
   page.drawLine({
     start: {
@@ -2173,61 +3184,51 @@ export async function generateDiagnosticPdf({
     end: {
       x:
         MARGIN_X +
-        150,
+        52,
 
       y,
     },
 
     thickness:
-      1,
+      2.4,
 
     color:
-      BORDER,
+      GOLD,
   });
 
   y -=
-    19;
+    23;
 
-  page.drawText(
-    "Diana Voltolini",
+  drawParagraph(
+    data.finalOpinion ||
+      "Parecer não informado.",
     {
-      x:
-        MARGIN_X,
-
-      y,
-
       size:
-        10.8,
+        9.6,
 
-      font:
-        bold,
+      lineHeight:
+        13,
 
-      color:
-        NAVY,
+      gapAfter:
+        20,
+
+      paragraphGap:
+        5,
     },
   );
 
-  y -=
-    15;
-
-  page.drawText(
-    "Especialista em Faturamento e Inteligência Fiscal",
-    {
-      x:
-        MARGIN_X,
-
-      y,
-
-      size:
-        7.3,
-
-      font:
-        regular,
-
-      color:
-        MUTED,
-    },
+  drawLimitationBox(
+    data.limitation ||
+      defaultLimitation,
   );
+
+  drawSignature();
+
+  /*
+   * =========================================================
+   * RODAPÉ E PAGINAÇÃO
+   * =========================================================
+   */
 
   const pages =
     pdf.getPages();
@@ -2243,7 +3244,7 @@ export async function generateDiagnosticPdf({
             MARGIN_X,
 
           y:
-            47,
+            49,
         },
 
         end: {
@@ -2252,7 +3253,7 @@ export async function generateDiagnosticPdf({
             MARGIN_X,
 
           y:
-            47,
+            49,
         },
 
         thickness:
@@ -2266,7 +3267,7 @@ export async function generateDiagnosticPdf({
         31;
 
       const footerFontSize =
-        5.5;
+        6;
 
       const professionalText =
         "Diana Voltolini | Especialista em Faturamento e Inteligência Fiscal";
@@ -2310,8 +3311,7 @@ export async function generateDiagnosticPdf({
             PAGE_WIDTH /
               2 -
             websiteWidth /
-              2 +
-            78,
+              2,
 
           y:
             footerY,
@@ -2361,7 +3361,7 @@ export async function generateDiagnosticPdf({
       const pageTextWidth =
         regular.widthOfTextAtSize(
           pageText,
-          5.4,
+          5.8,
         );
 
       currentPage.drawText(
@@ -2376,7 +3376,7 @@ export async function generateDiagnosticPdf({
             17,
 
           size:
-            5.4,
+            5.8,
 
           font:
             regular,

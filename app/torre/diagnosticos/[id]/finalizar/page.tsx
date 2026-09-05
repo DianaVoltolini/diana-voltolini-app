@@ -81,6 +81,24 @@ const operationResultLabels:
     "Risco crítico",
 };
 
+const preparationStatusLabels:
+  Record<string, string> = {
+  pending:
+    "Não avaliada",
+
+  proven:
+    "Comprovada para esta operação",
+
+  partially_proven:
+    "Parcialmente comprovada",
+
+  not_proven:
+    "Não comprovada",
+
+  not_applicable:
+    "Não aplicável para o cenário/data analisado",
+};
+
 const errorMessages:
   Record<string, string> = {
   "diagnostico-nao-encontrado":
@@ -205,14 +223,6 @@ export default async function FinalizationPage({
     );
   }
 
-  /*
-   * Esta página é exclusiva da
-   * Etapa 4.
-   *
-   * Não permitimos finalizar
-   * diretamente a partir de
-   * under_review.
-   */
   if (
     diagnostic.status !==
       "awaiting_approval"
@@ -313,14 +323,46 @@ export default async function FinalizationPage({
       ) => {
         const result =
           asString(
+            operation.document_conformity,
+          ) ||
+          asString(
             operation.result,
+          );
+
+        const preparationStatus =
+          asString(
+            operation.preparation_status,
           );
 
         return (
           result.length > 0 &&
           result !== "pending" &&
+          preparationStatus.length > 0 &&
+          preparationStatus !==
+            "pending" &&
           asString(
-            operation.technical_analysis,
+            operation.operation_identification,
+          ).length > 0 &&
+          asString(
+            operation.evidence_found,
+          ).length > 0 &&
+          asString(
+            operation.calculation_review,
+          ).length > 0 &&
+          asString(
+            operation.technical_finding,
+          ).length > 0 &&
+          asString(
+            operation.risk_impact,
+          ).length > 0 &&
+          asString(
+            operation.recommended_action,
+          ).length > 0 &&
+          asString(
+            operation.responsible_party,
+          ).length > 0 &&
+          asString(
+            operation.closure_evidence,
           ).length > 0
         );
       },
@@ -485,8 +527,8 @@ export default async function FinalizationPage({
               </h1>
 
               <p>
-                Confira abaixo exatamente
-                o conteúdo técnico que será
+                Confira exatamente o
+                conteúdo técnico que será
                 disponibilizado ao cliente.
                 Nesta etapa você não edita
                 o diagnóstico: aprova ou
@@ -541,11 +583,11 @@ export default async function FinalizationPage({
               </strong>
 
               <p>
-                Existe alguma inconsistência
-                entre os XMLs analisados,
-                a conclusão ou o status da
-                análise. Retorne para ajustes
-                antes de liberar o resultado.
+                Existe algum campo obrigatório
+                da análise individual, da
+                conclusão ou do status da
+                análise que ainda precisa ser
+                ajustado antes da liberação.
               </p>
 
               <form
@@ -730,7 +772,20 @@ export default async function FinalizationPage({
 
                       const result =
                         asString(
+                          operation.document_conformity,
+                        ) ||
+                        asString(
                           operation.result,
+                        );
+
+                      const preparationStatus =
+                        asString(
+                          operation.preparation_status,
+                        );
+
+                      const technicalBasis =
+                        asString(
+                          operation.technical_basis,
                         );
 
                       return (
@@ -758,6 +813,10 @@ export default async function FinalizationPage({
 
                             {operationName ? (
                               <small>
+                                <b>
+                                  Operação informada
+                                  pelo cliente:
+                                </b>{" "}
                                 {
                                   operationName
                                 }
@@ -768,7 +827,7 @@ export default async function FinalizationPage({
                           <dl>
                             <div>
                               <dt>
-                                CFOP
+                                CFOP identificado
                               </dt>
 
                               <dd>
@@ -781,7 +840,8 @@ export default async function FinalizationPage({
 
                             <div>
                               <dt>
-                                Resultado
+                                Conformidade do
+                                documento
                               </dt>
 
                               <dd>
@@ -792,34 +852,186 @@ export default async function FinalizationPage({
                                   "Não informado"}
                               </dd>
                             </div>
+
+                            <div>
+                              <dt>
+                                Preparação IBS/CBS
+                              </dt>
+
+                              <dd>
+                                {preparationStatusLabels[
+                                  preparationStatus
+                                ] ||
+                                  preparationStatus ||
+                                  "Não informado"}
+                              </dd>
+                            </div>
                           </dl>
 
                           <div
                             className={
-                              styles.operationText
+                              styles.operationDetailList
                             }
                           >
-                            <h4>
-                              Análise técnica
-                            </h4>
+                            <section
+                              className={
+                                styles.operationDetail
+                              }
+                            >
+                              <h4>
+                                1. Identificação da
+                                operação
+                              </h4>
 
-                            <p>
-                              {asString(
-                                operation.technical_analysis,
-                              ) ||
-                                "Não informada."}
-                            </p>
+                              <p>
+                                {asString(
+                                  operation.operation_identification,
+                                ) ||
+                                  "Não informada."}
+                              </p>
+                            </section>
 
-                            <h4>
-                              Recomendação
-                            </h4>
+                            <section
+                              className={
+                                styles.operationDetail
+                              }
+                            >
+                              <h4>
+                                2. Evidências
+                                encontradas
+                              </h4>
 
-                            <p>
-                              {asString(
-                                operation.recommendation,
-                              ) ||
-                                "Não foi registrada recomendação específica para este XML."}
-                            </p>
+                              <p>
+                                {asString(
+                                  operation.evidence_found,
+                                ) ||
+                                  "Não informadas."}
+                              </p>
+                            </section>
+
+                            <section
+                              className={
+                                styles.operationDetail
+                              }
+                            >
+                              <h4>
+                                3. Conferência dos
+                                cálculos
+                              </h4>
+
+                              <p>
+                                {asString(
+                                  operation.calculation_review,
+                                ) ||
+                                  "Não informada."}
+                              </p>
+                            </section>
+
+                            <section
+                              className={
+                                styles.operationDetail
+                              }
+                            >
+                              <h4>
+                                4. Achado técnico
+                              </h4>
+
+                              <p>
+                                {asString(
+                                  operation.technical_finding,
+                                ) ||
+                                  "Não informado."}
+                              </p>
+                            </section>
+
+                            {technicalBasis ? (
+                              <section
+                                className={
+                                  styles.operationDetail
+                                }
+                              >
+                                <h4>
+                                  5. Fundamentação
+                                  técnica
+                                </h4>
+
+                                <p>
+                                  {
+                                    technicalBasis
+                                  }
+                                </p>
+                              </section>
+                            ) : null}
+
+                            <section
+                              className={
+                                styles.operationDetail
+                              }
+                            >
+                              <h4>
+                                6. Risco ou impacto
+                              </h4>
+
+                              <p>
+                                {asString(
+                                  operation.risk_impact,
+                                ) ||
+                                  "Não informado."}
+                              </p>
+                            </section>
+
+                            <section
+                              className={
+                                styles.operationDetail
+                              }
+                            >
+                              <h4>
+                                7. Ação recomendada
+                              </h4>
+
+                              <p>
+                                {asString(
+                                  operation.recommended_action,
+                                ) ||
+                                  "Não informada."}
+                              </p>
+                            </section>
+
+                            <section
+                              className={
+                                styles.operationDetail
+                              }
+                            >
+                              <h4>
+                                8. Responsável
+                                sugerido
+                              </h4>
+
+                              <p>
+                                {asString(
+                                  operation.responsible_party,
+                                ) ||
+                                  "Não informado."}
+                              </p>
+                            </section>
+
+                            <section
+                              className={
+                                styles.operationDetail
+                              }
+                            >
+                              <h4>
+                                9. Evidência para
+                                encerramento
+                              </h4>
+
+                              <p>
+                                {asString(
+                                  operation.closure_evidence,
+                                ) ||
+                                  "Não informada."}
+                              </p>
+                            </section>
                           </div>
                         </article>
                       );

@@ -34,6 +34,14 @@ const allowedOperationResults = [
   "critical",
 ];
 
+const allowedPreparationStatuses = [
+  "pending",
+  "proven",
+  "partially_proven",
+  "not_proven",
+  "not_applicable",
+];
+
 type JsonRecord =
   Record<string, unknown>;
 
@@ -87,6 +95,71 @@ function asString(
   return typeof value === "string"
     ? value.trim()
     : "";
+}
+
+function isDetailedOperationComplete(
+  operation: JsonRecord,
+) {
+  return (
+    allowedOperationResults.includes(
+      asString(
+        operation.result,
+      ),
+    ) &&
+    asString(
+      operation.result,
+    ) !==
+      "pending" &&
+    allowedPreparationStatuses.includes(
+      asString(
+        operation.preparation_status,
+      ),
+    ) &&
+    asString(
+      operation.preparation_status,
+    ) !==
+      "pending" &&
+    Boolean(
+      asString(
+        operation.operation_identification,
+      ),
+    ) &&
+    Boolean(
+      asString(
+        operation.evidence_found,
+      ),
+    ) &&
+    Boolean(
+      asString(
+        operation.calculation_review,
+      ),
+    ) &&
+    Boolean(
+      asString(
+        operation.technical_finding,
+      ),
+    ) &&
+    Boolean(
+      asString(
+        operation.risk_impact,
+      ),
+    ) &&
+    Boolean(
+      asString(
+        operation.recommended_action,
+      ),
+    ) &&
+    Boolean(
+      asString(
+        operation.responsible_party,
+      ),
+    ) &&
+    Boolean(
+      asString(
+        operation.closure_evidence,
+      ),
+    )
+  );
 }
 
 function diagnosticPath(
@@ -442,16 +515,64 @@ export async function saveOperationAnalysis(
       "result",
     );
 
-  const technicalAnalysis =
+  const preparationStatus =
     readText(
       formData,
-      "technicalAnalysis",
+      "preparationStatus",
     );
 
-  const recommendation =
+  const operationIdentification =
     readText(
       formData,
-      "recommendation",
+      "operationIdentification",
+    );
+
+  const evidenceFound =
+    readText(
+      formData,
+      "evidenceFound",
+    );
+
+  const calculationReview =
+    readText(
+      formData,
+      "calculationReview",
+    );
+
+  const technicalFinding =
+    readText(
+      formData,
+      "technicalFinding",
+    );
+
+  const technicalBasis =
+    readText(
+      formData,
+      "technicalBasis",
+    );
+
+  const riskImpact =
+    readText(
+      formData,
+      "riskImpact",
+    );
+
+  const recommendedAction =
+    readText(
+      formData,
+      "recommendedAction",
+    );
+
+  const responsibleParty =
+    readText(
+      formData,
+      "responsibleParty",
+    );
+
+  const closureEvidence =
+    readText(
+      formData,
+      "closureEvidence",
     );
 
   const currentIndex =
@@ -497,13 +618,36 @@ export async function saveOperationAnalysis(
   }
 
   if (
-    !technicalAnalysis
+    !allowedPreparationStatuses.includes(
+      preparationStatus,
+    ) ||
+    preparationStatus ===
+      "pending"
   ) {
     redirect(
       analysisPath(
         diagnosticId,
         currentIndex,
-        "erro=analise-tecnica-obrigatoria",
+        "erro=preparacao-obrigatoria",
+      ),
+    );
+  }
+
+  if (
+    !operationIdentification ||
+    !evidenceFound ||
+    !calculationReview ||
+    !technicalFinding ||
+    !riskImpact ||
+    !recommendedAction ||
+    !responsibleParty ||
+    !closureEvidence
+  ) {
+    redirect(
+      analysisPath(
+        diagnosticId,
+        currentIndex,
+        "erro=analise-detalhada-incompleta",
       ),
     );
   }
@@ -621,6 +765,33 @@ export async function saveOperationAnalysis(
       asRecord,
     );
 
+  const legacyTechnicalAnalysis =
+    [
+      `IDENTIFICAÇÃO DA OPERAÇÃO\n${operationIdentification}`,
+      `EVIDÊNCIAS ENCONTRADAS\n${evidenceFound}`,
+      `CONFERÊNCIA DOS CÁLCULOS\n${calculationReview}`,
+      `ACHADO TÉCNICO\n${technicalFinding}`,
+      technicalBasis
+        ? `FUNDAMENTAÇÃO TÉCNICA\n${technicalBasis}`
+        : "",
+      `RISCO / IMPACTO\n${riskImpact}`,
+    ]
+      .filter(
+        Boolean,
+      )
+      .join(
+        "\n\n",
+      );
+
+  const legacyRecommendation =
+    [
+      `AÇÃO RECOMENDADA\n${recommendedAction}`,
+      `RESPONSÁVEL SUGERIDO\n${responsibleParty}`,
+      `EVIDÊNCIA PARA ENCERRAMENTO\n${closureEvidence}`,
+    ].join(
+      "\n\n",
+    );
+
   const newOperation = {
     document_id:
       document.id,
@@ -640,12 +811,50 @@ export async function saveOperationAnalysis(
 
     result,
 
+    document_conformity:
+      result,
+
+    preparation_status:
+      preparationStatus,
+
+    operation_identification:
+      operationIdentification,
+
+    evidence_found:
+      evidenceFound,
+
+    calculation_review:
+      calculationReview,
+
+    technical_finding:
+      technicalFinding,
+
+    technical_basis:
+      technicalBasis ||
+      null,
+
+    risk_impact:
+      riskImpact,
+
+    recommended_action:
+      recommendedAction,
+
+    responsible_party:
+      responsibleParty,
+
+    closure_evidence:
+      closureEvidence,
+
+    /*
+     * Campos legados mantidos enquanto
+     * tela do cliente e PDF ainda usam
+     * a estrutura anterior.
+     */
     technical_analysis:
-      technicalAnalysis,
+      legacyTechnicalAnalysis,
 
     recommendation:
-      recommendation ||
-      null,
+      legacyRecommendation,
   };
 
   const existingIndex =
@@ -1048,16 +1257,8 @@ export async function saveConclusion(
 
         return (
           !operation ||
-          asString(
-            operation.result,
-          ) ===
-            "" ||
-          asString(
-            operation.result,
-          ) ===
-            "pending" ||
-          !asString(
-            operation.technical_analysis,
+          !isDetailedOperationComplete(
+            operation,
           )
         );
       },
@@ -2054,7 +2255,8 @@ export async function sendForApproval(
           `
             final_classification,
             general_assessment,
-            final_opinion
+            final_opinion,
+            operations
           `,
         )
         .eq(
@@ -2077,10 +2279,27 @@ export async function sendForApproval(
     );
   }
 
+  const approvalOperations =
+    asArray(
+      analysis?.operations,
+    ).map(
+      asRecord,
+    );
+
   if (
     !analysis?.final_classification ||
     !analysis.general_assessment ||
-    !analysis.final_opinion
+    !analysis.final_opinion ||
+    approvalOperations.length ===
+      0 ||
+    approvalOperations.some(
+      (
+        operation,
+      ) =>
+        !isDetailedOperationComplete(
+          operation,
+        ),
+    )
   ) {
     redirect(
       conclusionPath(

@@ -13,7 +13,6 @@ import { logout } from "../../actions";
 import {
   resumeAnalysis,
   returnToAnalysis,
-  saveAnalysis,
   sendForApproval,
   sendMessage,
   startAnalysis,
@@ -75,6 +74,15 @@ const operationResultLabels: Record<string, string> = {
   compliant: "Conforme",
   attention: "Requer atenção",
   critical: "Risco crítico",
+};
+
+const preparationStatusLabels: Record<string, string> = {
+  pending: "Não avaliada",
+  proven: "Comprovada para esta operação",
+  partially_proven: "Parcialmente comprovada",
+  not_proven: "Não comprovada",
+  not_applicable:
+    "Não aplicável para o cenário/data analisado",
 };
 
 const classificationLabels: Record<string, string> = {
@@ -733,14 +741,31 @@ export default async function DiagnosticPage({
           ) ?? {};
 
         const saved =
+          savedOperations.find(
+            (operation) =>
+              asString(
+                operation.document_id,
+              ) ===
+              document.id,
+          ) ??
           savedOperations[
             index
-          ] ?? {};
+          ] ??
+          {};
 
         const operationType =
           asString(
             context.operationType,
           );
+
+        const result =
+          asString(
+            saved.document_conformity,
+          ) ||
+          asString(
+            saved.result,
+          ) ||
+          "pending";
 
         return {
           documentId:
@@ -768,20 +793,65 @@ export default async function DiagnosticPage({
               saved.cfop,
             ),
 
-          result:
+          result,
+
+          preparationStatus:
             asString(
-              saved.result,
+              saved.preparation_status,
             ) ||
             "pending",
 
-          technicalAnalysis:
+          operationIdentification:
             asString(
-              saved.technical_analysis,
+              saved.operation_identification,
             ),
 
-          recommendation:
+          evidenceFound:
+            asString(
+              saved.evidence_found,
+            ),
+
+          calculationReview:
+            asString(
+              saved.calculation_review,
+            ),
+
+          technicalFinding:
+            asString(
+              saved.technical_finding,
+            ),
+
+          technicalBasis:
+            asString(
+              saved.technical_basis,
+            ),
+
+          riskImpact:
+            asString(
+              saved.risk_impact,
+            ),
+
+          recommendedAction:
+            asString(
+              saved.recommended_action,
+            ) ||
             asString(
               saved.recommendation,
+            ),
+
+          responsibleParty:
+            asString(
+              saved.responsible_party,
+            ),
+
+          closureEvidence:
+            asString(
+              saved.closure_evidence,
+            ),
+
+          legacyTechnicalAnalysis:
+            asString(
+              saved.technical_analysis,
             ),
 
           whySelected:
@@ -923,14 +993,9 @@ export default async function DiagnosticPage({
       .toISOString()
       .slice(0, 10);
 
-  const canEditAnalysis =
-    [
-      "documents_received",
-      "under_review",
-      "client_action_required",
-      "awaiting_approval",
-    ].includes(
-      diagnostic.status,
+  const analysisSaved =
+    Boolean(
+      analysis?.updated_at,
     );
 
   const reviewReady =
@@ -940,10 +1005,9 @@ export default async function DiagnosticPage({
         analysis?.final_opinion?.trim(),
     );
 
-  const analysisSaved =
-    Boolean(
-      analysis?.updated_at,
-    );
+  const canEditTechnicalAnalysis =
+    diagnostic.status ===
+    "under_review";
 
   return (
     <main
@@ -1077,9 +1141,9 @@ export default async function DiagnosticPage({
               </h1>
 
               <p>
-                Analise os XMLs enviados,
-                registre suas conclusões e
-                prepare o resultado para o
+                Confira os XMLs, as evidências
+                registradas e a conclusão antes
+                da liberação do resultado ao
                 cliente.
               </p>
             </div>
@@ -1278,21 +1342,21 @@ export default async function DiagnosticPage({
 
             <article>
               <span>
-                Rascunho
+                Análise
               </span>
 
               <strong>
                 {analysisSaved
-                  ? "Salvo"
-                  : "Ainda não salvo"}
+                  ? "Salva"
+                  : "Ainda não salva"}
               </strong>
 
               <small>
                 {analysis?.updated_at
-                  ? `Atualizado em ${formatDateTime(
+                  ? `Atualizada em ${formatDateTime(
                       analysis.updated_at,
                     )}`
-                  : "Comece pela análise da NF-e"}
+                  : "Ainda não há análise registrada"}
               </small>
             </article>
           </section>
@@ -1335,9 +1399,8 @@ export default async function DiagnosticPage({
                         styles.cardDescription
                       }
                     >
-                      Consulte as informações
-                      essenciais antes de
-                      iniciar a conferência dos
+                      Informações utilizadas como
+                      contexto para a análise dos
                       XMLs.
                     </p>
                   </div>
@@ -1418,7 +1481,8 @@ export default async function DiagnosticPage({
 
                   <div>
                     <span>
-                      Preparação IBS/CBS
+                      Preparação informada
+                      pelo cliente
                     </span>
 
                     <strong>
@@ -1562,7 +1626,7 @@ export default async function DiagnosticPage({
                     </p>
 
                     <h2>
-                      Conferência das NF-e
+                      Conferência dos XMLs
                     </h2>
 
                     <p
@@ -1570,582 +1634,349 @@ export default async function DiagnosticPage({
                         styles.cardDescription
                       }
                     >
-                      Existe um bloco de
-                      análise para cada XML
-                      enviado pelo cliente.
+                      Revisão detalhada das
+                      evidências e conclusões
+                      registradas para cada
+                      documento.
                     </p>
                   </div>
 
-                  <span
+                  <div
                     className={
-                      styles.analysisCount
+                      styles.heroActions
                     }
                   >
-                    {
-                      operationRows.length
-                    }{" "}
-                    {operationRows.length ===
-                    1
-                      ? "NF-e"
-                      : "NF-e"}
-                  </span>
+                    <span
+                      className={
+                        styles.analysisCount
+                      }
+                    >
+                      {
+                        operationRows.length
+                      }{" "}
+                      XML(s)
+                    </span>
+
+                    {canEditTechnicalAnalysis ? (
+                      <Link
+                        className={
+                          styles.secondaryAction
+                        }
+                        href={`/torre/diagnosticos/${diagnostic.id}/analise?xml=0`}
+                      >
+                        Editar análise
+                      </Link>
+                    ) : null}
+                  </div>
                 </header>
 
                 {operationRows.length >
                 0 ? (
-                  <form
+                  <div
                     className={
-                      styles.analysisForm
-                    }
-                    action={
-                      saveAnalysis
+                      styles.operationList
                     }
                   >
-                    <input
-                      type="hidden"
-                      name="diagnosticId"
-                      value={
-                        diagnostic.id
-                      }
-                    />
-
-                    <input
-                      type="hidden"
-                      name="operationCount"
-                      value={
-                        operationRows.length
-                      }
-                    />
-
-                    <div
-                      className={
-                        styles.operationList
-                      }
-                    >
-                      {operationRows.map(
-                        (
-                          operation,
-                          index,
-                        ) => (
-                          <section
+                    {operationRows.map(
+                      (
+                        operation,
+                        index,
+                      ) => (
+                        <section
+                          className={
+                            styles.operationCard
+                          }
+                          key={
+                            operation.documentId
+                          }
+                        >
+                          <header
                             className={
-                              styles.operationCard
-                            }
-                            key={
-                              operation.documentId
+                              styles.operationHeader
                             }
                           >
-                            <header
-                              className={
-                                styles.operationHeader
-                              }
-                            >
-                              <div>
-                                <span
-                                  className={
-                                    styles.operationNumber
-                                  }
-                                >
-                                  NF-e{" "}
-                                  {
-                                    index +
-                                    1
-                                  }
-                                </span>
-
-                                <h3>
-                                  {
-                                    operation.fileName
-                                  }
-                                </h3>
-
-                                <p>
-                                  {
-                                    operation.operation
-                                  }
-                                </p>
-                              </div>
-
-                              {operation.signedUrl ? (
-                                <a
-                                  className={
-                                    styles.xmlButton
-                                  }
-                                  href={
-                                    operation.signedUrl
-                                  }
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  Abrir XML
-                                </a>
-                              ) : (
-                                <span
-                                  className={
-                                    styles.fileUnavailable
-                                  }
-                                >
-                                  XML indisponível
-                                </span>
-                              )}
-                            </header>
-
-                            <div
-                              className={
-                                styles.clientContext
-                              }
-                            >
-                              <div>
-                                <span>
-                                  Por que o cliente
-                                  escolheu esta NF-e?
-                                </span>
-
-                                <p>
-                                  {operation.whySelected ||
-                                    "Não informado"}
-                                </p>
-                              </div>
-
-                              <div>
-                                <span>
-                                  IBS/CBS já foi
-                                  testado?
-                                </span>
-
-                                <p>
-                                  {translateValue(
-                                    operation.ibsCbsTested,
-                                    ibsCbsTestedLabels,
-                                  )}
-                                </p>
-                              </div>
-
-                              {operation.importantNotes ? (
-                                <div
-                                  className={
-                                    styles.contextWide
-                                  }
-                                >
-                                  <span>
-                                    Observações do cliente
-                                  </span>
-
-                                  <p>
-                                    {
-                                      operation.importantNotes
-                                    }
-                                  </p>
-                                </div>
-                              ) : null}
-
-                              {operation.hasRejection ? (
-                                <div
-                                  className={
-                                    styles.contextWide
-                                  }
-                                >
-                                  <span>
-                                    Erro ou rejeição
-                                  </span>
-
-                                  <p>
-                                    {operation.rejectionDescription ||
-                                      "Cliente informou ocorrência de erro ou rejeição."}
-                                  </p>
-                                </div>
-                              ) : null}
-                            </div>
-
-                            <input
-                              type="hidden"
-                              name={`operation_${index}_name`}
-                              value={
-                                operation.operation
-                              }
-                            />
-
-                            <input
-                              type="hidden"
-                              name={`operation_${index}_frequency`}
-                              value=""
-                            />
-
-                            <div
-                              className={
-                                styles.operationFields
-                              }
-                            >
-                              <label>
-                                <span>
-                                  CFOP identificado
-                                </span>
-
-                                <input
-                                  type="text"
-                                  name={`operation_${index}_cfop`}
-                                  defaultValue={
-                                    operation.cfop
-                                  }
-                                  disabled={
-                                    !canEditAnalysis
-                                  }
-                                  placeholder="Ex.: 5.102"
-                                />
-
-                                <small>
-                                  Informe o CFOP que
-                                  você conferiu no XML.
-                                </small>
-                              </label>
-
-                              <label>
-                                <span>
-                                  Resultado da NF-e
-                                </span>
-
-                                <select
-                                  name={`operation_${index}_result`}
-                                  defaultValue={
-                                    operation.result
-                                  }
-                                  disabled={
-                                    !canEditAnalysis
-                                  }
-                                >
-                                  {Object.entries(
-                                    operationResultLabels,
-                                  ).map(
-                                    ([
-                                      value,
-                                      label,
-                                    ]) => (
-                                      <option
-                                        key={
-                                          value
-                                        }
-                                        value={
-                                          value
-                                        }
-                                      >
-                                        {
-                                          label
-                                        }
-                                      </option>
-                                    ),
-                                  )}
-                                </select>
-
-                                <small>
-                                  Classifique somente
-                                  depois de conferir o
-                                  XML.
-                                </small>
-                              </label>
-
-                              <label
+                            <div>
+                              <span
                                 className={
-                                  styles.fullField
+                                  styles.operationNumber
                                 }
                               >
-                                <span>
-                                  O que foi encontrado
-                                  nesta NF-e?
-                                </span>
+                                XML{" "}
+                                {
+                                  index +
+                                  1
+                                }
+                              </span>
 
-                                <textarea
-                                  name={`operation_${index}_analysis`}
-                                  defaultValue={
-                                    operation.technicalAnalysis
-                                  }
-                                  disabled={
-                                    !canEditAnalysis
-                                  }
-                                  placeholder="Ex.: XML autorizado, porém os campos de IBS/CBS não foram preenchidos. CST e cClassTrib precisam ser confirmados com a contabilidade."
-                                />
+                              <h3>
+                                {
+                                  operation.fileName
+                                }
+                              </h3>
 
-                                <small>
-                                  Registre a conferência
-                                  técnica: CFOP, CST,
-                                  cClassTrib, IBS, CBS,
-                                  base, alíquotas,
-                                  totalização e
-                                  parametrização.
-                                </small>
-                              </label>
+                              <p>
+                                {
+                                  operation.operation
+                                }
+                              </p>
+                            </div>
 
-                              <label
+                            {operation.signedUrl ? (
+                              <a
                                 className={
-                                  styles.fullField
+                                  styles.xmlButton
+                                }
+                                href={
+                                  operation.signedUrl
+                                }
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                Abrir XML
+                              </a>
+                            ) : (
+                              <span
+                                className={
+                                  styles.fileUnavailable
                                 }
                               >
-                                <span>
-                                  O que o cliente deve
-                                  fazer?
-                                </span>
-
-                                <textarea
-                                  name={`operation_${index}_recommendation`}
-                                  defaultValue={
-                                    operation.recommendation
-                                  }
-                                  disabled={
-                                    !canEditAnalysis
-                                  }
-                                  placeholder="Ex.: Solicitar à contabilidade a validação do CST e cClassTrib e revisar a parametrização no ERP antes das próximas emissões."
-                                />
-
-                                <small>
-                                  Escreva a recomendação
-                                  de forma prática e
-                                  objetiva.
-                                </small>
-                              </label>
-                            </div>
-                          </section>
-                        ),
-                      )}
-                    </div>
-
-                    <section
-                      className={
-                        styles.conclusionSection
-                      }
-                    >
-                      <header
-                        className={
-                          styles.conclusionHeader
-                        }
-                      >
-                        <p
-                          className={
-                            styles.eyebrow
-                          }
-                        >
-                          3. Conclusão
-                        </p>
-
-                        <h3>
-                          Resultado consolidado
-                        </h3>
-
-                        <p>
-                          Depois de analisar as
-                          NF-e, resuma aqui a
-                          situação geral da
-                          empresa.
-                        </p>
-                      </header>
-
-                      <div
-                        className={
-                          styles.analysisFields
-                        }
-                      >
-                        <label
-                          className={
-                            styles.fullField
-                          }
-                        >
-                          <span>
-                            Avaliação geral *
-                          </span>
-
-                          <textarea
-                            name="generalAssessment"
-                            defaultValue={
-                              analysis?.general_assessment ??
-                              ""
-                            }
-                            disabled={
-                              !canEditAnalysis
-                            }
-                            placeholder="Resuma a situação encontrada considerando os XMLs analisados, a preparação do ERP e as informações fornecidas pelo cliente."
-                          />
-
-                          <small>
-                            Este campo será usado
-                            na conclusão do
-                            diagnóstico.
-                          </small>
-                        </label>
-
-                        <label
-                          className={
-                            styles.fullField
-                          }
-                        >
-                          <span>
-                            Pontos positivos
-                          </span>
-
-                          <textarea
-                            name="strengths"
-                            defaultValue={
-                              analysis?.strengths ??
-                              ""
-                            }
-                            disabled={
-                              !canEditAnalysis
-                            }
-                            placeholder="Registre o que já está adequado ou representa um ponto positivo."
-                          />
-                        </label>
-
-                        <label
-                          className={
-                            styles.fullField
-                          }
-                        >
-                          <span>
-                            Riscos identificados
-                          </span>
-
-                          <textarea
-                            name="risks"
-                            defaultValue={
-                              analysis?.risks ??
-                              ""
-                            }
-                            disabled={
-                              !canEditAnalysis
-                            }
-                            placeholder="Liste os principais riscos fiscais, técnicos ou operacionais identificados."
-                          />
-                        </label>
-
-                        <label
-                          className={
-                            styles.fullField
-                          }
-                        >
-                          <span>
-                            Plano de ação
-                          </span>
-
-                          <textarea
-                            name="actionPlan"
-                            defaultValue={
-                              analysis?.action_plan ??
-                              ""
-                            }
-                            disabled={
-                              !canEditAnalysis
-                            }
-                            placeholder="Liste as ações recomendadas em ordem de prioridade."
-                          />
-                        </label>
-
-                        <label
-                          className={
-                            styles.classificationField
-                          }
-                        >
-                          <span>
-                            Classificação final *
-                          </span>
-
-                          <select
-                            name="finalClassification"
-                            defaultValue={
-                              analysis?.final_classification ??
-                              ""
-                            }
-                            disabled={
-                              !canEditAnalysis
-                            }
-                          >
-                            <option value="">
-                              Selecione
-                            </option>
-
-                            {Object.entries(
-                              classificationLabels,
-                            ).map(
-                              ([
-                                value,
-                                label,
-                              ]) => (
-                                <option
-                                  key={
-                                    value
-                                  }
-                                  value={
-                                    value
-                                  }
-                                >
-                                  {
-                                    label
-                                  }
-                                </option>
-                              ),
+                                XML indisponível
+                              </span>
                             )}
-                          </select>
+                          </header>
 
-                          <small>
-                            Preparada,
-                            parcialmente preparada
-                            ou não preparada.
-                          </small>
-                        </label>
-
-                        <label
-                          className={
-                            styles.fullField
-                          }
-                        >
-                          <span>
-                            Parecer final *
-                          </span>
-
-                          <textarea
-                            name="finalOpinion"
-                            defaultValue={
-                              analysis?.final_opinion ??
-                              ""
+                          <div
+                            className={
+                              styles.clientContext
                             }
-                            disabled={
-                              !canEditAnalysis
+                          >
+                            <div>
+                              <span>
+                                Por que o cliente
+                                escolheu este XML?
+                              </span>
+
+                              <p>
+                                {operation.whySelected ||
+                                  "Não informado"}
+                              </p>
+                            </div>
+
+                            <div>
+                              <span>
+                                IBS/CBS já foi
+                                testado?
+                              </span>
+
+                              <p>
+                                {translateValue(
+                                  operation.ibsCbsTested,
+                                  ibsCbsTestedLabels,
+                                )}
+                              </p>
+                            </div>
+
+                            {operation.importantNotes ? (
+                              <div
+                                className={
+                                  styles.contextWide
+                                }
+                              >
+                                <span>
+                                  Observações do cliente
+                                </span>
+
+                                <p>
+                                  {
+                                    operation.importantNotes
+                                  }
+                                </p>
+                              </div>
+                            ) : null}
+
+                            {operation.hasRejection ? (
+                              <div
+                                className={
+                                  styles.contextWide
+                                }
+                              >
+                                <span>
+                                  Erro ou rejeição
+                                </span>
+
+                                <p>
+                                  {operation.rejectionDescription ||
+                                    "Cliente informou ocorrência de erro ou rejeição."}
+                                </p>
+                              </div>
+                            ) : null}
+                          </div>
+
+                          <div
+                            className={
+                              styles.contextGrid
                             }
-                            placeholder="Escreva a conclusão profissional que será apresentada ao cliente."
-                          />
+                            style={{
+                              padding:
+                                "20px 20px 8px",
+                              marginBottom:
+                                0,
+                            }}
+                          >
+                            <div>
+                              <span>
+                                CFOP identificado
+                              </span>
 
-                          <small>
-                            Deve refletir somente o
-                            escopo e os documentos
-                            efetivamente analisados.
-                          </small>
-                        </label>
-                      </div>
-                    </section>
+                              <strong>
+                                {operation.cfop ||
+                                  "Não informado"}
+                              </strong>
+                            </div>
 
-                    {canEditAnalysis ? (
-                      <div
-                        className={
-                          styles.saveArea
-                        }
-                      >
-                        <div>
-                          <strong>
-                            Salve antes de sair
-                          </strong>
+                            <div>
+                              <span>
+                                Conformidade do documento
+                              </span>
 
-                          <p>
-                            Você pode salvar o
-                            rascunho quantas vezes
-                            precisar antes da
-                            revisão final.
-                          </p>
-                        </div>
+                              <strong>
+                                {translateValue(
+                                  operation.result,
+                                  operationResultLabels,
+                                )}
+                              </strong>
+                            </div>
 
-                        <button
-                          type="submit"
-                        >
-                          Salvar rascunho
-                        </button>
-                      </div>
-                    ) : null}
-                  </form>
+                            <div>
+                              <span>
+                                Preparação IBS/CBS
+                              </span>
+
+                              <strong>
+                                {translateValue(
+                                  operation.preparationStatus,
+                                  preparationStatusLabels,
+                                )}
+                              </strong>
+                            </div>
+                          </div>
+
+                          <div
+                            className={
+                              styles.contextText
+                            }
+                            style={{
+                              padding:
+                                "12px 20px 20px",
+                            }}
+                          >
+                            <div>
+                              <span>
+                                1. Identificação da operação
+                              </span>
+
+                              <p>
+                                {operation.operationIdentification ||
+                                  "Não informado"}
+                              </p>
+                            </div>
+
+                            <div>
+                              <span>
+                                2. Evidências encontradas
+                              </span>
+
+                              <p>
+                                {operation.evidenceFound ||
+                                  "Não informado"}
+                              </p>
+                            </div>
+
+                            <div>
+                              <span>
+                                3. Conferência dos cálculos
+                              </span>
+
+                              <p>
+                                {operation.calculationReview ||
+                                  "Não informado"}
+                              </p>
+                            </div>
+
+                            <div>
+                              <span>
+                                4. Achado técnico
+                              </span>
+
+                              <p>
+                                {operation.technicalFinding ||
+                                  operation.legacyTechnicalAnalysis ||
+                                  "Não informado"}
+                              </p>
+                            </div>
+
+                            {operation.technicalBasis ? (
+                              <div>
+                                <span>
+                                  5. Fundamentação técnica
+                                </span>
+
+                                <p>
+                                  {
+                                    operation.technicalBasis
+                                  }
+                                </p>
+                              </div>
+                            ) : null}
+
+                            <div>
+                              <span>
+                                6. Risco ou impacto
+                              </span>
+
+                              <p>
+                                {operation.riskImpact ||
+                                  "Não informado"}
+                              </p>
+                            </div>
+
+                            <div>
+                              <span>
+                                7. Ação recomendada
+                              </span>
+
+                              <p>
+                                {operation.recommendedAction ||
+                                  "Não informado"}
+                              </p>
+                            </div>
+
+                            <div>
+                              <span>
+                                8. Responsável sugerido
+                              </span>
+
+                              <p>
+                                {operation.responsibleParty ||
+                                  "Não informado"}
+                              </p>
+                            </div>
+
+                            <div>
+                              <span>
+                                9. Evidência para encerramento
+                              </span>
+
+                              <p>
+                                {operation.closureEvidence ||
+                                  "Não informado"}
+                              </p>
+                            </div>
+                          </div>
+                        </section>
+                      ),
+                    )}
+                  </div>
                 ) : (
                   <div
                     className={
@@ -2156,6 +1987,129 @@ export default async function DiagnosticPage({
                     disponível para análise.
                   </div>
                 )}
+              </article>
+
+              <article
+                className={
+                  styles.card
+                }
+              >
+                <header
+                  className={
+                    styles.cardHeader
+                  }
+                >
+                  <div>
+                    <p
+                      className={
+                        styles.eyebrow
+                      }
+                    >
+                      3. Conclusão
+                    </p>
+
+                    <h2>
+                      Resultado consolidado
+                    </h2>
+
+                    <p
+                      className={
+                        styles.cardDescription
+                      }
+                    >
+                      Síntese final construída
+                      a partir dos XMLs e das
+                      informações fornecidas.
+                    </p>
+                  </div>
+
+                  {canEditTechnicalAnalysis ? (
+                    <Link
+                      className={
+                        styles.secondaryAction
+                      }
+                      href={`/torre/diagnosticos/${diagnostic.id}/conclusao`}
+                    >
+                      Editar conclusão
+                    </Link>
+                  ) : null}
+                </header>
+
+                <div
+                  className={
+                    styles.contextText
+                  }
+                >
+                  <div>
+                    <span>
+                      Avaliação geral
+                    </span>
+
+                    <p>
+                      {analysis?.general_assessment ||
+                        "Não informada"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span>
+                      Pontos positivos
+                    </span>
+
+                    <p>
+                      {analysis?.strengths ||
+                        "Não informados"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span>
+                      Riscos identificados
+                    </span>
+
+                    <p>
+                      {analysis?.risks ||
+                        "Não informados"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span>
+                      Plano de ação
+                    </span>
+
+                    <p>
+                      {analysis?.action_plan ||
+                        "Não informado"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span>
+                      Classificação final
+                    </span>
+
+                    <p>
+                      {analysis?.final_classification
+                        ? classificationLabels[
+                            analysis.final_classification
+                          ] ??
+                          analysis.final_classification
+                        : "Não definida"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span>
+                      Parecer final
+                    </span>
+
+                    <p>
+                      {analysis?.final_opinion ||
+                        "Não informado"}
+                    </p>
+                  </div>
+                </div>
               </article>
 
               <article
@@ -2601,13 +2555,13 @@ export default async function DiagnosticPage({
                         }
                       >
                         <strong>
-                          1. Analise a NF-e
+                          1. Analise os XMLs
                         </strong>
 
                         <p>
-                          Preencha os campos da
-                          análise e clique em
-                          <b> Salvar rascunho</b>.
+                          Registre a análise
+                          detalhada de cada
+                          documento.
                         </p>
                       </div>
                     ) : !reviewReady ? (
@@ -2650,8 +2604,8 @@ export default async function DiagnosticPage({
                         </strong>
 
                         <p>
-                          O rascunho possui os
-                          campos mínimos necessários.
+                          Confira todo o conteúdo
+                          antes de encaminhar.
                         </p>
                       </div>
                     )}

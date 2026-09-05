@@ -96,6 +96,24 @@ const operationResultLabels:
     "Risco crítico",
 };
 
+const preparationStatusLabels:
+  Record<string, string> = {
+  pending:
+    "Não avaliada",
+
+  proven:
+    "Comprovada para esta operação",
+
+  partially_proven:
+    "Parcialmente comprovada",
+
+  not_proven:
+    "Não comprovada",
+
+  not_applicable:
+    "Não aplicável para o cenário/data analisado",
+};
+
 const defaultLimitation =
   "O diagnóstico possui natureza operacional e documental, limitado aos arquivos, operações e informações fornecidos pela empresa. Não substitui parecer jurídico, auditoria fiscal completa, responsabilidade técnica da contabilidade ou responsabilidade do fornecedor do ERP.";
 
@@ -169,6 +187,88 @@ function formatDate(
   ).format(
     new Date(value),
   );
+}
+
+function formatCnpj(
+  value:
+    | string
+    | null
+    | undefined,
+) {
+  const digits =
+    (
+      value ||
+      ""
+    ).replace(
+      /\D/g,
+      "",
+    );
+
+  if (
+    digits.length !==
+    14
+  ) {
+    return (
+      value ||
+      "Não informado"
+    );
+  }
+
+  return digits.replace(
+    /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
+    "$1.$2.$3/$4-$5",
+  );
+}
+
+function extractIdentifiedOperation(
+  operationIdentification:
+    string,
+) {
+  if (
+    !operationIdentification
+  ) {
+    return "";
+  }
+
+  const lines =
+    operationIdentification
+      .split(
+        /\r?\n/,
+      )
+      .map(
+        (
+          line,
+        ) =>
+          line.trim(),
+      )
+      .filter(
+        Boolean,
+      );
+
+  const natureLine =
+    lines.find(
+      (
+        line,
+      ) =>
+        line
+          .toLocaleLowerCase(
+            "pt-BR",
+          )
+          .startsWith(
+            "natureza da operação:",
+          ),
+    );
+
+  if (!natureLine) {
+    return "";
+  }
+
+  return natureLine
+    .replace(
+      /^natureza da operação:\s*/i,
+      "",
+    )
+    .trim();
 }
 
 export default async function ResultPage({
@@ -488,8 +588,9 @@ export default async function ResultPage({
                 </span>
 
                 <strong>
-                  {company?.cnpj ||
-                    "Não informado"}
+                  {formatCnpj(
+                    company?.cnpj,
+                  )}
                 </strong>
               </div>
 
@@ -600,18 +701,86 @@ export default async function ResultPage({
 
                       const resultValue =
                         asString(
+                          operation.document_conformity,
+                        ) ||
+                        asString(
                           operation.result,
                         );
 
-                      const documentId =
+                      const preparationStatus =
                         asString(
-                          operation.document_id,
+                          operation.preparation_status,
+                        );
+
+                      const operationIdentification =
+                        asString(
+                          operation.operation_identification,
+                        );
+
+                      const evidenceFound =
+                        asString(
+                          operation.evidence_found,
+                        );
+
+                      const calculationReview =
+                        asString(
+                          operation.calculation_review,
+                        );
+
+                      const technicalFinding =
+                        asString(
+                          operation.technical_finding,
+                        );
+
+                      const technicalBasis =
+                        asString(
+                          operation.technical_basis,
+                        );
+
+                      const riskImpact =
+                        asString(
+                          operation.risk_impact,
+                        );
+
+                      const recommendedAction =
+                        asString(
+                          operation.recommended_action,
+                        );
+
+                      const responsibleParty =
+                        asString(
+                          operation.responsible_party,
+                        );
+
+                      const closureEvidence =
+                        asString(
+                          operation.closure_evidence,
+                        );
+
+                      const identifiedOperation =
+                        extractIdentifiedOperation(
+                          operationIdentification,
+                        );
+
+                      const hasDetailedAnalysis =
+                        Boolean(
+                          operationIdentification ||
+                          evidenceFound ||
+                          calculationReview ||
+                          technicalFinding ||
+                          technicalBasis ||
+                          riskImpact ||
+                          recommendedAction ||
+                          responsibleParty ||
+                          closureEvidence,
                         );
 
                       return (
                         <article
                           key={
-                            documentId ||
+                            asString(
+                              operation.document_id,
+                            ) ||
                             `xml-${index}`
                           }
                         >
@@ -636,8 +805,26 @@ export default async function ResultPage({
                                     styles.operationName
                                   }
                                 >
+                                  <strong>
+                                    Operação informada pelo cliente:
+                                  </strong>{" "}
                                   {
                                     operationName
+                                  }
+                                </p>
+                              ) : null}
+
+                              {identifiedOperation ? (
+                                <p
+                                  className={
+                                    styles.operationName
+                                  }
+                                >
+                                  <strong>
+                                    Operação identificada no XML:
+                                  </strong>{" "}
+                                  {
+                                    identifiedOperation
                                   }
                                 </p>
                               ) : null}
@@ -655,7 +842,7 @@ export default async function ResultPage({
                           <dl>
                             <div>
                               <dt>
-                                CFOP
+                                CFOP identificado
                               </dt>
 
                               <dd>
@@ -665,31 +852,149 @@ export default async function ResultPage({
                                   "Não informado"}
                               </dd>
                             </div>
+
+                            <div>
+                              <dt>
+                                Conformidade do documento
+                              </dt>
+
+                              <dd>
+                                {operationResultLabels[
+                                  resultValue
+                                ] ||
+                                  resultValue ||
+                                  "Não informado"}
+                              </dd>
+                            </div>
+
+                            <div>
+                              <dt>
+                                Preparação IBS/CBS
+                              </dt>
+
+                              <dd>
+                                {preparationStatusLabels[
+                                  preparationStatus
+                                ] ||
+                                  preparationStatus ||
+                                  "Não informado"}
+                              </dd>
+                            </div>
                           </dl>
 
-                          <section>
-                            <h4>
-                              Análise técnica
-                            </h4>
+                          {hasDetailedAnalysis ? (
+                            <section>
+                              <h4>
+                                1. Identificação da operação
+                              </h4>
 
-                            <p>
-                              {asString(
-                                operation.technical_analysis,
-                              ) ||
-                                "Não informada."}
-                            </p>
+                              <p>
+                                {operationIdentification ||
+                                  "Não informada."}
+                              </p>
 
-                            <h4>
-                              Recomendação
-                            </h4>
+                              <h4>
+                                2. Evidências encontradas
+                              </h4>
 
-                            <p>
-                              {asString(
-                                operation.recommendation,
-                              ) ||
-                                "Não foi registrada recomendação específica para este XML."}
-                            </p>
-                          </section>
+                              <p>
+                                {evidenceFound ||
+                                  "Não informadas."}
+                              </p>
+
+                              <h4>
+                                3. Conferência dos cálculos
+                              </h4>
+
+                              <p>
+                                {calculationReview ||
+                                  "Não informada."}
+                              </p>
+
+                              <h4>
+                                4. Achado técnico
+                              </h4>
+
+                              <p>
+                                {technicalFinding ||
+                                  "Não informado."}
+                              </p>
+
+                              {technicalBasis ? (
+                                <>
+                                  <h4>
+                                    5. Fundamentação técnica
+                                  </h4>
+
+                                  <p>
+                                    {
+                                      technicalBasis
+                                    }
+                                  </p>
+                                </>
+                              ) : null}
+
+                              <h4>
+                                6. Risco ou impacto
+                              </h4>
+
+                              <p>
+                                {riskImpact ||
+                                  "Não informado."}
+                              </p>
+
+                              <h4>
+                                7. Ação recomendada
+                              </h4>
+
+                              <p>
+                                {recommendedAction ||
+                                  "Não informada."}
+                              </p>
+
+                              <h4>
+                                8. Responsável sugerido
+                              </h4>
+
+                              <p>
+                                {responsibleParty ||
+                                  "Não informado."}
+                              </p>
+
+                              <h4>
+                                9. Evidência para encerramento
+                              </h4>
+
+                              <p>
+                                {closureEvidence ||
+                                  "Não informada."}
+                              </p>
+                            </section>
+                          ) : (
+                            <section>
+                              <h4>
+                                Análise técnica
+                              </h4>
+
+                              <p>
+                                {asString(
+                                  operation.technical_analysis,
+                                ) ||
+                                  "Não informada."}
+                              </p>
+
+                              <h4>
+                                Recomendação
+                              </h4>
+
+                              <p>
+                                {asString(
+                                  operation.recommendation,
+                                ) ||
+                                  "Não foi registrada recomendação específica para este XML."}
+                              </p>
+                            </section>
+                          )}
                         </article>
                       );
                     },

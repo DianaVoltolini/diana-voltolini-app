@@ -1,4 +1,4 @@
-/* app/painel/diagnosticos/[id]/diagnostico.module.css */
+/* app/torre/diagnosticos/[id]/diagnostico.module.css */
 
 .page {
   min-height: 100dvh;
@@ -356,6 +356,10 @@
   gap: 20px;
 }
 
+.secondaryColumn {
+  align-self: start;
+}
+
 .card,
 .analysisCard,
 .nextStepCard,
@@ -381,8 +385,7 @@
 }
 
 .nextStepCard {
-  position: sticky;
-  top: 18px;
+  position: static;
   border-top: 4px solid #c9a227;
 }
 
@@ -1237,6 +1240,7 @@
     width: 100%;
   }
 }
+
 /* =========================================================
    ETAPA 2 — ANÁLISE INDIVIDUAL DOS XMLs
    ========================================================= */

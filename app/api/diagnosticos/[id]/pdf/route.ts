@@ -347,9 +347,67 @@ export async function GET(
                   operation.result,
                 ),
 
+              documentConformity:
+                asString(
+                  operation.document_conformity,
+                ) ||
+                asString(
+                  operation.result,
+                ),
+
+              preparationStatus:
+                asString(
+                  operation.preparation_status,
+                ),
+
               cfop:
                 asString(
                   operation.cfop,
+                ),
+
+              operationIdentification:
+                asString(
+                  operation.operation_identification,
+                ),
+
+              evidenceFound:
+                asString(
+                  operation.evidence_found,
+                ),
+
+              calculationReview:
+                asString(
+                  operation.calculation_review,
+                ),
+
+              technicalFinding:
+                asString(
+                  operation.technical_finding,
+                ),
+
+              technicalBasis:
+                asString(
+                  operation.technical_basis,
+                ),
+
+              riskImpact:
+                asString(
+                  operation.risk_impact,
+                ),
+
+              recommendedAction:
+                asString(
+                  operation.recommended_action,
+                ),
+
+              responsibleParty:
+                asString(
+                  operation.responsible_party,
+                ),
+
+              closureEvidence:
+                asString(
+                  operation.closure_evidence,
                 ),
 
               technicalAnalysis:
