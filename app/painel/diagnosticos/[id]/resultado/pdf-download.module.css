@@ -1,0 +1,68 @@
+/* C:\Users\Diana Voltolini\Documents\Aplicativo Saas\diana-app\app\painel\diagnosticos\[id]\resultado\pdf-download.module.css */
+
+.downloadButton {
+  position: fixed;
+  z-index: 80;
+  left: 24px;
+  bottom: 24px;
+
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  border: 1px solid #c9a227;
+  border-radius: 7px;
+
+  background: #c9a227;
+  color: #0d1b2a;
+
+  padding: 0 18px;
+
+  box-shadow:
+    0 12px 28px rgba(13, 27, 42, 0.18);
+
+  font-size: 0.8rem;
+  font-weight: 750;
+  line-height: 1;
+
+  text-decoration: none;
+
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.downloadButton:hover {
+  transform: translateY(-2px);
+
+  background: #d6b540;
+
+  box-shadow:
+    0 16px 34px rgba(13, 27, 42, 0.22);
+}
+
+.downloadButton:focus-visible {
+  outline: 3px solid rgba(201, 162, 39, 0.35);
+  outline-offset: 3px;
+}
+
+.downloadButton svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 640px) {
+  .downloadButton {
+    right: 14px;
+    bottom: 76px;
+    left: 14px;
+
+    min-height: 48px;
+
+    padding: 0 16px;
+  }
+}
