@@ -2,11 +2,9 @@
 
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import {
-  ensureClientAccess,
   hasEligibleOrderForEmail,
 } from "@/lib/supabase/client-access";
 import { createClient } from "@/lib/supabase/server";
@@ -157,6 +155,15 @@ export async function createAccess(
   const supabase =
     await createClient();
 
+  /*
+   * Garante que um primeiro acesso nunca
+   * aproveite uma sessão já existente no
+   * navegador.
+   */
+  await supabase.auth.signOut({
+    scope: "local",
+  });
+
   const {
     data,
     error,
@@ -190,50 +197,21 @@ export async function createAccess(
   }
 
   /*
-   * Caso a confirmação de e-mail esteja
-   * desativada, o Supabase já retorna
-   * uma sessão e podemos entrar diretamente.
+   * A confirmação de e-mail é obrigatória
+   * para o primeiro acesso.
+   *
+   * Mesmo que uma sessão seja devolvida por
+   * alguma configuração externa, ela não é
+   * mantida aqui. O acesso ao painel somente
+   * será criado pelo callback depois que o
+   * cliente confirmar o e-mail.
    */
-  if (
-    data.session &&
-    data.user?.id &&
-    data.user.email
-  ) {
-    try {
-      await ensureClientAccess({
-        userId: data.user.id,
-        email: data.user.email,
-        fullName,
-      });
-    } catch (linkError) {
-      console.error(
-        "Erro ao vincular contratação:",
-        linkError,
-      );
-
-      await supabase.auth.signOut();
-
-      redirectToForm({
-        erro:
-          "vinculo-indisponivel",
-        email,
-      });
-    }
-
-    revalidatePath(
-      "/",
-      "layout",
-    );
-
-    redirect("/painel");
+  if (data.session) {
+    await supabase.auth.signOut({
+      scope: "local",
+    });
   }
 
-  /*
-   * Com confirmação de e-mail habilitada,
-   * o cliente precisa clicar na mensagem.
-   * O callback abaixo criará a sessão e
-   * enviará diretamente ao painel.
-   */
   redirectToForm({
     sucesso:
       "verifique-email",
