@@ -163,6 +163,88 @@
   color: #b42318;
 }
 
+.questionnaireStartCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 42px;
+  margin-bottom: 22px;
+  border: 1px solid #dfc978;
+  border-left: 5px solid #c9a227;
+  border-radius: 12px;
+  background: #fffaf0;
+  padding: 28px 30px;
+  box-shadow:
+    0 10px 26px
+    rgba(13, 27, 42, 0.035);
+}
+
+.questionnaireStartContent {
+  max-width: 760px;
+}
+
+.questionnaireStartEyebrow {
+  margin: 0 0 7px;
+  color: #846611;
+  font-size: 0.76rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.questionnaireStartCard h2 {
+  margin: 0 0 10px;
+  color: #0d1b2a;
+  font-size: clamp(
+    1.55rem,
+    2.4vw,
+    2rem
+  );
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.18;
+}
+
+.questionnaireStartContent > p:last-child {
+  max-width: 760px;
+  margin: 0;
+  color: #4f5f6d;
+  font-size: 0.95rem;
+  line-height: 1.68;
+}
+
+.questionnaireStartActions {
+  display: grid;
+  min-width: 285px;
+  gap: 11px;
+}
+
+.questionnaireStartButton {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 1px solid #c9a227;
+  border-radius: 8px;
+  background: #c9a227;
+  color: #0d1b2a;
+  padding: 0 19px;
+  font-size: 0.9rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.questionnaireStartButton:hover {
+  background: #d3ad31;
+}
+
+.questionnaireStartActions small {
+  color: #6f7c86;
+  font-size: 0.79rem;
+  line-height: 1.5;
+}
+
 .pendingBanner {
   display: flex;
   align-items: center;
@@ -342,6 +424,10 @@
     minmax(0, 1.4fr)
     minmax(310px, 0.6fr);
   gap: 21px;
+}
+
+.mainGridSingle {
+  grid-template-columns: 1fr;
 }
 
 .informationCard,
@@ -587,11 +673,20 @@
     font-size: 2.35rem;
   }
 
+  .questionnaireStartCard,
   .pendingBanner {
     align-items: stretch;
     flex-direction: column;
     gap: 20px;
     padding: 21px 18px;
+  }
+
+  .questionnaireStartActions {
+    min-width: 0;
+  }
+
+  .questionnaireStartButton {
+    width: 100%;
   }
 
   .pendingBannerActions {
