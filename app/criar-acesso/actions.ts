@@ -11,6 +11,9 @@ import {
 } from "@/lib/supabase/client-access";
 import { createClient } from "@/lib/supabase/server";
 
+const PRODUCTION_ORIGIN =
+  "https://app.dianavoltolini.com.br";
+
 function normalizeEmail(
   value: string,
 ) {
@@ -20,6 +23,13 @@ function normalizeEmail(
 }
 
 function getSiteUrl() {
+  if (
+    process.env.NODE_ENV !==
+    "development"
+  ) {
+    return PRODUCTION_ORIGIN;
+  }
+
   const raw =
     process.env.NEXT_PUBLIC_SITE_URL ??
     "http://localhost:3001";
