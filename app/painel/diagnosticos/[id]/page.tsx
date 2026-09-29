@@ -916,6 +916,21 @@ export default async function DiagnosticPage({
     diagnostic.status ===
     "client_action_required";
 
+  const isFirstAccess =
+    diagnostic.status ===
+      "awaiting_questionnaire" &&
+    !questionnaire;
+
+  const showQuestionnaireStartBanner =
+    diagnostic.status ===
+      "awaiting_questionnaire" &&
+    !questionnaireReadyForReview;
+
+  const questionnaireActionLabel =
+    isFirstAccess
+      ? "Começar questionário"
+      : "Continuar questionário";
+
   const questionnaireStatus =
     questionnaireReadyForReview
       ? "Pronto para revisão"
@@ -1042,11 +1057,9 @@ export default async function DiagnosticPage({
                   styles.heroDescription
                 }
               >
-                Acompanhe o andamento,
-                as informações enviadas,
-                as mensagens e o
-                resultado do seu
-                diagnóstico.
+                {showQuestionnaireStartBanner
+                  ? "Seu diagnóstico está liberado. Comece preenchendo o questionário abaixo para enviar as informações necessárias à análise."
+                  : "Acompanhe o andamento, as informações enviadas, as mensagens e o resultado do seu diagnóstico."}
               </p>
             </div>
 
@@ -1062,6 +1075,79 @@ export default async function DiagnosticPage({
               }
             </span>
           </section>
+
+          {showQuestionnaireStartBanner &&
+          primaryHref ? (
+            <section
+              className={
+                styles.questionnaireStartCard
+              }
+            >
+              <div
+                className={
+                  styles.questionnaireStartContent
+                }
+              >
+                <p
+                  className={
+                    styles.questionnaireStartEyebrow
+                  }
+                >
+                  {isFirstAccess
+                    ? "Primeiro passo"
+                    : "Continue de onde parou"}
+                </p>
+
+                <h2>
+                  {isFirstAccess
+                    ? "Preencha o questionário para iniciar seu diagnóstico."
+                    : "Continue o preenchimento do questionário."}
+                </h2>
+
+                <p>
+                  É neste questionário que
+                  você informa os dados da
+                  empresa, como está a
+                  preparação para IBS/CBS,
+                  envia os XMLs selecionados
+                  e registra suas dúvidas.
+                </p>
+              </div>
+
+              <div
+                className={
+                  styles.questionnaireStartActions
+                }
+              >
+                <Link
+                  href={
+                    primaryHref
+                  }
+                  className={
+                    styles.questionnaireStartButton
+                  }
+                >
+                  <span>
+                    {
+                      questionnaireActionLabel
+                    }
+                  </span>
+
+                  <b
+                    aria-hidden="true"
+                  >
+                    →
+                  </b>
+                </Link>
+
+                <small>
+                  O prazo da análise começa
+                  após a confirmação final do
+                  envio.
+                </small>
+              </div>
+            </section>
+          ) : null}
 
           {actionRequired ? (
             <section
@@ -1242,7 +1328,9 @@ export default async function DiagnosticPage({
 
           <div
             className={
-              styles.mainGrid
+              showQuestionnaireStartBanner
+                ? `${styles.mainGrid} ${styles.mainGridSingle}`
+                : styles.mainGrid
             }
           >
             <section
@@ -1326,11 +1414,12 @@ export default async function DiagnosticPage({
               </dl>
             </section>
 
-            <aside
-              className={
-                styles.nextStepCard
-              }
-            >
+            {!showQuestionnaireStartBanner ? (
+              <aside
+                className={
+                  styles.nextStepCard
+                }
+              >
               <p
                 className={
                   styles.eyebrow
@@ -1444,7 +1533,8 @@ export default async function DiagnosticPage({
                   currentStatus.note
                 }
               </small>
-            </aside>
+              </aside>
+            ) : null}
           </div>
 
           <section
