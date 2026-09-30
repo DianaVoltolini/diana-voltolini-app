@@ -82,6 +82,27 @@ const resultLabels:
     "Não analisada",
 };
 
+const preparationLabels:
+  Record<
+    string,
+    string
+  > = {
+  proven:
+    "Comprovada para esta operação",
+
+  partially_proven:
+    "Parcialmente comprovada",
+
+  not_proven:
+    "Não comprovada",
+
+  not_applicable:
+    "Não aplicável ao cenário/data",
+
+  pending:
+    "Não avaliada",
+};
+
 const errorMessages:
   Record<
     string,
@@ -365,6 +386,57 @@ export default async function ConclusionPage({
               operation.result,
             ) ||
             "pending",
+
+          preparationStatus:
+            asString(
+              operation.preparation_status,
+            ) ||
+            "pending",
+
+          operationIdentification:
+            asString(
+              operation.operation_identification,
+            ),
+
+          evidenceFound:
+            asString(
+              operation.evidence_found,
+            ),
+
+          calculationReview:
+            asString(
+              operation.calculation_review,
+            ),
+
+          technicalFinding:
+            asString(
+              operation.technical_finding,
+            ),
+
+          technicalBasis:
+            asString(
+              operation.technical_basis,
+            ),
+
+          riskImpact:
+            asString(
+              operation.risk_impact,
+            ),
+
+          recommendedAction:
+            asString(
+              operation.recommended_action,
+            ),
+
+          responsibleParty:
+            asString(
+              operation.responsible_party,
+            ),
+
+          closureEvidence:
+            asString(
+              operation.closure_evidence,
+            ),
 
           technicalAnalysis:
             asString(
@@ -681,7 +753,7 @@ export default async function ConclusionPage({
 
             <section
               className={
-                styles.clientXmlContext
+                styles.conclusionXmlList
               }
             >
               {analyses.map(
@@ -689,118 +761,225 @@ export default async function ConclusionPage({
                   item,
                   index,
                 ) => (
-                  <div
+                  <article
                     key={
                       item.documentId
                     }
                     className={
-                      styles.wideContext
+                      styles.conclusionXmlCard
                     }
                   >
-                    <span>
-                      NF-e{" "}
-                      {
-                        index +
-                        1
-                      }{" "}
-                      —{" "}
-                      {
-                        item.fileName
+                    <header
+                      className={
+                        styles.conclusionXmlHeader
                       }
-                    </span>
-
-                    <p>
-                      <strong>
-                        Operação:
-                      </strong>{" "}
-                      {
-                        item.operation
-                      }
-                    </p>
-
-                    <p
-                      style={{
-                        marginTop:
-                          "6px",
-                      }}
                     >
-                      <strong>
-                        CFOP:
-                      </strong>{" "}
-                      {item.cfop ||
-                        "Não informado"}
-                    </p>
+                      <div>
+                        <span>
+                          NF-e{" "}
+                          {
+                            index +
+                            1
+                          }
+                        </span>
 
-                    <p
-                      style={{
-                        marginTop:
-                          "6px",
-                      }}
-                    >
-                      <strong>
-                        Resultado:
-                      </strong>{" "}
-                      {resultLabels[
-                        item.result
-                      ] ??
-                        item.result}
-                    </p>
-
-                    <p
-                      style={{
-                        marginTop:
-                          "10px",
-                      }}
-                    >
-                      <strong>
-                        Análise:
-                      </strong>{" "}
-                      {
-                        item.technicalAnalysis
-                      }
-                    </p>
-
-                    {item.recommendation ? (
-                      <p
-                        style={{
-                          marginTop:
-                            "10px",
-                        }}
-                      >
                         <strong>
-                          Recomendação:
-                        </strong>{" "}
-                        {
-                          item.recommendation
-                        }
-                      </p>
-                    ) : null}
+                          {
+                            item.fileName
+                          }
+                        </strong>
+                      </div>
 
-                    <Link
-                      href={`/torre/diagnosticos/${diagnostic.id}/analise?xml=${index}`}
-                      style={{
-                        display:
-                          "inline-block",
+                      <Link
+                        href={`/torre/diagnosticos/${diagnostic.id}/analise?xml=${index}`}
+                      >
+                        Revisar NF-e
+                      </Link>
+                    </header>
 
-                        marginTop:
-                          "12px",
-
-                        color:
-                          "#0d1b2a",
-
-                        fontSize:
-                          "0.82rem",
-
-                        fontWeight:
-                          750,
-
-                        textDecoration:
-                          "underline",
-                      }}
+                    <div
+                      className={
+                        styles.conclusionXmlMeta
+                      }
                     >
-                      Revisar esta NF-e
-                    </Link>
-                  </div>
+                      <div>
+                        <span>
+                          Operação
+                        </span>
+
+                        <strong>
+                          {
+                            item.operation
+                          }
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          CFOP
+                        </span>
+
+                        <strong>
+                          {item.cfop ||
+                            "Não informado"}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Conformidade
+                        </span>
+
+                        <strong
+                          className={`${styles.resultBadge} ${
+                            styles[
+                              `result_${item.result}`
+                            ] ?? ""
+                          }`}
+                        >
+                          {resultLabels[
+                            item.result
+                          ] ??
+                            item.result}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Preparação IBS/CBS
+                        </span>
+
+                        <strong
+                          className={
+                            styles.preparationBadge
+                          }
+                        >
+                          {preparationLabels[
+                            item.preparationStatus
+                          ] ??
+                            item.preparationStatus}
+                        </strong>
+                      </div>
+                    </div>
+
+                    <details
+                      className={
+                        styles.conclusionXmlDetails
+                      }
+                    >
+                      <summary>
+                        Ver análise completa
+                      </summary>
+
+                      <div
+                        className={
+                          styles.conclusionXmlDetailGrid
+                        }
+                      >
+                        <section>
+                          <h3>
+                            1. Identificação da operação
+                          </h3>
+
+                          <p>
+                            {item.operationIdentification ||
+                              "Não informada."}
+                          </p>
+                        </section>
+
+                        <section>
+                          <h3>
+                            2. Evidências encontradas
+                          </h3>
+
+                          <p>
+                            {item.evidenceFound ||
+                              "Não informadas."}
+                          </p>
+                        </section>
+
+                        <section>
+                          <h3>
+                            3. Conferência dos cálculos
+                          </h3>
+
+                          <p>
+                            {item.calculationReview ||
+                              "Não informada."}
+                          </p>
+                        </section>
+
+                        <section>
+                          <h3>
+                            4. Achado técnico
+                          </h3>
+
+                          <p>
+                            {item.technicalFinding ||
+                              "Não informado."}
+                          </p>
+                        </section>
+
+                        {item.technicalBasis ? (
+                          <section>
+                            <h3>
+                              5. Fundamentação técnica
+                            </h3>
+
+                            <p>
+                              {
+                                item.technicalBasis
+                              }
+                            </p>
+                          </section>
+                        ) : null}
+
+                        <section>
+                          <h3>
+                            6. Risco ou impacto
+                          </h3>
+
+                          <p>
+                            {item.riskImpact ||
+                              "Não informado."}
+                          </p>
+                        </section>
+
+                        <section>
+                          <h3>
+                            7. Ação recomendada
+                          </h3>
+
+                          <p>
+                            {item.recommendedAction ||
+                              "Não informada."}
+                          </p>
+                        </section>
+
+                        <section>
+                          <h3>
+                            8. Responsável sugerido
+                          </h3>
+
+                          <p>
+                            {item.responsibleParty ||
+                              "Não informado."}
+                          </p>
+                        </section>
+
+                        <section>
+                          <h3>
+                            9. Evidência para encerramento
+                          </h3>
+
+                          <p>
+                            {item.closureEvidence ||
+                              "Não informada."}
+                          </p>
+                        </section>
+                      </div>
+                    </details>
+                  </article>
                 ),
               )}
             </section>
