@@ -602,55 +602,19 @@ export async function saveOperationAnalysis(
     );
   }
 
-  if (
-    !allowedOperationResults.includes(
+  const normalizedResult =
+    allowedOperationResults.includes(
       result,
-    ) ||
-    result === "pending"
-  ) {
-    redirect(
-      analysisPath(
-        diagnosticId,
-        currentIndex,
-        "erro=resultado-obrigatorio",
-      ),
-    );
-  }
+    )
+      ? result
+      : "pending";
 
-  if (
-    !allowedPreparationStatuses.includes(
+  const normalizedPreparationStatus =
+    allowedPreparationStatuses.includes(
       preparationStatus,
-    ) ||
-    preparationStatus ===
-      "pending"
-  ) {
-    redirect(
-      analysisPath(
-        diagnosticId,
-        currentIndex,
-        "erro=preparacao-obrigatoria",
-      ),
-    );
-  }
-
-  if (
-    !operationIdentification ||
-    !evidenceFound ||
-    !calculationReview ||
-    !technicalFinding ||
-    !riskImpact ||
-    !recommendedAction ||
-    !responsibleParty ||
-    !closureEvidence
-  ) {
-    redirect(
-      analysisPath(
-        diagnosticId,
-        currentIndex,
-        "erro=analise-detalhada-incompleta",
-      ),
-    );
-  }
+    )
+      ? preparationStatus
+      : "pending";
 
   const {
     supabase,
@@ -809,13 +773,14 @@ export async function saveOperationAnalysis(
     frequency:
       "",
 
-    result,
+    result:
+      normalizedResult,
 
     document_conformity:
-      result,
+      normalizedResult,
 
     preparation_status:
-      preparationStatus,
+      normalizedPreparationStatus,
 
     operation_identification:
       operationIdentification,
@@ -996,6 +961,60 @@ export async function saveOperationAnalysis(
   revalidateWorkspace(
     diagnosticId,
   );
+
+  /*
+   * A análise é salva como rascunho antes
+   * de qualquer retorno de validação.
+   *
+   * Assim, se algum campo obrigatório
+   * estiver faltando, o conteúdo já digitado
+   * permanece registrado e reaparece ao
+   * retornar para este XML.
+   */
+  if (
+    normalizedResult ===
+      "pending"
+  ) {
+    redirect(
+      analysisPath(
+        diagnosticId,
+        currentIndex,
+        "erro=resultado-obrigatorio",
+      ),
+    );
+  }
+
+  if (
+    normalizedPreparationStatus ===
+      "pending"
+  ) {
+    redirect(
+      analysisPath(
+        diagnosticId,
+        currentIndex,
+        "erro=preparacao-obrigatoria",
+      ),
+    );
+  }
+
+  if (
+    !operationIdentification ||
+    !evidenceFound ||
+    !calculationReview ||
+    !technicalFinding ||
+    !riskImpact ||
+    !recommendedAction ||
+    !responsibleParty ||
+    !closureEvidence
+  ) {
+    redirect(
+      analysisPath(
+        diagnosticId,
+        currentIndex,
+        "erro=analise-detalhada-incompleta",
+      ),
+    );
+  }
 
   const nextIndex =
     currentIndex + 1;
