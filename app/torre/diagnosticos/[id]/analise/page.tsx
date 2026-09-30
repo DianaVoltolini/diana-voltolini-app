@@ -518,17 +518,27 @@ export default async function AnalysisPage({
       operationLabels,
     );
 
-  const result =
+  const savedResult =
     asString(
       savedOperation.result,
-    ) ||
-    "pending";
+    );
 
-  const preparationStatus =
+  const result =
+    savedResult ===
+      "pending"
+      ? ""
+      : savedResult;
+
+  const savedPreparationStatus =
     asString(
       savedOperation.preparation_status,
-    ) ||
-    "pending";
+    );
+
+  const preparationStatus =
+    savedPreparationStatus ===
+      "pending"
+      ? ""
+      : savedPreparationStatus;
 
   const isSaved =
     result !==
@@ -1034,9 +1044,22 @@ export default async function AnalysisPage({
                     }
                     required
                   >
+                    <option
+                      value=""
+                      disabled
+                    >
+                      Selecione
+                    </option>
+
                     {Object.entries(
                       resultLabels,
-                    ).map(
+                    )
+                      .filter(
+                        ([value]) =>
+                          value !==
+                          "pending",
+                      )
+                      .map(
                       ([
                         value,
                         label,
@@ -1080,9 +1103,22 @@ export default async function AnalysisPage({
                     }
                     required
                   >
+                    <option
+                      value=""
+                      disabled
+                    >
+                      Selecione
+                    </option>
+
                     {Object.entries(
                       preparationLabels,
-                    ).map(
+                    )
+                      .filter(
+                        ([value]) =>
+                          value !==
+                          "pending",
+                      )
+                      .map(
                       ([
                         value,
                         label,
