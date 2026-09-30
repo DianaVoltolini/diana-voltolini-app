@@ -72,13 +72,13 @@ type ResultPayload = {
 const classificationLabels:
   Record<string, string> = {
   prepared:
-    "Empresa preparada",
+    "Preparação IBS/CBS comprovada",
 
   partially_prepared:
-    "Empresa parcialmente preparada",
+    "Preparação IBS/CBS parcialmente comprovada",
 
   not_prepared:
-    "Empresa não preparada",
+    "Preparação IBS/CBS não comprovada",
 };
 
 const operationResultLabels:
@@ -116,6 +116,51 @@ const preparationStatusLabels:
 
 const defaultLimitation =
   "O diagnóstico possui natureza operacional e documental, limitado aos arquivos, operações e informações fornecidos pela empresa. Não substitui parecer jurídico, auditoria fiscal completa, responsabilidade técnica da contabilidade ou responsabilidade do fornecedor do ERP.";
+
+function stripDuplicatedLimitation(
+  value:
+    | string
+    | null
+    | undefined,
+  limitation:
+    string,
+) {
+  let text =
+    asString(
+      value,
+    );
+
+  const normalizedLimitation =
+    asString(
+      limitation,
+    );
+
+  if (
+    text &&
+    normalizedLimitation &&
+    text.endsWith(
+      normalizedLimitation,
+    )
+  ) {
+    text =
+      text
+        .slice(
+          0,
+          -normalizedLimitation.length,
+        )
+        .trim();
+
+    text =
+      text
+        .replace(
+          /Limitação do diagnóstico:\s*$/i,
+          "",
+        )
+        .trim();
+  }
+
+  return text;
+}
 
 function asRecord(
   value: unknown,
@@ -410,6 +455,16 @@ export default async function ResultPage({
     company?.trade_name ||
     company?.legal_name ||
     "Empresa não informada";
+
+  const limitation =
+    result.limitation ||
+    defaultLimitation;
+
+  const finalOpinion =
+    stripDuplicatedLimitation(
+      result.finalOpinion,
+      limitation,
+    );
 
   return (
     <main
@@ -1077,7 +1132,7 @@ export default async function ResultPage({
               </h2>
 
               <p>
-                {result.finalOpinion ||
+                {finalOpinion ||
                   "Parecer não informado."}
               </p>
             </section>
@@ -1092,8 +1147,9 @@ export default async function ResultPage({
               </h2>
 
               <p>
-                {result.limitation ||
-                  defaultLimitation}
+                {
+                  limitation
+                }
               </p>
             </section>
 
