@@ -1578,3 +1578,225 @@
     width: 100%;
   }
 }
+
+/* =========================================================
+   ETAPA 3 — RESUMO VISUAL DOS XMLs NA CONCLUSÃO
+   ========================================================= */
+
+.conclusionXmlList {
+  display: grid;
+  gap: 16px;
+  padding: 22px 27px 27px;
+  background: #fbfcfd;
+}
+
+.conclusionXmlCard {
+  overflow: hidden;
+  border: 1px solid #d8e1e8;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.conclusionXmlHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid #e1e7ec;
+  padding: 16px 18px;
+}
+
+.conclusionXmlHeader > div {
+  min-width: 0;
+}
+
+.conclusionXmlHeader span {
+  display: block;
+  margin-bottom: 4px;
+  color: #846611;
+  font-size: 0.73rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.conclusionXmlHeader strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #0d1b2a;
+  font-size: 0.91rem;
+  line-height: 1.45;
+}
+
+.conclusionXmlHeader a {
+  flex: 0 0 auto;
+  color: #0d1b2a;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+.conclusionXmlMeta {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 0;
+  border-bottom: 1px solid #e1e7ec;
+}
+
+.conclusionXmlMeta > div {
+  min-width: 0;
+  border-right: 1px solid #e1e7ec;
+  padding: 15px 17px;
+}
+
+.conclusionXmlMeta > div:last-child {
+  border-right: 0;
+}
+
+.conclusionXmlMeta span {
+  display: block;
+  margin-bottom: 7px;
+  color: #687785;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.conclusionXmlMeta strong {
+  display: inline-flex;
+  color: #17283a;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.resultBadge,
+.preparationBadge {
+  align-items: center;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-weight: 800 !important;
+}
+
+.result_compliant {
+  background: #edf8f1;
+  color: #236b45 !important;
+}
+
+.result_attention {
+  background: #fff7df;
+  color: #7a5700 !important;
+}
+
+.result_critical {
+  background: #fff0ee;
+  color: #a83228 !important;
+}
+
+.result_pending {
+  background: #eef2f5;
+  color: #536372 !important;
+}
+
+.preparationBadge {
+  background: #f1f4f7;
+  color: #40515f !important;
+}
+
+.conclusionXmlDetails {
+  background: #ffffff;
+}
+
+.conclusionXmlDetails > summary {
+  padding: 15px 18px;
+  color: #0d1b2a;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.conclusionXmlDetails[open] > summary {
+  border-bottom: 1px solid #e1e7ec;
+  background: #fffaf0;
+}
+
+.conclusionXmlDetailGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 18px;
+}
+
+.conclusionXmlDetailGrid section {
+  border: 1px solid #e0e7ed;
+  border-radius: 8px;
+  background: #fbfcfd;
+  padding: 15px 16px;
+}
+
+.conclusionXmlDetailGrid section:nth-child(1),
+.conclusionXmlDetailGrid section:nth-child(2),
+.conclusionXmlDetailGrid section:nth-child(3),
+.conclusionXmlDetailGrid section:nth-child(4) {
+  grid-column: 1 / -1;
+}
+
+.conclusionXmlDetailGrid h3 {
+  margin: 0 0 7px;
+  color: #17283a;
+  font-size: 0.84rem;
+  font-weight: 850;
+}
+
+.conclusionXmlDetailGrid p {
+  margin: 0;
+  color: #445462;
+  font-size: 0.86rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 900px) {
+  .conclusionXmlMeta {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .conclusionXmlMeta > div:nth-child(2) {
+    border-right: 0;
+  }
+
+  .conclusionXmlMeta > div:nth-child(-n + 2) {
+    border-bottom: 1px solid #e1e7ec;
+  }
+}
+
+@media (max-width: 760px) {
+  .conclusionXmlList {
+    padding: 16px;
+  }
+
+  .conclusionXmlHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .conclusionXmlMeta,
+  .conclusionXmlDetailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .conclusionXmlMeta > div {
+    border-right: 0;
+    border-bottom: 1px solid #e1e7ec;
+  }
+
+  .conclusionXmlMeta > div:last-child {
+    border-bottom: 0;
+  }
+
+  .conclusionXmlDetailGrid section {
+    grid-column: auto !important;
+  }
+}
