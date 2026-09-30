@@ -57,13 +57,13 @@ const limitationText =
 const classificationLabels:
   Record<string, string> = {
   prepared:
-    "Preparada",
+    "Preparação IBS/CBS comprovada",
 
   partially_prepared:
-    "Parcialmente preparada",
+    "Preparação IBS/CBS parcialmente comprovada",
 
   not_prepared:
-    "Não preparada",
+    "Preparação IBS/CBS não comprovada",
 };
 
 const operationResultLabels:
@@ -138,6 +138,43 @@ function asString(
   return typeof value === "string"
     ? value.trim()
     : "";
+}
+
+function stripDuplicatedLimitation(
+  value:
+    | string
+    | null
+    | undefined,
+) {
+  let text =
+    asString(
+      value,
+    );
+
+  if (
+    text &&
+    text.endsWith(
+      limitationText,
+    )
+  ) {
+    text =
+      text
+        .slice(
+          0,
+          -limitationText.length,
+        )
+        .trim();
+
+    text =
+      text
+        .replace(
+          /Limitação do diagnóstico:\s*$/i,
+          "",
+        )
+        .trim();
+  }
+
+  return text;
 }
 
 function formatDateTime(
@@ -386,6 +423,11 @@ export default async function FinalizationPage({
     company?.trade_name ||
     company?.legal_name ||
     "Empresa não informada";
+
+  const finalOpinion =
+    stripDuplicatedLimitation(
+      analysis.final_opinion,
+    );
 
   return (
     <main
@@ -1106,7 +1148,7 @@ export default async function FinalizationPage({
               </h3>
 
               <p>
-                {analysis.final_opinion ||
+                {finalOpinion ||
                   "Não informado."}
               </p>
             </section>
