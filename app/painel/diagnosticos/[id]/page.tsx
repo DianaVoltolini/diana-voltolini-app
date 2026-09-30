@@ -928,8 +928,8 @@ export default async function DiagnosticPage({
 
   const questionnaireActionLabel =
     isFirstAccess
-      ? "Começar questionário"
-      : "Continuar questionário";
+      ? "Preencher questionário agora"
+      : "Continuar preenchimento";
 
   const questionnaireStatus =
     questionnaireReadyForReview
@@ -1079,53 +1079,95 @@ export default async function DiagnosticPage({
           {showQuestionnaireStartBanner &&
           primaryHref ? (
             <section
-              className={
-                styles.questionnaireStartCard
-              }
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "minmax(0, 1fr) minmax(280px, 340px)",
+                alignItems: "center",
+                gap: "32px",
+                marginBottom: "22px",
+                border: "1px solid #D9BF62",
+                borderLeft: "6px solid #C9A227",
+                borderRadius: "12px",
+                background: "#FFFBF0",
+                padding: "26px 28px",
+                boxShadow:
+                  "0 10px 24px rgba(13, 27, 42, 0.04)",
+              }}
             >
-              <div
-                className={
-                  styles.questionnaireStartContent
-                }
-              >
+              <div>
                 <p
-                  className={
-                    styles.questionnaireStartEyebrow
-                  }
+                  style={{
+                    margin: "0 0 7px",
+                    color: "#846611",
+                    fontSize: "0.76rem",
+                    fontWeight: 850,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
                 >
                   {isFirstAccess
-                    ? "Primeiro passo"
+                    ? "Comece por aqui"
                     : "Continue de onde parou"}
                 </p>
 
-                <h2>
+                <h2
+                  style={{
+                    margin: "0 0 9px",
+                    color: "#0D1B2A",
+                    fontSize: "1.55rem",
+                    fontWeight: 800,
+                    letterSpacing: "-0.025em",
+                    lineHeight: 1.2,
+                  }}
+                >
                   {isFirstAccess
                     ? "Preencha o questionário para iniciar seu diagnóstico."
-                    : "Continue o preenchimento do questionário."}
+                    : "Continue o preenchimento do seu questionário."}
                 </h2>
 
-                <p>
-                  É neste questionário que
-                  você informa os dados da
-                  empresa, como está a
-                  preparação para IBS/CBS,
-                  envia os XMLs selecionados
-                  e registra suas dúvidas.
+                <p
+                  style={{
+                    margin: 0,
+                    color: "#536372",
+                    fontSize: "0.94rem",
+                    lineHeight: 1.65,
+                  }}
+                >
+                  Informe os dados da empresa,
+                  a preparação para IBS/CBS,
+                  envie os XMLs selecionados e
+                  registre suas dúvidas.
                 </p>
               </div>
 
               <div
-                className={
-                  styles.questionnaireStartActions
-                }
+                style={{
+                  display: "grid",
+                  gap: "10px",
+                }}
               >
                 <Link
                   href={
                     primaryHref
                   }
-                  className={
-                    styles.questionnaireStartButton
-                  }
+                  style={{
+                    display: "flex",
+                    minHeight: "56px",
+                    alignItems: "center",
+                    justifyContent:
+                      "space-between",
+                    gap: "18px",
+                    border:
+                      "1px solid #C9A227",
+                    borderRadius: "8px",
+                    background: "#C9A227",
+                    color: "#0D1B2A",
+                    padding: "0 19px",
+                    fontSize: "0.9rem",
+                    fontWeight: 850,
+                    textDecoration: "none",
+                  }}
                 >
                   <span>
                     {
@@ -1135,12 +1177,21 @@ export default async function DiagnosticPage({
 
                   <b
                     aria-hidden="true"
+                    style={{
+                      fontSize: "1.1rem",
+                    }}
                   >
                     →
                   </b>
                 </Link>
 
-                <small>
+                <small
+                  style={{
+                    color: "#6D7B86",
+                    fontSize: "0.78rem",
+                    lineHeight: 1.5,
+                  }}
+                >
                   O prazo da análise começa
                   após a confirmação final do
                   envio.
