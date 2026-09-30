@@ -55,13 +55,13 @@ const classificationLabels:
     string
   > = {
   prepared:
-    "Preparada",
+    "Preparação comprovada",
 
   partially_prepared:
-    "Parcialmente preparada",
+    "Preparação parcialmente comprovada",
 
   not_prepared:
-    "Não preparada",
+    "Preparação não comprovada",
 };
 
 const resultLabels:
@@ -1162,9 +1162,9 @@ export default async function ConclusionPage({
                   </select>
 
                   <small>
-                    Preparada,
-                    parcialmente preparada
-                    ou não preparada.
+                    Classifique a preparação
+                    IBS/CBS apenas dentro do
+                    escopo analisado.
                   </small>
                 </label>
 
@@ -1189,7 +1189,11 @@ export default async function ConclusionPage({
                   <small>
                     Este é o fechamento
                     profissional do
-                    diagnóstico.
+                    diagnóstico. Não inclua
+                    aqui o texto de limitação;
+                    ele será apresentado
+                    automaticamente na etapa
+                    final.
                   </small>
                 </label>
               </div>
