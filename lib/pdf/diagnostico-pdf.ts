@@ -150,13 +150,13 @@ const WHITE = rgb(
 const classificationLabels:
   Record<string, string> = {
   prepared:
-    "Empresa preparada",
+    "Preparação IBS/CBS comprovada",
 
   partially_prepared:
-    "Empresa parcialmente preparada",
+    "Preparação IBS/CBS parcialmente comprovada",
 
   not_prepared:
-    "Empresa não preparada",
+    "Preparação IBS/CBS não comprovada",
 };
 
 const operationResultLabels:
@@ -221,6 +221,51 @@ const taxRegimeLabels:
 
 const defaultLimitation =
   "O diagnóstico possui natureza operacional e documental, limitado aos arquivos, operações e informações fornecidos pela empresa. Não substitui parecer jurídico, auditoria fiscal completa, responsabilidade técnica da contabilidade ou responsabilidade do fornecedor do ERP.";
+
+function stripDuplicatedLimitation(
+  value:
+    | string
+    | null
+    | undefined,
+  limitation:
+    string,
+) {
+  let text =
+    normalizeText(
+      value,
+    );
+
+  const normalizedLimitation =
+    normalizeText(
+      limitation,
+    );
+
+  if (
+    text &&
+    normalizedLimitation &&
+    text.endsWith(
+      normalizedLimitation,
+    )
+  ) {
+    text =
+      text
+        .slice(
+          0,
+          -normalizedLimitation.length,
+        )
+        .trim();
+
+    text =
+      text
+        .replace(
+          /Limitação do diagnóstico:\s*$/i,
+          "",
+        )
+        .trim();
+  }
+
+  return text;
+}
 
 function normalizeText(
   value:
@@ -2985,7 +3030,11 @@ export async function generateDiagnosticPdf({
   /*
    * =========================================================
    * 2. ANÁLISE INDIVIDUAL DOS XMLs
-   * Cada XML começa obrigatoriamente em uma nova página.
+   *
+   * O próximo XML aproveita o espaço restante quando houver
+   * área suficiente para iniciar o bloco com boa leitura.
+   * Isso evita páginas quase vazias sem misturar conteúdos
+   * de forma apertada.
    * =========================================================
    */
 
@@ -2994,7 +3043,9 @@ export async function generateDiagnosticPdf({
       operation,
       index,
     ) => {
-      addPage();
+      ensureSpace(
+        260,
+      );
 
       drawXmlHeader(
         operation,
@@ -3199,8 +3250,18 @@ export async function generateDiagnosticPdf({
   y -=
     23;
 
+  const limitation =
+    data.limitation ||
+    defaultLimitation;
+
+  const finalOpinion =
+    stripDuplicatedLimitation(
+      data.finalOpinion,
+      limitation,
+    );
+
   drawParagraph(
-    data.finalOpinion ||
+    finalOpinion ||
       "Parecer não informado.",
     {
       size:
@@ -3218,8 +3279,7 @@ export async function generateDiagnosticPdf({
   );
 
   drawLimitationBox(
-    data.limitation ||
-      defaultLimitation,
+    limitation,
   );
 
   drawSignature();
