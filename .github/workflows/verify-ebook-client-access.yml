@@ -1,0 +1,23 @@
+# .github/workflows/verify-ebook-client-access.yml
+name: Verify ebook client access
+on:
+  push:
+    branches:
+      - feature/ebook-client-access
+  pull_request:
+    paths:
+      - "app/painel/ebooks/**"
+      - ".github/workflows/verify-ebook-client-access.yml"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
