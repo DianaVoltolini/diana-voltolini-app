@@ -51,7 +51,11 @@ export default async function EbooksPage() {
           {hasPaidOrder ? (
             <>
               <p style={{ fontWeight: 700, color: "#167241" }}>Pagamento confirmado</p>
-              <p>Seu e-book foi adquirido. O download ficará disponível aqui após a implantação da entrega protegida.</p>
+              <p>Seu e-book está disponível para download.</p>
+              <a href="/api/ebooks/ibs-cbs-na-pratica/download"
+                style={{ display: "inline-block", marginTop: 12, background: "#c9a227", color: "#0d1b2a", padding: "12px 20px", borderRadius: 5, fontWeight: 700 }}>
+                Baixar e-book (PDF) ↓
+              </a>
             </>
           ) : (
             <>
