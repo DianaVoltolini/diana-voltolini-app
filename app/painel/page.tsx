@@ -466,6 +466,21 @@ export default async function PainelPage() {
       ),
     );
 
+  // Controle de acesso ao e-book por produto e pagamento confirmado.
+  const { data: ebookProduct, error: ebookProductError } = await admin
+    .from("products").select("id").eq("code", "EBOOK-IBSCBS-001").maybeSingle();
+  if (ebookProductError) throw new Error("Não foi possível consultar seus materiais digitais.");
+  let ebookPurchased = false;
+  if (ebookProduct) {
+    const { data: ebookOrders, error: ebookOrdersError } = await admin
+      .from("orders").select("id")
+      .eq("user_id", userId)
+      .eq("product_id", ebookProduct.id)
+      .eq("status", "paid").limit(1);
+    if (ebookOrdersError) throw new Error("Não foi possível verificar seus e-books.");
+    ebookPurchased = Boolean(ebookOrders?.length);
+  }
+
   const displayName =
     profile?.full_name?.trim() ||
     userEmail?.split(
@@ -560,6 +575,30 @@ export default async function PainelPage() {
               facilitar sua jornada!
             </p>
           </header>
+
+          <section aria-label="Produtos e serviços" style={{ margin: "28px 0 36px" }}>
+            <p className={styles.eyebrow}>SEUS PRODUTOS E SERVIÇOS</p>
+            <h2 style={{ margin: "8px 0 18px" }}>O que você deseja acessar?</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+              <article style={{ padding: 24, border: "1px solid #dfe5ec", borderTop: "4px solid #c9a227", borderRadius: 10, background: "#fff" }}>
+                <h3 style={{ marginTop: 0 }}>Diagnósticos</h3>
+                <p>Consulte suas análises, arquivos enviados e resultados.</p>
+                <a href="#diagnosticos" style={{ color: "#856511", fontWeight: 700 }}>Ver meus diagnósticos →</a>
+              </article>
+              <article style={{ padding: 24, border: "1px solid #dfe5ec", borderTop: "4px solid #c9a227", borderRadius: 10, background: "#fff" }}>
+                <h3 style={{ marginTop: 0 }}>E-books</h3>
+                <p>{ebookPurchased ? "Seu e-book IBS e CBS na Prática está disponível." : "Conheça o material IBS e CBS na Prática."}</p>
+                <Link href={ebookPurchased ? "/painel/ebooks" : "https://dianavoltolini.com.br/ibs-cbs-na-pratica"} style={{ color: "#856511", fontWeight: 700 }}>
+                  {ebookPurchased ? "Acessar meu e-book →" : "Conhecer o e-book →"}
+                </Link>
+              </article>
+              <article style={{ padding: 24, border: "1px solid #dfe5ec", borderTop: "4px solid #c9a227", borderRadius: 10, background: "#fff" }}>
+                <h3 style={{ marginTop: 0 }}>Mentorias e encontros</h3>
+                <p>Em breve, suas participações e materiais estarão reunidos aqui.</p>
+                <span style={{ color: "#64748b", fontWeight: 600 }}>Área em preparação</span>
+              </article>
+            </div>
+          </section>
 
           <section
             className={
@@ -657,6 +696,7 @@ export default async function PainelPage() {
           </section>
 
           <section
+            id="diagnosticos"
             className={
               styles.diagnosticsSection
             }
