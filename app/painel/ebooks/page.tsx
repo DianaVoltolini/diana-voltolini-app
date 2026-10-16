@@ -1,6 +1,9 @@
 // app/painel/ebooks/page.tsx
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
+import { logout } from "../actions";
+import styles from "../painel.module.css";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
@@ -38,7 +41,19 @@ export default async function EbooksPage() {
   }
 
   return (
-    <main style={{ minHeight: "75vh", background: "#f7f9fb", padding: "64px 20px", color: "#0d1b2a" }}>
+    <>
+      <header className={styles.header}>
+        <div className={`container ${styles.headerContent}`}>
+          <a href="https://dianavoltolini.com.br" aria-label="Acessar o site Diana Voltolini">
+            <Image className={styles.logo} src="/brand/logo-light.png" alt="Diana Voltolini" width={1535} height={538} priority />
+          </a>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Link href="/painel" style={{ background: "#fff", border: "1px solid #cbd5e1", borderRadius: 6, padding: "11px 15px", color: "#0d1b2a", fontWeight: 700, fontSize: 13 }}>Voltar ao painel</Link>
+            <form action={logout}><button className={styles.logoutButton} type="submit">Sair</button></form>
+          </div>
+        </div>
+      </header>
+      <main style={{ minHeight: "75vh", background: "#f7f9fb", padding: "64px 20px", color: "#0d1b2a" }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <Link href="/painel" style={{ fontSize: 14, fontWeight: 700, color: "#9f7d17" }}>← Voltar ao painel</Link>
         <p style={{ margin: "36px 0 9px", fontSize: 12, color: "#9f7d17", fontWeight: 800, letterSpacing: 2 }}>ÁREA DO CLIENTE</p>
@@ -68,6 +83,7 @@ export default async function EbooksPage() {
           )}
         </section>
       </div>
-    </main>
+      </main>
+    </>
   );
 }
