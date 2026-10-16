@@ -6,7 +6,10 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const BUCKET = "digital-products";
+// The uploaded Storage screenshot shows a bucket URL ending in "digital-products%203.".
+ // Keep both exact known names to accommodate the actual uploaded bucket,
+ // without granting public access to either location.
+const BUCKETS = ["digital-products", "digital-products 3."] as const;
 const OBJECT_PATH = "ebooks/ibs-cbs-na-pratica/Ebook_IBS_CBS_na_Pratica_Diana_Voltolini.pdf";
 const PRODUCT_CODE = "EBOOK-IBSCBS-001";
 
@@ -39,19 +42,27 @@ export async function GET() {
     if (orderError) throw orderError;
     if (!orders?.length) return denied(403);
 
-    const { data, error: storageError } = await admin.storage.from(BUCKET)
-      .createSignedUrl(OBJECT_PATH, 60, {
-        download: "Ebook_IBS_CBS_na_Pratica_Diana_Voltolini.pdf",
+    for (const bucket of BUCKETS) {
+      const { data, error: storageError } = await admin.storage.from(bucket)
+        .createSignedUrl(OBJECT_PATH, 60, {
+          download: "Ebook_IBS_CBS_na_Pratica_Diana_Voltolini.pdf",
+        });
+      if (!storageError && data?.signedUrl) {
+        return NextResponse.redirect(data.signedUrl, {
+          status: 303,
+          headers: { "Cache-Control": "no-store, private", "Referrer-Policy": "no-referrer" },
+        });
+      }
+      // Only log server-side diagnostics; do not expose storage details to customers.
+      console.error("Falha na assinatura do arquivo privado do e-book:", {
+        bucket, path: OBJECT_PATH, code: storageError?.name, message: storageError?.message,
       });
-    if (storageError || !data?.signedUrl) {
-      console.error("Erro no download protegido do e-book:", storageError);
-      return NextResponse.json({ error: "O arquivo está temporariamente indisponível." }, { status: 503, headers: { "Cache-Control": "no-store" } });
     }
 
-    return NextResponse.redirect(data.signedUrl, {
-      status: 303,
-      headers: { "Cache-Control": "no-store, private", "Referrer-Policy": "no-referrer" },
-    });
+    return NextResponse.json(
+      { error: "O arquivo está temporariamente indisponível." },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     console.error("Falha ao validar direito de acesso ao e-book:", error);
     return NextResponse.json({ error: "Não foi possível verificar o acesso ao e-book." }, { status: 500, headers: { "Cache-Control": "no-store" } });
