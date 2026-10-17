@@ -55,7 +55,6 @@ export default async function EbooksPage() {
       </header>
       <main style={{ minHeight: "75vh", background: "#f7f9fb", padding: "64px 20px", color: "#0d1b2a" }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
-        <Link href="/painel" style={{ fontSize: 14, fontWeight: 700, color: "#9f7d17" }}>← Voltar ao painel</Link>
         <p style={{ margin: "36px 0 9px", fontSize: 12, color: "#9f7d17", fontWeight: 800, letterSpacing: 2 }}>ÁREA DO CLIENTE</p>
         <h1 style={{ fontFamily: "Georgia,serif", fontSize: "clamp(32px,5vw,46px)", margin: "0 0 12px" }}>Meus E-books</h1>
         <p style={{ color: "#65717e", marginBottom: 32 }}>Seus materiais digitais e o acesso às compras realizadas.</p>
