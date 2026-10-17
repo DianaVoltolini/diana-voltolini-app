@@ -9,9 +9,9 @@ import { redirect } from "next/navigation";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
-import { logout } from "./actions";
+import { logout } from "../actions";
 
-import styles from "./painel.module.css";
+import styles from "../painel.module.css";
 
 export const metadata: Metadata = {
   title: "Meus Diagnósticos",
