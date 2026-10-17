@@ -466,6 +466,21 @@ export default async function PainelPage() {
       ),
     );
 
+  // Controle de acesso ao e-book por produto e pagamento confirmado.
+  const { data: ebookProduct, error: ebookProductError } = await admin
+    .from("products").select("id").eq("code", "EBOOK-IBSCBS-001").maybeSingle();
+  if (ebookProductError) throw new Error("Não foi possível consultar seus materiais digitais.");
+  let ebookPurchased = false;
+  if (ebookProduct) {
+    const { data: ebookOrders, error: ebookOrdersError } = await admin
+      .from("orders").select("id")
+      .eq("user_id", userId)
+      .eq("product_id", ebookProduct.id)
+      .eq("status", "paid").limit(1);
+    if (ebookOrdersError) throw new Error("Não foi possível verificar seus e-books.");
+    ebookPurchased = Boolean(ebookOrders?.length);
+  }
+
   const displayName =
     profile?.full_name?.trim() ||
     userEmail?.split(
@@ -548,115 +563,36 @@ export default async function PainelPage() {
                 styles.welcomeText
               }
             >
-              Aqui você encontra tudo 
-              que precisa para gerenciar 
-              sua experiência de forma eficiente.   
-              Acompanhe o seu
-              diagnóstico, consulte as
-              informações enviadas,
-              acompanhe suas mensagens e
-              acesse seus resultados.
-              Tudo ao seu alcance para 
-              facilitar sua jornada!
-            </p>
+              Acesse seus produtos e acompanhe os serviços contratados em um só lugar.
+              Escolha abaixo o que deseja consultar.            </p>
           </header>
 
-          <section
-            className={
-              styles.guidanceCard
-            }
-          >
-            <div
-              className={
-                styles.guidanceList
-              }
-            >
-              <article>
-                <span>
-                  01
-                </span>
-
-                <div>
-                  <strong>
-                    Acompanhe cada
-                    diagnóstico
-                  </strong>
-
-                  <p>
-                    Veja a data da
-                    contratação, pagamento,
-                    arquivos enviados,
-                    previsão de conclusão
-                    e o status atual.
-                  </p>
-                </div>
+          <section aria-label="Produtos e serviços" style={{ margin: "28px 0 36px" }}>
+            <p className={styles.eyebrow}>SEUS PRODUTOS E SERVIÇOS</p>
+            <h2 style={{ margin: "8px 0 18px" }}>O que você deseja acessar?</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+              <article style={{ padding: 24, border: "1px solid #dfe5ec", borderTop: "4px solid #c9a227", borderRadius: 10, background: "#fff" }}>
+                <h3 style={{ marginTop: 0 }}>Diagnósticos</h3>
+                <p>{diagnostics.length > 0 ? `Você tem ${diagnostics.length} diagnóstico(s) para acompanhar.` : "Acompanhe análises e resultados ou conheça o Diagnóstico Expresso."}</p>
+                <a href={diagnostics.length > 0 ? "#diagnosticos" : "https://dianavoltolini.com.br/diagnostico-ibs-cbs"} style={{ color: "#856511", fontWeight: 700 }}>{diagnostics.length > 0 ? "Ver meus diagnósticos →" : "Conhecer o diagnóstico →"}</a>
               </article>
-
-              <article>
-                <span>
-                  02
-                </span>
-
-                <div>
-                  <strong>
-                    Acompanhe a jornada
-                  </strong>
-
-                  <p>
-                    O painel mostra em
-                    qual ponto o trabalho
-                    está: envio, análise,
-                    revisão final ou
-                    resultado.
-                  </p>
-                </div>
+              <article style={{ padding: 24, border: "1px solid #dfe5ec", borderTop: "4px solid #c9a227", borderRadius: 10, background: "#fff" }}>
+                <h3 style={{ marginTop: 0 }}>E-books</h3>
+                <p>{ebookPurchased ? "Seu e-book IBS e CBS na Prática está disponível." : "Conheça o material IBS e CBS na Prática."}</p>
+                <Link href={ebookPurchased ? "/painel/ebooks" : "https://dianavoltolini.com.br/ibs-cbs-na-pratica"} style={{ color: "#856511", fontWeight: 700 }}>
+                  {ebookPurchased ? "Acessar meu e-book →" : "Conhecer o e-book →"}
+                </Link>
               </article>
-
-              <article>
-                <span>
-                  03
-                </span>
-
-                <div>
-                  <strong>
-                    Use as mensagens
-                  </strong>
-
-                  <p>
-                    Se precisarmos de
-                    algum esclarecimento
-                    ou complemento, a
-                    comunicação ficará
-                    registrada dentro do
-                    diagnóstico.
-                  </p>
-                </div>
-              </article>
-
-              <article>
-                <span>
-                  04
-                </span>
-
-                <div>
-                  <strong>
-                    Consulte o resultado
-                  </strong>
-
-                  <p>
-                    Após a conclusão, o
-                    parecer e as
-                    informações do
-                    diagnóstico continuam
-                    disponíveis na sua
-                    Área do Cliente.
-                  </p>
-                </div>
+              <article style={{ padding: 24, border: "1px solid #dfe5ec", borderTop: "4px solid #c9a227", borderRadius: 10, background: "#fff" }}>
+                <h3 style={{ marginTop: 0 }}>Mentorias e encontros</h3>
+                <p>Em breve, suas participações e materiais estarão reunidos aqui.</p>
+                <span style={{ color: "#64748b", fontWeight: 600 }}>Área em preparação</span>
               </article>
             </div>
           </section>
 
           <section
+            id="diagnosticos"
             className={
               styles.diagnosticsSection
             }
