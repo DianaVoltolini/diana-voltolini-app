@@ -481,6 +481,13 @@ export default async function PainelPage() {
     ebookPurchased = Boolean(ebookOrders?.length);
   }
 
+  const pendingDiagnostics = diagnostics.filter((item) =>
+    item.status === "awaiting_questionnaire" ||
+    item.status === "awaiting_documents" ||
+    item.status === "client_action_required"
+  );
+  const latestDiagnostics = diagnostics.slice(0, 3);
+
   const displayName =
     profile?.full_name?.trim() ||
     userEmail?.split(
@@ -541,41 +548,38 @@ export default async function PainelPage() {
         }
       >
         <div className="container">
-          <header
-            className={
-              styles.welcome
-            }
-          >
-            <p
-              className={
-                styles.eyebrow
-              }
-            >
-              Painel do Cliente
+          <header style={{ background: "#0d1b2a", color: "#fff", borderRadius: 14, padding: "clamp(24px, 4vw, 46px)", marginBottom: 24 }}>
+            <p style={{ color: "#d5ad35", fontSize: 12, fontWeight: 800, letterSpacing: 1.5 }}>ÁREA DO CLIENTE</p>
+            <h1 style={{ color: "#fff", margin: "12px 0 14px" }}>Olá, {displayName}</h1>
+            <p style={{ color: "#d3dce5", maxWidth: 680, lineHeight: 1.65, marginBottom: 20 }}>
+              Tudo o que você contratou, seus materiais e os próximos passos em um só lugar.
             </p>
-
-            <h1>
-              Olá, {displayName}
-            </h1>
-
-            <p
-              className={
-                styles.welcomeText
-              }
-            >
-              Consulte suas compras, baixe seus materiais e acompanhe os serviços em andamento. Tudo organizado para você.            </p>
+            <Link href="/painel/diagnosticos" style={{ display: "inline-block", color: "#0d1b2a", background: "#d7b03a", fontWeight: 800, borderRadius: 7, padding: "12px 17px", textDecoration: "none" }}>
+              Acompanhar meus serviços →
+            </Link>
           </header>
 
-          <section aria-label="Resumo da sua área" style={{ display: "flex", flexWrap: "wrap", gap: 14, margin: "28px 0 32px" }}>
-            <div style={{ flex: "1 1 220px", background: "#fff", border: "1px solid #dfe5ec", borderRadius: 9, padding: 18 }}>
-              <span style={{ color: "#64748b", fontSize: 13 }}>Diagnósticos</span>
-              <p style={{ margin: "8px 0 0", fontSize: 25, fontWeight: 800 }}>{diagnostics.length}</p>
-            </div>
-            <div style={{ flex: "1 1 220px", background: "#fff", border: "1px solid #dfe5ec", borderRadius: 9, padding: 18 }}>
-              <span style={{ color: "#64748b", fontSize: 13 }}>E-books adquiridos</span>
-              <p style={{ margin: "8px 0 0", fontSize: 25, fontWeight: 800 }}>{ebookPurchased ? 1 : 0}</p>
-            </div>
+          <section aria-label="Resumo da conta" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(195px,1fr))", gap: 14, marginBottom: 32 }}>
+            {[
+              { label: "Diagnósticos contratados", value: diagnostics.length, detail: "Serviços vinculados à sua conta" },
+              { label: "Materiais digitais", value: ebookPurchased ? 1 : 0, detail: "E-books disponíveis" },
+              { label: "Precisam de atenção", value: pendingDiagnostics.length, detail: pendingDiagnostics.length ? "Confira as pendências dos diagnósticos" : "Nenhuma ação identificada" },
+            ].map((item) => (
+              <article key={item.label} style={{ padding: 23, background: "#fff", border: "1px solid #dfe5ec", borderRadius: 11 }}>
+                <p style={{ color: "#617084", fontSize: 13, margin: "0 0 10px" }}>{item.label}</p>
+                <strong style={{ fontSize: 32, color: "#0d1b2a" }}>{item.value}</strong>
+                <p style={{ color: "#617084", fontSize: 12, margin: "8px 0 0" }}>{item.detail}</p>
+              </article>
+            ))}
           </section>
+
+          {pendingDiagnostics.length > 0 && (
+            <section aria-label="Pendências" style={{ background: "#fffaf0", border: "1px solid #e9d4a3", borderLeft: "5px solid #c9a227", borderRadius: 9, padding: "18px 22px", marginBottom: 32 }}>
+              <h2 style={{ color: "#0d1b2a", fontSize: 19, margin: "0 0 7px" }}>Sua atenção é necessária</h2>
+              <p style={{ color: "#516071", margin: "0 0 12px" }}>Você tem {pendingDiagnostics.length} diagnóstico(s) aguardando informações ou providências.</p>
+              <Link href="/painel/diagnosticos" style={{ fontWeight: 800, color: "#86630b" }}>Ver pendências →</Link>
+            </section>
+          )}
 
           <section aria-label="Produtos e serviços" style={{ margin: "28px 0 36px" }}>
             <p className={styles.eyebrow}>SEUS PRODUTOS E SERVIÇOS</p>
@@ -601,6 +605,23 @@ export default async function PainelPage() {
             </div>
           </section>
 
+          {latestDiagnostics.length > 0 && (
+            <section aria-label="Acompanhamento recente" style={{ margin: "38px 0 22px" }}>
+              <p className={styles.eyebrow}>ACOMPANHAMENTO</p>
+              <h2 style={{ margin: "8px 0 18px", color: "#0d1b2a" }}>Diagnósticos recentes</h2>
+              <div style={{ display: "grid", gap: 12 }}>
+                {latestDiagnostics.map((item) => (
+                  <article key={item.id} style={{ display: "flex", gap: 15, justifyContent: "space-between", flexWrap: "wrap", alignItems: "center", border: "1px solid #dfe5ec", background: "#fff", borderRadius: 9, padding: "17px 22px" }}>
+                    <div>
+                      <strong style={{ color: "#0d1b2a" }}>{item.code}</strong>
+                      <p style={{ color: "#64748b", fontSize: 13, margin: "6px 0 0" }}>Situação: {getGeneralStatus(item.status)}</p>
+                    </div>
+                    <Link href={`/painel/diagnosticos/${item.id}`} style={{ color: "#856511", fontWeight: 800 }}>Acompanhar →</Link>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </section>
     </main>
