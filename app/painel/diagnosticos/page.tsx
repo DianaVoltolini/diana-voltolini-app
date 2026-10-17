@@ -518,20 +518,10 @@ export default async function DiagnosticosPage() {
             />
           </a>
 
-          <form
-            action={
-              logout
-            }
-          >
-            <button
-              className={
-                styles.logoutButton
-              }
-              type="submit"
-            >
-              Sair
-            </button>
-          </form>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Link href="/painel" style={{ background: "#fff", border: "1px solid #cbd5e1", borderRadius: 6, padding: "11px 15px", color: "#0d1b2a", fontWeight: 700, fontSize: 13 }}>Voltar ao painel</Link>
+            <form action={logout}><button className={styles.logoutButton} type="submit">Sair</button></form>
+          </div>
         </div>
       </header>
 
@@ -566,7 +556,6 @@ export default async function DiagnosticosPage() {
               Acompanhe suas análises, documentos enviados, andamento e resultados.            </p>
           </header>
 
-          <div style={{ margin: "0 0 24px" }}><Link href="/painel" style={{ color: "#856511", fontWeight: 700 }}>← Voltar ao painel</Link></div>
           <section
             id="diagnosticos"
             className={
