@@ -554,8 +554,8 @@ export default async function PainelPage() {
             <p style={{ color: "#d3dce5", maxWidth: 680, lineHeight: 1.65, marginBottom: 20 }}>
               Tudo o que você contratou, seus materiais e os próximos passos em um só lugar.
             </p>
-            <Link href="/painel/diagnosticos" style={{ display: "inline-block", color: "#0d1b2a", background: "#d7b03a", fontWeight: 800, borderRadius: 7, padding: "12px 17px", textDecoration: "none" }}>
-              Acompanhar meus serviços →
+            <Link href="#produtos-servicos" style={{ display: "inline-block", color: "#0d1b2a", background: "#d7b03a", fontWeight: 800, borderRadius: 7, padding: "12px 17px", textDecoration: "none" }}>
+              Ver meus produtos e serviços →
             </Link>
           </header>
 
@@ -581,16 +581,18 @@ export default async function PainelPage() {
             </section>
           )}
 
-          <section aria-label="Produtos e serviços" style={{ margin: "28px 0 36px" }}>
-            <p className={styles.eyebrow}>SEUS PRODUTOS E SERVIÇOS</p>
+          <section id="produtos-servicos" aria-label="Produtos e serviços" style={{ margin: "28px 0 36px", scrollMarginTop: 24 }}>
+            <p className={styles.eyebrow}>ACESSOS DA SUA CONTA</p>
             <h2 style={{ margin: "8px 0 18px" }}>Seus produtos e serviços</h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
-              <article style={{ padding: 24, border: "1px solid #dfe5ec", borderTop: "4px solid #c9a227", borderRadius: 10, background: "#fff" }}>
+              <article style={{ padding: 28, border: "1px solid #dfe5ec", borderTop: "4px solid #c9a227", borderRadius: 12, background: "#fff", boxShadow: "0 5px 18px rgba(13,27,42,.04)" }}>
+                <p style={{ color: diagnostics.length ? "#187044" : "#64748b", fontWeight: 800, fontSize: 12, margin: "0 0 15px" }}>{diagnostics.length ? "ACESSO DISPONÍVEL" : "CONHEÇA O SERVIÇO"}</p>
                 <h3 style={{ marginTop: 0 }}>Diagnósticos</h3>
                 <p>{diagnostics.length > 0 ? `Você tem ${diagnostics.length} diagnóstico(s) para acompanhar.` : "Acompanhe análises e resultados ou conheça o Diagnóstico Expresso."}</p>
                 <a href={diagnostics.length > 0 ? "/painel/diagnosticos" : "https://dianavoltolini.com.br/diagnostico-ibs-cbs"} style={{ color: "#856511", fontWeight: 700 }}>{diagnostics.length > 0 ? "Ver meus diagnósticos →" : "Conhecer o diagnóstico →"}</a>
               </article>
               <article style={{ padding: 24, border: "1px solid #dfe5ec", borderTop: "4px solid #c9a227", borderRadius: 10, background: "#fff" }}>
+                <p style={{ color: ebookPurchased ? "#187044" : "#64748b", fontWeight: 800, fontSize: 12, margin: "0 0 15px" }}>{ebookPurchased ? "ACESSO DISPONÍVEL" : "CONHEÇA O MATERIAL"}</p>
                 <h3 style={{ marginTop: 0 }}>E-books</h3>
                 <p>{ebookPurchased ? "Seu e-book IBS e CBS na Prática está disponível." : "Conheça o material IBS e CBS na Prática."}</p>
                 <Link href={ebookPurchased ? "/painel/ebooks" : "https://dianavoltolini.com.br/ibs-cbs-na-pratica"} style={{ color: "#856511", fontWeight: 700 }}>
@@ -598,6 +600,7 @@ export default async function PainelPage() {
                 </Link>
               </article>
               <article style={{ padding: 24, border: "1px solid #dfe5ec", borderTop: "4px solid #c9a227", borderRadius: 10, background: "#fff" }}>
+                <p style={{ color: "#64748b", fontWeight: 800, fontSize: 12, margin: "0 0 15px" }}>EM PREPARAÇÃO</p>
                 <h3 style={{ marginTop: 0 }}>Mentorias e encontros</h3>
                 <p>Em breve, suas participações e materiais estarão reunidos aqui.</p>
                 <span style={{ color: "#64748b", fontWeight: 600 }}>Área em preparação</span>
@@ -616,7 +619,7 @@ export default async function PainelPage() {
                       <strong style={{ color: "#0d1b2a" }}>{item.code}</strong>
                       <p style={{ color: "#64748b", fontSize: 13, margin: "6px 0 0" }}>Situação: {getGeneralStatus(item.status)}</p>
                     </div>
-                    <Link href={`/painel/diagnosticos/${item.id}`} style={{ color: "#856511", fontWeight: 800 }}>Acompanhar →</Link>
+                    <Link href={`/painel/diagnosticos/${item.id}`} style={{ color: "#856511", fontWeight: 800 }}>{item.status === "completed" ? "Ver resultado →" : pendingDiagnostics.some((pending) => pending.id === item.id) ? "Resolver pendência →" : "Acompanhar →"}</Link>
                   </article>
                 ))}
               </div>
