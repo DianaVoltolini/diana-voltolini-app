@@ -30,8 +30,8 @@ export default async function TorrePage() {
   const ebookSold=paidOrders.filter(x=>ebookIds.has(x.product_id)).length;
   const pendingOrders=orders.filter(x=>x.status==="pending").length;
   const navCards=[
-    {title:"Gestão de Serviços",description:"Acompanhe Diagnósticos, veja a situação dos atendimentos e o resumo dos produtos vendidos.",url:"/torre/servicos",button:"Gerenciar serviços →"},
-    {title:"Financeiro Geral",description:"Consulte vendas, pagamentos, clientes e valores com filtros por período, serviço e status.",url:"/torre/financeiro",button:"Ver financeiro →"},
+    {title:"Gestão de Serviços",description:"Veja o resumo dos produtos e serviços vendidos e acesse suas áreas específicas.",url:"/torre/servicos",button:"Gerenciar serviços →"},
+    {title:"E-books",description:"Acompanhe os e-books comercializados e suas vendas confirmadas.",url:"/torre/ebooks",button:"Ver e-books →"},
     {title:"Diagnósticos",description:"Gerencie questionários, arquivos XML, andamento das análises e entregas.",url:"/torre/diagnosticos",button:"Gerenciar diagnósticos →"},
   ];
   return <main className={styles.page}>
@@ -53,9 +53,22 @@ export default async function TorrePage() {
         <section className={styles.diagnosticsSection} aria-label="Resultado financeiro resumido">
           <header className={styles.sectionHeader}><div><p className={styles.eyebrow}>RESUMO DE VENDAS</p><h2>Recebimentos registrados</h2></div><Link className={styles.openLink} href="/torre/financeiro">Abrir financeiro →</Link></header>
           <strong style={{fontSize:30,color:"#177245"}}>{money(totalPaid)}</strong>
-          <p style={{color:"#647381",marginTop:9}}>Total dos pedidos pagos consultados. Para filtrar por mês ou produto, acesse o Financeiro Geral.</p>
+          <p style={{color:"#647381",marginTop:9}}>Consulte vendas, pagamentos, clientes e valores com filtros por período, serviço e status.</p>
         </section>
       </>}
+      {!hasError && <section className={styles.diagnosticsSection} aria-label="Indicadores por produto">
+        <header className={styles.sectionHeader}><div><p className={styles.eyebrow}>INDICADORES</p><h2>Vendas confirmadas por produto</h2></div></header>
+        {products.filter(p=>paidOrders.some(o=>o.product_id===p.id)).map(p=>{
+          const count=paidOrders.filter(o=>o.product_id===p.id).length;
+          const width=paidOrders.length ? count/paidOrders.length*100 : 0;
+          return <div key={p.id} style={{marginBottom:16}}>
+            <div style={{display:"flex",justifyContent:"space-between",gap:12,color:"#354553",fontSize:14,marginBottom:5}}><span>{p.name}</span><strong>{count}</strong></div>
+            <div style={{height:10,background:"#e8edf2",borderRadius:99,overflow:"hidden"}}><div style={{height:"100%",width:`${width}%`,background:"#c9a227"}} /></div>
+          </div>;
+        })}
+        {paidOrders.length===0&&<p style={{color:"#647381"}}>Nenhuma venda paga registrada.</p>}
+        <p style={{fontSize:12,color:"#647381"}}>Distribuição dos pedidos pagos consultados, não dos recebimentos bancários.</p>
+      </section>}
       <section aria-label="Áreas de gestão" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(270px,1fr))",gap:18}}>
         {navCards.map(card=><article key={card.url} style={{background:"#fff",border:"1px solid #d6e0e8",borderTop:"4px solid #c9a227",borderRadius:12,padding:27}}>
           <h2 style={{color:"#0d1b2a",fontSize:24,margin:"0 0 12px"}}>{card.title}</h2>
@@ -63,6 +76,7 @@ export default async function TorrePage() {
           <Link href={card.url} className={styles.openLink}>{card.button}</Link>
         </article>)}
       </section>
+      <p style={{marginTop:23}}><Link href="/torre/pendencias" className={styles.openLink}>Ver todas as pendências →</Link></p>
       <p style={{color:"#647381",fontSize:12,marginTop:24}}>Os indicadores exibem os registros recentes consultados. A gestão detalhada permanece nas páginas específicas.</p>
     </div></section>
   </main>;
