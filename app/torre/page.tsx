@@ -8,6 +8,7 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 
 import { logout } from "./actions";
 import styles from "./painel.module.css";
+import FinanceOverview from "./finance-overview";
 
 export const metadata: Metadata = {
   title: "Painel administrativo",
@@ -395,6 +396,8 @@ export default async function PainelPage() {
             </article>
           </section>
 
+          <FinanceOverview />
+
           {urgentDiagnostics.length >
           0 ? (
             <section
@@ -501,11 +504,11 @@ export default async function PainelPage() {
                     styles.eyebrow
                   }
                 >
-                  Operação completa
+                  GESTÃO DE SERVIÇOS
                 </p>
 
                 <h2>
-                  Todos os diagnósticos
+                  Diagnósticos contratados
                 </h2>
               </div>
 
