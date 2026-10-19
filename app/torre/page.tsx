@@ -32,6 +32,7 @@ export default async function TorrePage() {
   const navCards=[
     {title:"Gestão de Serviços",description:"Acompanhe Diagnósticos, veja a situação dos atendimentos e o resumo dos produtos vendidos.",url:"/torre/servicos",button:"Gerenciar serviços →"},
     {title:"Financeiro Geral",description:"Consulte vendas, pagamentos, clientes e valores com filtros por período, serviço e status.",url:"/torre/financeiro",button:"Ver financeiro →"},
+    {title:"Diagnósticos",description:"Gerencie questionários, arquivos XML, andamento das análises e entregas.",url:"/torre/diagnosticos",button:"Gerenciar diagnósticos →"},
   ];
   return <main className={styles.page}>
     <header className={styles.header}><div className={`container ${styles.headerContent}`}>
