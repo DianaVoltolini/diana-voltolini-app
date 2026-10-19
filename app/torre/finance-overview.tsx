@@ -1,4 +1,5 @@
 // app/torre/finance-overview.tsx
+import type { CSSProperties } from "react";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import styles from "./painel.module.css";
 
@@ -8,8 +9,8 @@ type Filters = { de?: string; ate?: string; cliente?: string; servico?: string; 
 const currency = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 const dateLabel = (value: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(new Date(value));
 const localDate = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
-const validDate = (s: string | undefined) => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s)) ? s : undefined;
-const field: React.CSSProperties = { width: "100%", minWidth: 0, padding: "10px", borderRadius: 7, border: "1px solid #cbd5e1", background: "#fff", color: "#0d1b2a" };
+const validDate = (s: string | undefined) => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s)) && new Date(s).toISOString().slice(0,10) === s ? s : undefined;
+const field: CSSProperties = { width: "100%", minWidth: 0, padding: "10px", borderRadius: 7, border: "1px solid #cbd5e1", background: "#fff", color: "#0d1b2a" };
 
 export default async function FinanceOverview({ filters }: { filters: Filters }) {
   const admin = getSupabaseAdmin();
@@ -26,13 +27,16 @@ export default async function FinanceOverview({ filters }: { filters: Filters })
   let query = admin.from("orders")
     .select("id, created_at, customer_name, customer_email, product_id, amount_cents, status")
     .gte("created_at", start + "T00:00:00-03:00")
-    .lt("created_at", new Date(new Date(end + "T12:00:00-03:00").getTime() + 86400000).toISOString())
+    .lt("created_at", new Date(new Date(end + "T00:00:00-03:00").getTime() + 86400000).toISOString())
     .order("created_at", { ascending: false }).limit(1000);
   if (service && products.some((p) => p.id === service)) query = query.eq("product_id", service);
   if (status === "paid" || status === "pending") query = query.eq("status", status);
   else if (status === "other") query = query.not("status", "in", '("paid","pending")');
-  if (customer) query = query.or(`customer_name.ilike.%${customer.replace(/[%_,().]/g,"")}%,customer_email.ilike.%${customer.replace(/[%_,().]/g,"")}%`);
-  const { data, error } = await query;
+  if (customer) {
+    const safeCustomer = customer.replace(/[%_,().\\]/g, "");
+    if (safeCustomer) query = query.or(`customer_name.ilike.%${safeCustomer}%,customer_email.ilike.%${safeCustomer}%`);
+  }
+  const { data, error } = start <= end ? await query : { data: [], error: null };
   if (error) return <section className={styles.diagnosticsSection}><p className={styles.errorMessage}>Não foi possível consultar o financeiro geral.</p></section>;
   const sales = (data ?? []) as Sale[];
   const paid = sales.filter((x) => x.status === "paid");
