@@ -45,7 +45,7 @@ export default async function FinanceOverview({ filters }: { filters: Filters })
   return <section className={styles.diagnosticsSection} id="financeiro">
     <header className={styles.sectionHeader}><div><p className={styles.eyebrow}>VENDAS E RECEBIMENTOS</p><h2>Financeiro geral</h2>
       <p style={{ color: "#637280" }}>Consulte as vendas por período, cliente, produto e situação do pagamento.</p></div></header>
-    <form method="get" action="/torre" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(155px,1fr))", gap: 12, marginBottom: 24, alignItems: "end" }}>
+    <form method="get" action="/torre/financeiro" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(155px,1fr))", gap: 12, marginBottom: 24, alignItems: "end" }}>
       <label style={{ fontSize: 13, fontWeight: 700 }}>De<input name="de" type="date" defaultValue={start} style={field}/></label>
       <label style={{ fontSize: 13, fontWeight: 700 }}>Até<input name="ate" type="date" defaultValue={end} style={field}/></label>
       <label style={{ fontSize: 13, fontWeight: 700 }}>Cliente<input name="cliente" defaultValue={customer} placeholder="Nome ou e-mail" style={field}/></label>
@@ -54,7 +54,7 @@ export default async function FinanceOverview({ filters }: { filters: Filters })
       <label style={{ fontSize: 13, fontWeight: 700 }}>Status<select name="status" defaultValue={status} style={field}>
         <option value="">Todos</option><option value="paid">Pago</option><option value="pending">Pendente</option><option value="other">Outros</option></select></label>
       <button type="submit" className={styles.openLink} style={{ cursor: "pointer" }}>Filtrar</button>
-      <a href="/torre#financeiro" style={{ color: "#856511", fontWeight: 700, fontSize: 13 }}>Limpar filtros</a>
+      <a href="/torre/financeiro#financeiro" style={{ color: "#856511", fontWeight: 700, fontSize: 13 }}>Limpar filtros</a>
     </form>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 14, marginBottom: 22 }}>
       <article style={{ padding: 18, border: "1px solid #dce4eb", borderRadius: 9 }}><span>Recebido</span><strong style={{ display: "block", fontSize: 26, color: "#177245" }}>{currency(total(paid))}</strong><small>{paid.length} pedido(s) pago(s)</small></article>
