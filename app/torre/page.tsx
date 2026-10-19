@@ -70,11 +70,12 @@ function formatDate(
   ).format(new Date(value));
 }
 
-export default async function PainelPage() {
+export default async function PainelPage({ searchParams }: { searchParams: Promise<{ de?: string; ate?: string; cliente?: string; servico?: string; status?: string }> }) {
   const {
     supabase,
     profile,
   } = await requireAdmin();
+  const financeFilters = await searchParams;
 
   const {
     data: diagnosticsData,
@@ -396,7 +397,7 @@ export default async function PainelPage() {
             </article>
           </section>
 
-          <FinanceOverview />
+          <FinanceOverview filters={financeFilters} />
 
           {urgentDiagnostics.length >
           0 ? (
