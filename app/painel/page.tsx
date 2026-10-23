@@ -600,6 +600,12 @@ export default async function PainelPage() {
                 </Link>
               </article>
               <article style={{ padding: 24, border: "1px solid #dfe5ec", borderTop: "4px solid #c9a227", borderRadius: 10, background: "#fff" }}>
+                <p style={{ color: "#64748b", fontWeight: 800, fontSize: 12, margin: "0 0 15px" }}>CONTEÚDO POR ASSINATURA</p>
+                <h3 style={{ marginTop: 0 }}>Fiscal na Prática</h3>
+                <p>Análises fiscais e materiais exclusivos. O acesso depende de uma assinatura vigente.</p>
+                <Link href="/painel/assinatura" style={{ color: "#856511", fontWeight: 700 }}>Acessar biblioteca →</Link>
+              </article>
+              <article style={{ padding: 24, border: "1px solid #dfe5ec", borderTop: "4px solid #c9a227", borderRadius: 10, background: "#fff" }}>
                 <p style={{ color: "#64748b", fontWeight: 800, fontSize: 12, margin: "0 0 15px" }}>EM PREPARAÇÃO</p>
                 <h3 style={{ marginTop: 0 }}>Mentorias e encontros</h3>
                 <p>Em breve, suas participações e materiais estarão reunidos aqui.</p>
