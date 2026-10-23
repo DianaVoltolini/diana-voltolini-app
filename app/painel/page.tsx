@@ -581,6 +581,12 @@ export default async function PainelPage() {
             </section>
           )}
 
+          <section aria-label="Orientações para acesso" style={{background:"#ffffff",border:"1px solid #dde5ec",borderRadius:12,padding:"20px 24px",margin:"24px 0",display:"flex",alignItems:"center",justifyContent:"space-between",gap:20,flexWrap:"wrap"}}>
+            <div><p style={{margin:"0 0 5px",color:"#97720c",fontSize:12,fontWeight:800,letterSpacing:".05em"}}>SUA ÁREA EXCLUSIVA</p>
+            <strong style={{color:"#0d1b2a",fontSize:19}}>Tudo o que você contratou, em um só lugar</strong>
+            <p style={{color:"#617085",margin:"7px 0 0",fontSize:14}}>O menu à esquerda organiza os serviços ativos e os demais produtos. A assinatura libera materiais enquanto estiver vigente.</p></div>
+            <Link href="/painel/assinatura" style={{background:"#0d1b2a",color:"#fff",fontWeight:750,padding:"12px 16px",borderRadius:8,textDecoration:"none"}}>Fiscal na Prática →</Link>
+          </section>
           <section id="produtos-servicos" aria-label="Produtos e serviços" style={{ margin: "28px 0 36px", scrollMarginTop: 24 }}>
             <p className={styles.eyebrow}>ACESSOS DA SUA CONTA</p>
             <h2 style={{ margin: "8px 0 18px" }}>Seus produtos e serviços</h2>
