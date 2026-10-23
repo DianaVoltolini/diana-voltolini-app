@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import CustomerSidebar from "./customer-sidebar";
+import { getFiscalAccess } from "@/lib/fiscal/subscription-access";
 import styles from "./customer-sidebar.module.css";
 
 export const dynamic = "force-dynamic";
@@ -59,17 +60,16 @@ export default async function PainelLayout({
   }
 
   const admin = getSupabaseAdmin();
-  const now = new Date().toISOString();
-  const [diagnosticsResult, ordersResult, ebookProductResult, subscriptionResult] = await Promise.all([
+  const [diagnosticsResult, ordersResult, ebookProductResult, subscriptionAccess] = await Promise.all([
     admin.from("diagnostics").select("id").eq("user_id",userId).limit(1),
     admin.from("orders").select("id,product_id").eq("user_id",userId).eq("status","paid").limit(200),
     admin.from("products").select("id").eq("code","EBOOK-IBSCBS-001").maybeSingle(),
-    admin.from("fiscal_subscriptions").select("id").eq("user_id",userId).eq("status","active").gt("paid_until",now).limit(1)
+    getFiscalAccess(userId)
   ]);
   const hasDiagnostics = Boolean(diagnosticsResult.data?.length);
   const ebookProductId = ebookProductResult.data?.id;
   const hasEbook = Boolean(ebookProductId && ordersResult.data?.some(o => o.product_id === ebookProductId));
-  const hasSubscription = !subscriptionResult.error && Boolean(subscriptionResult.data?.length);
+  const hasSubscription = subscriptionAccess.allowed;
   return <div className={styles.shell}>
     <CustomerSidebar diagnostics={hasDiagnostics} subscriber={hasSubscription} ebooks={hasEbook}/>
     <div className={styles.content}>{children}</div>
