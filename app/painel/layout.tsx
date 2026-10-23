@@ -67,7 +67,8 @@ export default async function PainelLayout({
     admin.from("fiscal_subscriptions").select("id").eq("user_id",userId).eq("status","active").gt("paid_until",now).limit(1)
   ]);
   const hasDiagnostics = Boolean(diagnosticsResult.data?.length);
-  const hasEbook = Boolean(ebookProductResult.data && ordersResult.data?.some(o=>o.product_id===ebookProductResult.data.id));
+  const ebookProductId = ebookProductResult.data?.id;
+  const hasEbook = Boolean(ebookProductId && ordersResult.data?.some(o => o.product_id === ebookProductId));
   const hasSubscription = !subscriptionResult.error && Boolean(subscriptionResult.data?.length);
   return <div className={styles.shell}>
     <CustomerSidebar diagnostics={hasDiagnostics} subscriber={hasSubscription} ebooks={hasEbook}/>
