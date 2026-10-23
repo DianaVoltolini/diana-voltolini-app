@@ -5,6 +5,9 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import CustomerSidebar from "./customer-sidebar";
+import styles from "./customer-sidebar.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -55,5 +58,19 @@ export default async function PainelLayout({
     redirect("/torre");
   }
 
-  return children;
+  const admin = getSupabaseAdmin();
+  const now = new Date().toISOString();
+  const [diagnosticsResult, ordersResult, ebookProductResult, subscriptionResult] = await Promise.all([
+    admin.from("diagnostics").select("id").eq("user_id",userId).limit(1),
+    admin.from("orders").select("id,product_id").eq("user_id",userId).eq("status","paid").limit(200),
+    admin.from("products").select("id").eq("code","EBOOK-IBSCBS-001").maybeSingle(),
+    admin.from("fiscal_subscriptions").select("id").eq("user_id",userId).eq("status","active").gt("paid_until",now).limit(1)
+  ]);
+  const hasDiagnostics = Boolean(diagnosticsResult.data?.length);
+  const hasEbook = Boolean(ebookProductResult.data && ordersResult.data?.some(o=>o.product_id===ebookProductResult.data.id));
+  const hasSubscription = !subscriptionResult.error && Boolean(subscriptionResult.data?.length);
+  return <div className={styles.shell}>
+    <CustomerSidebar diagnostics={hasDiagnostics} subscriber={hasSubscription} ebooks={hasEbook}/>
+    <div className={styles.content}>{children}</div>
+  </div>;
 }
