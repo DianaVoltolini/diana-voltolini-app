@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
@@ -14,7 +15,7 @@ export default async function ConteudosPage({searchParams}:{searchParams:Promise
  const {data,error}=await db.from("fiscal_articles").select("id,title,slug,summary,body,category,visibility,status,source_links,updated_at").order("updated_at",{ascending:false}).limit(100);
  const articles=(data??[]) as Article[];
  const selected=articles.find(x=>x.id===params.editar);
- const field:React.CSSProperties={display:"block",width:"100%",padding:"12px",border:"1px solid #cbd5e1",borderRadius:7,marginTop:7,background:"#fff",color:"#0d1b2a"};
+ const field:CSSProperties={display:"block",width:"100%",padding:"12px",border:"1px solid #cbd5e1",borderRadius:7,marginTop:7,background:"#fff",color:"#0d1b2a"};
  return <main className={styles.page}><section className={styles.content}><div className="container">
  <Link href="/torre" style={{color:"#846611",fontWeight:700}}>← Torre de Controle</Link>
  <header className={styles.pageHeader} style={{marginTop:25}}><div><p className={styles.eyebrow}>FISCAL NA PRÁTICA</p><h1>Gestão de conteúdos</h1><p>Prepare artigos gratuitos e materiais exclusivos da assinatura. A publicação pública será ativada na próxima etapa.</p></div></header>
