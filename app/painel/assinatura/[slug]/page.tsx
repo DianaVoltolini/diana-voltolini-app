@@ -3,16 +3,16 @@ import Link from "next/link";
 import { notFound,redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getFiscalAccess } from "@/lib/fiscal/subscription-access";
 export const metadata:Metadata={title:"Material exclusivo | Fiscal na Prática",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
 export default async function ExclusiveArticle({params}:{params:Promise<{slug:string}>}){
  const auth=await createClient();const {data,error}=await auth.auth.getClaims();
  const uid=typeof data?.claims?.sub==="string"?data.claims.sub:null;
  if(error||!uid)redirect("/login?retorno=%2Fpainel%2Fassinatura");
- const db=getSupabaseAdmin();const {data:access,error:accessError}=await db.from("fiscal_subscriptions")
- .select("id").eq("user_id",uid).eq("status","active").gt("paid_until",new Date().toISOString()).limit(1);
- if(accessError)throw new Error("Não foi possível verificar a autorização.");
- if(!access?.length)redirect("/painel/assinatura");
+ const access=await getFiscalAccess(uid);
+ if(!access.allowed)redirect("/painel/assinatura");
+ const db=getSupabaseAdmin();
  const {data:article,error:articleError}=await db.from("fiscal_articles").select("title,summary,category,body,source_links")
  .eq("slug",(await params).slug).eq("status","published").eq("visibility","subscriber").maybeSingle();
  if(articleError)throw new Error("Não foi possível carregar o material.");
