@@ -18,7 +18,7 @@ export default async function ConteudosPage({searchParams}:{searchParams:Promise
  const field:CSSProperties={display:"block",width:"100%",padding:"12px",border:"1px solid #cbd5e1",borderRadius:7,marginTop:7,background:"#fff",color:"#0d1b2a"};
  return <main className={styles.page}><section className={styles.content}><div className="container">
  <Link href="/torre" style={{color:"#846611",fontWeight:700}}>← Torre de Controle</Link>
- <header className={styles.pageHeader} style={{marginTop:25}}><div><p className={styles.eyebrow}>FISCAL NA PRÁTICA</p><h1>Gestão de conteúdos</h1><p>Prepare artigos gratuitos e materiais exclusivos da assinatura. A publicação pública será ativada na próxima etapa.</p></div></header>
+ <header className={styles.pageHeader} style={{marginTop:25}}><div><p className={styles.eyebrow}>FISCAL NA PRÁTICA</p><h1>Gestão de conteúdos</h1><p>Prepare artigos gratuitos e materiais exclusivos da assinatura. Revise os materiais antes de publicar. Escolha "Exclusivo para assinantes" e "Rascunho" enquanto estiver em elaboração.</p></div></header>
  {error&&<p className={styles.errorMessage}>Tabela de conteúdos ainda não disponível. Aplique primeiro a migração SQL, sem alterar as tabelas atuais.</p>}
  {params.salvo&&<p style={{color:"#177245",fontWeight:700}}>Conteúdo salvo com sucesso.</p>}
  {params.erro&&<p className={styles.errorMessage}>Não foi possível salvar. Confira os campos, o slug e a conexão com o banco.</p>}
@@ -30,7 +30,7 @@ export default async function ConteudosPage({searchParams}:{searchParams:Promise
  <label>Slug (letras minúsculas, números e hífens)<input style={field} name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" defaultValue={selected?.slug??""} placeholder="ibs-cbs-na-nfe"/></label>
  <label>Resumo<textarea style={field} name="summary" rows={3} required maxLength={600} defaultValue={selected?.summary??""}/></label>
  <label>Categoria<select name="category" style={field} defaultValue={selected?.category??"Reforma Tributária"}>
- {["Reforma Tributária","NF-e e Faturamento","Tributos na Prática","Sistemas e Parametrização","Obrigações e Prazos"].map(x=><option key={x}>{x}</option>)}</select></label>
+ {["Reforma Tributária","NF-e e Faturamento","Tributos na Prática","Sistemas e Parametrização","Obrigações e Prazos","Atualizações fiscais","NF-e e XML","IBS e CBS","ICMS e DIFAL","Checklists e guias","Agenda fiscal"].map(x=><option key={x}>{x}</option>)}</select></label>
  <label>Visibilidade<select name="visibility" style={field} defaultValue={selected?.visibility??"public"}><option value="public">Público</option><option value="subscriber">Exclusivo para assinantes</option></select></label>
  <label>Status<select name="status" style={field} defaultValue={selected?.status??"draft"}><option value="draft">Rascunho</option><option value="published">Aprovado para publicação</option></select></label>
  <label>Conteúdo<textarea style={field} name="body" rows={14} required defaultValue={selected?.body??""} placeholder="Escreva a análise e seus pontos práticos..."/></label>
