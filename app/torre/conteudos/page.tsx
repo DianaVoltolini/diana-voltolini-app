@@ -27,13 +27,15 @@ export default async function ConteudosPage({searchParams}:{searchParams:Promise
  <h2>{selected?"Editar conteúdo":"Novo conteúdo"}</h2>
  <form action={saveFiscalArticle} style={{display:"grid",gap:14,maxWidth:850}}>
  <input name="id" type="hidden" value={selected?.id??""}/>
- <label>Título<input style={field} name="title" required maxLength={180} defaultValue={selected?.title??""}/></label>
- <label>Slug (letras minúsculas, números e hífens)<input style={field} name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" defaultValue={selected?.slug??""} placeholder="ibs-cbs-na-nfe"/></label>
- <label>Resumo<textarea style={field} name="summary" rows={3} required maxLength={600} defaultValue={selected?.summary??""}/></label>
+ <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:14}}>
  <label>Categoria<select name="category" style={field} defaultValue={selected?.category??"Reforma Tributária"}>
  {["Reforma Tributária","NF-e e Faturamento","Tributos na Prática","Sistemas e Parametrização","Obrigações e Prazos","Atualizações fiscais","NF-e e XML","IBS e CBS","ICMS e DIFAL","Checklists e guias","Agenda fiscal"].map(x=><option key={x}>{x}</option>)}</select></label>
  <label>Visibilidade<select name="visibility" style={field} defaultValue={selected?.visibility??"public"}><option value="public">Público</option><option value="subscriber">Exclusivo para assinantes</option></select></label>
  <label>Status<select name="status" style={field} defaultValue={selected?.status??"draft"}><option value="draft">Rascunho</option><option value="published">Aprovado para publicação</option></select></label>
+ </div>
+ <label>Título<input style={field} name="title" required maxLength={180} defaultValue={selected?.title??""}/></label>
+ <label>Slug (letras minúsculas, números e hífens)<input style={field} name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" defaultValue={selected?.slug??""} placeholder="ibs-cbs-na-nfe"/></label>
+ <label>Resumo<textarea style={field} name="summary" rows={3} required maxLength={600} defaultValue={selected?.summary??""}/></label>
  <label>Conteúdo<textarea style={field} name="body" rows={14} required defaultValue={selected?.body??""} placeholder="Escreva a análise e seus pontos práticos..."/></label>
  <label>Fontes oficiais / URLs<textarea style={field} name="source_links" rows={3} defaultValue={selected?.source_links??""} placeholder="Uma URL por linha"/></label>
  <button className={styles.openLink} style={{cursor:"pointer",justifySelf:"start"}} type="submit">Salvar conteúdo</button>
