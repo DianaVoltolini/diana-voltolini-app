@@ -36,7 +36,7 @@ BEGIN
    RETURN NEW;
  END IF;
 
- v_paid_at:=COALESCE(NEW.paid_at,now());
+ v_paid_at:=now(); -- início no primeiro vínculo de acesso confirmado; não depende de campo paid_at em orders
  INSERT INTO public.fiscal_subscriptions(
   user_id,status,paid_until,billing_day,renewal_enabled
  ) VALUES(
