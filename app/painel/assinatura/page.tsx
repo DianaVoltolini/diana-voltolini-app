@@ -20,7 +20,7 @@ export default async function SubscriptionPage(){
  ]);
  const active=access.allowed;
  return <ProductPage title="Fiscal na Prática" description="Análises fiscais, materiais e orientações para aplicar na rotina de faturamento.">
- {!active?<section style={{marginTop:30,background:"#fff",padding:30,borderRadius:12}}>
+ {!active?<section style={{marginTop:0,background:"#fff",padding:30,borderRadius:12}}>
  <h2>Acesso para assinantes</h2><p>Seu cadastro ainda não possui uma assinatura vigente. Seus outros produtos adquiridos continuam disponíveis normalmente no painel.</p>
  <a href="https://dianavoltolini.com.br/assinatura-fiscal" style={{fontWeight:800,color:"#926e10"}}>Conhecer o Fiscal na Prática →</a>
  </section>:<section style={{marginTop:30}}>
