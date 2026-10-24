@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import { logout } from "../actions";
 
 import styles from "../painel.module.css";
+import ProductPage from "../product-page";
 
 export const metadata: Metadata = {
   title: "Meus Diagnósticos",
@@ -489,42 +490,7 @@ export default async function DiagnosticosPage() {
     "Cliente";
 
   return (
-    <main
-      className={
-        styles.page
-      }
-    >
-      <section
-        className={
-          styles.content
-        }
-      >
-        <div className="container">
-          <header
-            className={
-              styles.welcome
-            }
-          >
-            <p
-              className={
-                styles.eyebrow
-              }
-            >
-              Painel do Cliente
-            </p>
-
-            <h1>
-              Meus Diagnósticos
-            </h1>
-
-            <p
-              className={
-                styles.welcomeText
-              }
-            >
-              Acompanhe suas análises, documentos enviados, andamento e resultados.            </p>
-          </header>
-
+    <ProductPage title="Meus Diagnósticos" description="Acompanhe suas análises, documentos enviados, andamento e resultados.">
           <section
             id="diagnosticos"
             className={
@@ -896,8 +862,6 @@ export default async function DiagnosticosPage() {
               </b>
             </a>
           </section>
-        </div>
-      </section>
-    </main>
+    </ProductPage>
   );
 }
