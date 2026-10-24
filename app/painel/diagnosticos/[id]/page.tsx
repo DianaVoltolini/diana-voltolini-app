@@ -8,7 +8,6 @@ import type {
   Metadata,
 } from "next";
 
-import Image from "next/image";
 import Link from "next/link";
 
 import {
@@ -18,7 +17,6 @@ import {
 
 import { createClient } from "@/lib/supabase/server";
 
-import { logout } from "../../actions";
 
 import MessageForm from "./mensagens/message-form";
 
@@ -954,62 +952,6 @@ export default async function DiagnosticPage({
         styles.page
       }
     >
-      <header
-        className={
-          styles.header
-        }
-      >
-        <div
-          className={`container ${styles.headerContent}`}
-        >
-          <a
-            href="https://dianavoltolini.com.br"
-            aria-label="Acessar o site Diana Voltolini"
-          >
-            <Image
-              className={
-                styles.logo
-              }
-              src="/brand/logo-light.png"
-              alt="Diana Voltolini"
-              width={1535}
-              height={538}
-              priority
-            />
-          </a>
-
-          <div
-            className={
-              styles.headerActions
-            }
-          >
-            <Link
-              className={
-                styles.backButton
-              }
-              href="/painel"
-            >
-              Voltar ao painel
-            </Link>
-
-            <form
-              action={
-                logout
-              }
-            >
-              <button
-                className={
-                  styles.logoutButton
-                }
-                type="submit"
-              >
-                Sair
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
-
       <section
         className={
           styles.content

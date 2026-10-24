@@ -31,7 +31,7 @@ export default async function PainelPage(){
  const firstName=profile?.full_name?.trim().split(/\s+/)[0]||"Cliente";
  return <main className={styles.page}>
    <div className={styles.container}>
-    <div className={styles.overline}>ÁREA DO CLIENTE <span> / VISÃO GERAL</span></div>
+    <div className={styles.overline}>VISÃO GERAL</div>
     <section className={styles.hero}>
      <div><p className={styles.heroEyebrow}>SEU ESPAÇO DIGITAL</p><h1>Olá, {firstName}.</h1><p>Seus serviços contratados, conteúdos e informações importantes reunidos em um só lugar.</p></div>
      <Link className={styles.heroButton} href="#minhas-compras">Ver minhas compras <span aria-hidden="true">↗</span></Link>
