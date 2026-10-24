@@ -11,10 +11,6 @@ export const dynamic = "force-dynamic";
 export default async function ServicosPage() {
  const {profile}=await requireAdmin();
  return <main className={styles.page}>
-   <header className={styles.header}><div className={`container ${styles.headerContent}`}>
-     <div className={styles.brandArea}><Image className={styles.logo} src="/brand/logo-light.png" alt="Diana Voltolini" width={1535} height={538} priority/><span>Torre de Controle</span></div>
-     <div className={styles.headerActions}><div className={styles.adminIdentity}><strong>{profile.full_name}</strong><span>Administradora</span></div><form action={logout}><button type="submit">Sair</button></form></div>
-   </div></header>
    <section className={styles.content}><div className="container">
      <p><Link href="/torre" style={{fontWeight:800,color:"#80620e"}}>← Visão geral</Link></p>
      <header className={styles.pageHeader}><div><p className={styles.eyebrow}>GESTÃO ADMINISTRATIVA</p><h1>Gestão de Serviços</h1><p>Consulte os produtos e serviços vendidos. Para acompanhar arquivos, questionários e análises, entre na gestão de Diagnósticos.</p></div></header>
