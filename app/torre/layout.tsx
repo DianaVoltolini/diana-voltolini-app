@@ -10,7 +10,7 @@ export default async function TorreLayout({children}:{children:ReactNode}){
  const {profile}=await requireAdmin();
  return <div className={styles.shell}>
   <header className={styles.topbar}>
-   <Link href="/torre" className={styles.brand} aria-label="Torre de Controle — visão geral"><Image src="/brand/logo-light.png" width={1535} height={538} alt="Diana Voltolini" priority/><span>Torre de Controle</span></Link>
+   <Link href="/torre" className={styles.brand} aria-label="Torre de Controle — visão geral"><Image src="/brand/logo-light.png" width={1535} height={538} alt="Diana Voltolini" priority/></Link>
    <div className={styles.actions}><span className={styles.adminName}>{profile.full_name}</span><form action={logout}><button type="submit" className={styles.logout}>Sair</button></form></div>
   </header>
   <div className={styles.body}><TorreSidebar/><div className={styles.content}>{children}</div></div>

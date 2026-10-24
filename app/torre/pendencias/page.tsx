@@ -28,7 +28,7 @@ export default async function PendenciasPage(){
  const {data:products}=orders.length?await db.from("products").select("id,name").in("id",[...new Set(orders.map(x=>x.product_id))]):{data:[]};
  const names=new Map((products??[]).map(x=>[x.id,x.name]));
  return <main className={styles.page}><section className={styles.content}><div className="container">
- <p><Link href="/torre" style={{fontWeight:800,color:"#80620e"}}>← Visão geral</Link></p>
+ 
  <header className={styles.pageHeader}><div><p className={styles.eyebrow}>CENTRAL DE ACOMPANHAMENTO</p><h1>Pendências</h1>
  <p>Diagnósticos não finalizados e pedidos aguardando pagamento. Priorize as tarefas que dependem de uma ação.</p></div></header>
  <section className={styles.summaryGrid}>

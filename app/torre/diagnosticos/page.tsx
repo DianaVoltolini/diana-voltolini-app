@@ -272,7 +272,7 @@ export default async function ServicosPage() {
               <p
                 className={styles.eyebrow}
               >
-                Gestão administrativa
+                GESTÃO DE DIAGNÓSTICOS
               </p>
 
               <h1>
@@ -288,7 +288,7 @@ export default async function ServicosPage() {
             </div>
           </header>
 
-          <div style={{marginBottom:24}}><Link href="/torre" style={{fontWeight:800,color:"#80620e"}}>← Voltar à Torre</Link></div>
+          
           <section
             className={styles.summaryGrid}
           >

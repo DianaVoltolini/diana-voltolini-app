@@ -15,7 +15,7 @@ export default async function FinanceiroPage({searchParams}:{searchParams:Promis
   const filters=await searchParams;
   return <main className={styles.page}>
     <section className={styles.content}><div className="container">
-      <p><Link href="/torre" style={{fontWeight:800,color:"#80620e"}}>← Visão geral</Link></p>
+      
       <header className={styles.pageHeader}><div><p className={styles.eyebrow}>GESTÃO FINANCEIRA</p><h1>Vendas e recebimentos</h1><p>Consulte pagamentos de todos os produtos em um só lugar.</p></div></header>
       <FinanceOverview filters={filters}/>
     </div></section>

@@ -12,8 +12,8 @@ export default async function ServicosPage() {
  const {profile}=await requireAdmin();
  return <main className={styles.page}>
    <section className={styles.content}><div className="container">
-     <p><Link href="/torre" style={{fontWeight:800,color:"#80620e"}}>← Visão geral</Link></p>
-     <header className={styles.pageHeader}><div><p className={styles.eyebrow}>GESTÃO ADMINISTRATIVA</p><h1>Gestão de Serviços</h1><p>Consulte os produtos e serviços vendidos. Para acompanhar arquivos, questionários e análises, entre na gestão de Diagnósticos.</p></div></header>
+     
+     <header className={styles.pageHeader}><div><p className={styles.eyebrow}>GESTÃO DE SERVIÇOS</p><h1>Gestão de Serviços</h1><p>Consulte os produtos e serviços vendidos. Para acompanhar arquivos, questionários e análises, entre na gestão de Diagnósticos.</p></div></header>
      <SoldProducts/>
      <section className={styles.diagnosticsSection}>
        <header className={styles.sectionHeader}><div><p className={styles.eyebrow}>ACOMPANHAMENTO OPERACIONAL</p><h2>Diagnósticos contratados</h2></div></header>
