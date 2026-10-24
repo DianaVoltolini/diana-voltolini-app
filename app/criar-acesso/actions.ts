@@ -184,6 +184,9 @@ export async function createAccess(
     });
 
   if (error) {
+    if (error.code === "user_already_exists" || /already registered|already exists|already been registered/i.test(error.message)) {
+      redirectToForm({ erro: "email-ja-cadastrado", email });
+    }
     console.error(
       "Erro no cadastro Supabase:",
       error,
