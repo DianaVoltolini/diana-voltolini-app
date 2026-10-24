@@ -1,8 +1,8 @@
 /* app/painel/painel.module.css */
 
 .page {
-  min-height: 100dvh;
-  background: #f2f6fa;
+  min-height: calc(100dvh - 84px);
+  background: #f4f6f8;
 }
 
 .header {
@@ -71,7 +71,7 @@
 }
 
 .content {
-  padding-block: 48px 76px;
+  padding: 46px clamp(20px, 4vw, 56px) 76px;
 }
 
 .pageHeader {
@@ -81,7 +81,7 @@
 .eyebrow {
   margin: 0 0 9px;
   color: #846611;
-  font-size: 0.86rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.11em;
   line-height: 1.4;
@@ -94,7 +94,7 @@
   font-size: clamp(
     2.6rem,
     4vw,
-    3.6rem
+    3rem
   );
   font-weight: 800;
   letter-spacing: -0.05em;
@@ -104,7 +104,7 @@
 .pageHeader > div > p:last-child {
   margin: 0;
   color: #536372;
-  font-size: 1.1rem;
+  font-size: 0.97rem;
   line-height: 1.65;
 }
 
