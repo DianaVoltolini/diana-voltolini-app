@@ -33,3 +33,29 @@ export async function saveFiscalArticle(data: FormData) {
   revalidatePath("/torre/conteudos");
   redirect("/torre/conteudos?salvo=1");
 }
+
+/** Atualização rápida de acesso e status, sem modificar o conteúdo editorial. */
+export async function updateFiscalArticleQuick(data: FormData) {
+  await requireAdmin();
+  const id=String(data.get("id")??"");
+  const visibility=String(data.get("visibility")??"");
+  const status=String(data.get("status")??"");
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+    || !["public","subscriber"].includes(visibility)
+    || !["draft","published"].includes(status)) {
+    redirect("/torre/conteudos?erro=dados");
+  }
+  const db=getSupabaseAdmin();
+  const {data:existing,error:readError}=await db.from("fiscal_articles")
+    .select("id,published_at,status").eq("id",id).maybeSingle();
+  if(readError||!existing)redirect("/torre/conteudos?erro=salvar");
+  const now=new Date().toISOString();
+  const published_at=status==="published" ? (existing.published_at??now) : existing.published_at;
+  const {error}=await db.from("fiscal_articles")
+    .update({visibility,status,published_at,updated_at:now})
+    .eq("id",id);
+  if(error)redirect("/torre/conteudos?erro=salvar");
+  revalidatePath("/torre/conteudos");
+  revalidatePath("/painel/assinatura");
+  redirect("/torre/conteudos?salvo=1");
+}
