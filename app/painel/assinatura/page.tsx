@@ -6,6 +6,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getFiscalAccess } from "@/lib/fiscal/subscription-access";
 import CancelSubscriptionConfirm from "./cancel-confirmation";
 import ProductPage from "../product-page";
+import FiscalLibrary from "./fiscal-library";
 export const metadata:Metadata={title:"Fiscal na Prática | Minha assinatura",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
 export default async function SubscriptionPage(){
@@ -26,9 +27,6 @@ export default async function SubscriptionPage(){
  </section>:<section style={{marginTop:30}}>
  <p style={{color:"#167143",fontWeight:750}}>{access.grace?"Período de carência: regularize o pagamento para manter o acesso.":access.cancellationRequested?"Cancelamento solicitado. Acesso mantido até o fim do período pago.":"Assinatura vigente até "+new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo"}).format(new Date(access.paidUntil!))}</p>
  {!access.cancellationRequested && access.paidUntil && access.subscriptionId && <CancelSubscriptionConfirm paidUntil={access.paidUntil} subscriptionId={access.subscriptionId} />}
- {articlesError?<p>Não foi possível carregar seus conteúdos.</p>:
- <div style={{display:"grid",gap:16}}>{(articles??[]).map(x=><article key={x.id} style={{background:"#fff",padding:25,borderRadius:12}}>
- <small>{x.category}</small><h2>{x.title}</h2><p>{x.summary}</p><Link href={`/painel/assinatura/${x.slug}`} style={{color:"#8d6a11",fontWeight:750}}>Acessar material →</Link></article>)}
- {articles?.length===0&&<p>Os primeiros materiais exclusivos serão publicados em breve.</p>}</div>}</section>}
+ {articlesError?<p role="alert">Não foi possível carregar seus conteúdos.</p>:<FiscalLibrary articles={articles??[]}/>} </section>}
  </ProductPage>;
 }
