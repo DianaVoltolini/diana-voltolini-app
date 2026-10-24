@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { logout } from "../actions";
-import styles from "../painel.module.css";
+import ProductPage from "../product-page";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
@@ -41,12 +41,7 @@ export default async function EbooksPage() {
   }
 
   return (
-    <>
-      <main style={{ minHeight: "75vh", background: "#f7f9fb", padding: "64px 20px", color: "#0d1b2a" }}>
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
-        <p style={{ margin: "36px 0 9px", fontSize: 12, color: "#9f7d17", fontWeight: 800, letterSpacing: 2 }}>ÁREA DO CLIENTE</p>
-        <h1 style={{ fontFamily: "Georgia,serif", fontSize: "clamp(32px,5vw,46px)", margin: "0 0 12px" }}>Meus E-books</h1>
-        <p style={{ color: "#65717e", marginBottom: 32 }}>Seus materiais digitais e o acesso às compras realizadas.</p>
+    <ProductPage title="Meus E-books" description="Seus materiais digitais e o acesso às compras realizadas.">
         <section style={{ border: "1px solid #e1e7ed", borderTop: "4px solid #c9a227", borderRadius: 9, background: "#fff", padding: "32px" }}>
           <p style={{ color: "#9f7d17", fontSize: 12, fontWeight: 800, letterSpacing: 1.5 }}>E-BOOK DIGITAL</p>
           <h2 style={{ fontFamily: "Georgia,serif", fontSize: 27, margin: "0 0 16px" }}>IBS e CBS na Prática</h2>
@@ -70,8 +65,6 @@ export default async function EbooksPage() {
             </>
           )}
         </section>
-      </div>
-      </main>
-    </>
+    </ProductPage>
   );
 }

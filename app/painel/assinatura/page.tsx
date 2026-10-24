@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getFiscalAccess } from "@/lib/fiscal/subscription-access";
 import CancelSubscriptionConfirm from "./cancel-confirmation";
+import ProductPage from "../product-page";
 export const metadata:Metadata={title:"Fiscal na Prática | Minha assinatura",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
 export default async function SubscriptionPage(){
@@ -18,12 +19,8 @@ export default async function SubscriptionPage(){
  db.from("fiscal_articles").select("id,slug,title,summary,category,published_at").eq("status","published").eq("visibility","subscriber").order("published_at",{ascending:false}).limit(100)
  ]);
  const active=access.allowed;
- return <main style={{minHeight:"100vh",background:"#f2f6fa",padding:"45px 20px"}}>
- <div className="container" style={{maxWidth:980}}>
- <Link href="/painel" style={{fontWeight:750,color:"#8d6a11"}}>← Voltar ao painel</Link>
- <p style={{marginTop:32,color:"#89660c",fontWeight:800}}>CONTEÚDO EXCLUSIVO</p><h1>Fiscal na Prática</h1>
- <p>Análises fiscais, materiais e orientações para aplicar na rotina de faturamento.</p>
- {!active?<section style={{marginTop:30,background:"#fff",padding:30,borderRadius:12}}>
+ return <ProductPage title="Fiscal na Prática" description="Análises fiscais, materiais e orientações para aplicar na rotina de faturamento.">
+ {!active?<section style={{marginTop:0,background:"#fff",padding:30,borderRadius:12}}>
  <h2>Acesso para assinantes</h2><p>Seu cadastro ainda não possui uma assinatura vigente. Seus outros produtos adquiridos continuam disponíveis normalmente no painel.</p>
  <a href="https://dianavoltolini.com.br/assinatura-fiscal" style={{fontWeight:800,color:"#926e10"}}>Conhecer o Fiscal na Prática →</a>
  </section>:<section style={{marginTop:30}}>
@@ -33,5 +30,5 @@ export default async function SubscriptionPage(){
  <div style={{display:"grid",gap:16}}>{(articles??[]).map(x=><article key={x.id} style={{background:"#fff",padding:25,borderRadius:12}}>
  <small>{x.category}</small><h2>{x.title}</h2><p>{x.summary}</p><Link href={`/painel/assinatura/${x.slug}`} style={{color:"#8d6a11",fontWeight:750}}>Acessar material →</Link></article>)}
  {articles?.length===0&&<p>Os primeiros materiais exclusivos serão publicados em breve.</p>}</div>}</section>}
- </div></main>;
+ </ProductPage>;
 }
