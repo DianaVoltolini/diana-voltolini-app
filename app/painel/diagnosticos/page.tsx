@@ -493,6 +493,7 @@ export default async function DiagnosticosPage() {
     <ProductPage title="Meus Diagnósticos" description="Acompanhe suas análises, documentos enviados, andamento e resultados.">
           <section
             id="diagnosticos"
+            style={{ marginTop: 0 }}
             className={
               styles.diagnosticsSection
             }
