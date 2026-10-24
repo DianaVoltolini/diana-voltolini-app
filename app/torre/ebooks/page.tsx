@@ -22,7 +22,7 @@ export default async function EbooksAdminPage() {
   const paid = orders.filter(x=>x.status==="paid").length;
   const pending = orders.filter(x=>x.status==="pending").length;
   return <main className={styles.page}><section className={styles.content}><div className="container">
-    <p><Link href="/torre" style={{fontWeight:800,color:"#80620e"}}>← Visão geral</Link></p>
+    
     <header className={styles.pageHeader}><div><p className={styles.eyebrow}>GESTÃO DE PRODUTOS</p><h1>E-books</h1>
       <p>Pedidos do e-book IBS e CBS na Prática, com situação do pagamento.</p></div></header>
     <section className={styles.summaryGrid}>
