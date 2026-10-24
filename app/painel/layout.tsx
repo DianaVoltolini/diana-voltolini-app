@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import CustomerSidebar from "./customer-sidebar";
+import { ensureClientAccess } from "@/lib/supabase/client-access";
 import { getFiscalAccess } from "@/lib/fiscal/subscription-access";
 import styles from "./customer-sidebar.module.css";
 
@@ -57,6 +58,13 @@ export default async function PainelLayout({
 
   if (profile.role === "admin") {
     redirect("/torre");
+  }
+
+  // Vincula compras públicas ao usuário já autenticado, inclusive após logins posteriores.
+  // A consulta usa somente o e-mail da sessão verificada do Supabase.
+  const verifiedEmail = claimsData?.claims?.email;
+  if (typeof verifiedEmail === "string" && verifiedEmail.length > 0) {
+    await ensureClientAccess({ userId, email: verifiedEmail });
   }
 
   const admin = getSupabaseAdmin();
