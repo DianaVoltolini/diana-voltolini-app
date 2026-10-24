@@ -494,37 +494,6 @@ export default async function DiagnosticosPage() {
         styles.page
       }
     >
-      <header
-        className={
-          styles.header
-        }
-      >
-        <div
-          className={`container ${styles.headerContent}`}
-        >
-          <a
-            href="https://dianavoltolini.com.br"
-            aria-label="Acessar o site Diana Voltolini"
-          >
-            <Image
-              className={
-                styles.logo
-              }
-              src="/brand/logo-light.png"
-              alt="Diana Voltolini"
-              width={1535}
-              height={538}
-              priority
-            />
-          </a>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Link href="/painel" style={{ background: "#fff", border: "1px solid #cbd5e1", borderRadius: 6, padding: "11px 15px", color: "#0d1b2a", fontWeight: 700, fontSize: 13 }}>Voltar ao painel</Link>
-            <form action={logout}><button className={styles.logoutButton} type="submit">Sair</button></form>
-          </div>
-        </div>
-      </header>
-
       <section
         className={
           styles.content

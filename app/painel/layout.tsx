@@ -1,6 +1,8 @@
 // app/painel/layout.tsx
 
 import type { ReactNode } from "react";
+import Image from "next/image";
+import { logout } from "./actions";
 
 import { redirect } from "next/navigation";
 
@@ -79,7 +81,16 @@ export default async function PainelLayout({
   const hasEbook = Boolean(ebookProductId && ordersResult.data?.some(o => o.product_id === ebookProductId));
   const hasSubscription = subscriptionAccess.allowed;
   return <div className={styles.shell}>
-    <CustomerSidebar diagnostics={hasDiagnostics} subscriber={hasSubscription} ebooks={hasEbook}/>
-    <div className={styles.content}>{children}</div>
+    <header className={styles.topbar}>
+      <a className={styles.brand} href="https://dianavoltolini.com.br" aria-label="Diana Voltolini — voltar ao site"><Image src="/brand/logo-light.png" alt="Diana Voltolini" width={1535} height={538} priority /></a>
+      <div className={styles.headerActions}>
+        <a className={styles.siteLink} href="https://dianavoltolini.com.br" target="_blank" rel="noopener noreferrer">Visitar site ↗</a>
+        <form action={logout}><button className={styles.logout} type="submit">Sair</button></form>
+      </div>
+    </header>
+    <div className={styles.body}>
+      <CustomerSidebar diagnostics={hasDiagnostics} subscriber={hasSubscription} ebooks={hasEbook}/>
+      <div className={styles.content}>{children}</div>
+    </div>
   </div>;
 }

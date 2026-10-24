@@ -2,22 +2,34 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./customer-sidebar.module.css";
-type Props={diagnostics:boolean,subscriber:boolean,ebooks:boolean};
+
+type Props={diagnostics:boolean;subscriber:boolean;ebooks:boolean};
 export default function CustomerSidebar({diagnostics,subscriber,ebooks}:Props){
  const path=usePathname();
- const link=(href:string,name:string,description?:string)=> <Link key={href} href={href} className={styles.link} aria-current={path===href||(href!=="/painel"&&path.startsWith(href+"/"))?"page":undefined}>{name}{description&&<small>{description}</small>}</Link>;
- const menu=<nav className={styles.links} aria-label="Produtos e serviços">
- {link("/painel","Visão geral")}
- <span className={styles.group}>ATIVOS</span>
- {diagnostics&&link("/painel/diagnosticos","Diagnósticos")}
- {subscriber&&link("/painel/assinatura","Assinatura Fiscal")}
- {!diagnostics&&!subscriber&&<span className={styles.empty}>Nenhum serviço ativo no momento</span>}
- <span className={styles.group}>OUTROS PRODUTOS</span>
- {link("/painel/ebooks","E-books",ebooks?"Adquirido":"Conhecer")}
- {!subscriber&&link("/painel/assinatura","Assinatura Fiscal","Conhecer")}
- </nav>;
+ const link=(href:string,name:string,description?:string)=><Link key={href} href={href} className={styles.link} aria-current={path===href||(href!=="/painel"&&path.startsWith(href+"/"))?"page":undefined}><span>{name}</span>{description&&<small>{description}</small>}</Link>;
  return <aside className={styles.sidebar}>
- <div className={styles.desktop}><h2 className={styles.heading}>Meus produtos e serviços</h2>{menu}</div>
- <details className={styles.mobile}><summary>Meus produtos e serviços</summary>{menu}</details>
+  <nav className={styles.navigation} aria-label="Navegação da Área do Cliente">
+   <div className={styles.desktop}>
+    <p className={styles.intro}>PAINEL DO CLIENTE</p>
+    {link("/painel","Visão geral")}
+    <p className={styles.group}>MINHAS COMPRAS</p>
+    {diagnostics&&link("/painel/diagnosticos","Diagnósticos","Serviços contratados")}
+    {ebooks&&link("/painel/ebooks","E-books","Materiais adquiridos")}
+    {subscriber&&link("/painel/assinatura","Fiscal na Prática","Minha assinatura")}
+    {!diagnostics&&!ebooks&&!subscriber&&<p className={styles.empty}>Nenhuma compra liberada no momento.</p>}
+    <p className={styles.group}>OUTROS PRODUTOS</p>
+    {!diagnostics&&<a className={styles.link} href="https://dianavoltolini.com.br/diagnostico-ibs-cbs" target="_blank" rel="noopener noreferrer">Diagnóstico IBS/CBS <small>Conhecer ↗</small></a>}
+    {!ebooks&&<a className={styles.link} href="https://dianavoltolini.com.br/ibs-cbs-na-pratica" target="_blank" rel="noopener noreferrer">E-book IBS/CBS <small>Conhecer ↗</small></a>}
+    {!subscriber&&<a className={styles.link} href="https://dianavoltolini.com.br/assinatura-fiscal" target="_blank" rel="noopener noreferrer">Fiscal na Prática <small>Conhecer ↗</small></a>}
+    {diagnostics&&ebooks&&subscriber&&<p className={styles.empty}>Confira outras soluções no site.</p>}
+   </div>
+   <details className={styles.mobile}><summary>Menu e minhas compras</summary><div className={styles.mobileLinks}>
+    {link("/painel","Visão geral")}
+    {diagnostics&&link("/painel/diagnosticos","Diagnósticos")}
+    {ebooks&&link("/painel/ebooks","E-books")}
+    {subscriber&&link("/painel/assinatura","Fiscal na Prática")}
+    <a className={styles.link} href="https://dianavoltolini.com.br/produtos" target="_blank" rel="noopener noreferrer">Outros produtos ↗</a>
+   </div></details>
+  </nav>
  </aside>;
 }
