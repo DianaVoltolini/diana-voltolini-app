@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getFiscalAccess } from "@/lib/fiscal/subscription-access";
 import { cancelFiscalSubscription } from "./actions";
+import StartFiscalCheckout from "./start-checkout";
 export const metadata:Metadata={title:"Fiscal na Prática | Minha assinatura",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
 export default async function SubscriptionPage(){
@@ -26,6 +27,7 @@ export default async function SubscriptionPage(){
  {!active?<section style={{marginTop:30,background:"#fff",padding:30,borderRadius:12}}>
  <h2>Acesso para assinantes</h2><p>Seu cadastro ainda não possui uma assinatura vigente. Seus outros produtos adquiridos continuam disponíveis normalmente no painel.</p>
  <a href="https://dianavoltolini.com.br/assinatura-fiscal" style={{fontWeight:800,color:"#926e10"}}>Conhecer o Fiscal na Prática →</a>
+ <StartFiscalCheckout/>
  </section>:<section style={{marginTop:30}}>
  <p style={{color:"#167143",fontWeight:750}}>{access.grace?"Período de carência: regularize o pagamento para manter o acesso.":access.cancellationRequested?"Cancelamento solicitado. Acesso mantido até o fim do período pago.":"Assinatura vigente até "+new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo"}).format(new Date(access.paidUntil!))}</p>
  {!access.cancellationRequested&&<form action={cancelFiscalSubscription} style={{margin:"14px 0 25px"}}><button type="submit" style={{padding:"10px 14px",cursor:"pointer"}}>Solicitar cancelamento da assinatura</button></form>}
