@@ -4,15 +4,16 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { saveFiscalArticle } from "./actions";
+import FiscalArticleTable from "./article-table";
 import styles from "../painel.module.css";
 export const metadata: Metadata={title:"Gestão de Conteúdos | Torre"};
 export const dynamic="force-dynamic";
-type Article={id:string;title:string;slug:string;summary:string;body:string;category:string;visibility:string;status:string;source_links:string;updated_at:string};
+type Article={id:string;title:string;slug:string;summary:string;body:string;category:string;visibility:string;status:string;source_links:string;updated_at:string;published_at:string|null};
 export default async function ConteudosPage({searchParams}:{searchParams:Promise<{editar?:string;salvo?:string;erro?:string}>}){
  await requireAdmin();
  const params=await searchParams;
  const db=getSupabaseAdmin();
- const {data,error}=await db.from("fiscal_articles").select("id,title,slug,summary,body,category,visibility,status,source_links,updated_at").order("updated_at",{ascending:false}).limit(100);
+ const {data,error}=await db.from("fiscal_articles").select("id,title,slug,summary,body,category,visibility,status,source_links,updated_at,published_at").order("updated_at",{ascending:false}).limit(100);
  const articles=(data??[]) as Article[];
  const selected=articles.find(x=>x.id===params.editar);
  const field:CSSProperties={display:"block",width:"100%",padding:"12px",border:"1px solid #cbd5e1",borderRadius:7,marginTop:7,background:"#fff",color:"#0d1b2a"};
@@ -37,8 +38,6 @@ export default async function ConteudosPage({searchParams}:{searchParams:Promise
  <label>Fontes oficiais / URLs<textarea style={field} name="source_links" rows={3} defaultValue={selected?.source_links??""} placeholder="Uma URL por linha"/></label>
  <button className={styles.openLink} style={{cursor:"pointer",justifySelf:"start"}} type="submit">Salvar conteúdo</button>
  </form></section>}
- {!error&&<section className={styles.diagnosticsSection}><h2>Conteúdos cadastrados</h2><div className={styles.tableWrapper}><table className={styles.table}><thead><tr><th>Título</th><th>Categoria</th><th>Acesso</th><th>Status</th><th></th></tr></thead><tbody>
- {articles.map(x=><tr key={x.id}><td><strong>{x.title}</strong><small>{x.slug}</small></td><td>{x.category}</td><td>{x.visibility==="public"?"Gratuito":"Assinante"}</td><td>{x.status==="draft"?"Rascunho":"Aprovado"}</td><td><Link href={`/torre/conteudos?editar=${x.id}`} className={styles.openLink}>Editar</Link></td></tr>)}
- {!articles.length&&<tr><td colSpan={5}>Nenhum artigo cadastrado.</td></tr>}</tbody></table></div></section>}
+ {!error&&<section className={styles.diagnosticsSection}><h2>Conteúdos cadastrados</h2><FiscalArticleTable articles={articles}/></section>}
  </div></section></main>;
 }
