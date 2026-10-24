@@ -2,6 +2,7 @@
 
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 
 import { createAccess } from "./actions";
 import styles from "../login/login.module.css";
@@ -36,6 +37,9 @@ const errorMessages: Record<string, string> = {
 
   "verificacao-indisponivel":
     "Não foi possível verificar sua contratação agora. Tente novamente em instantes.",
+
+  "email-ja-cadastrado":
+    "Se você já possui acesso, entre com sua senha. Suas novas compras ficam disponíveis na mesma conta.",
 
   "cadastro-indisponivel":
     "Não foi possível criar seu acesso neste momento. Tente novamente.",
@@ -110,6 +114,12 @@ export default async function CriarAcessoPage({
 
             <p>
               Utilize o mesmo e-mail informado ao gerar sua cobrança.
+              Se você já tem uma conta, não precisa criar outra: faça login para acessar suas compras.
+            </p>
+            <p style={{ marginTop: 12 }}>
+              <Link href={`/login?retorno=%2Fpainel&email=${encodeURIComponent(email)}`} style={{ fontWeight: 750 }}>
+                Já tenho cadastro — entrar na Área do Cliente
+              </Link>
             </p>
           </header>
 
