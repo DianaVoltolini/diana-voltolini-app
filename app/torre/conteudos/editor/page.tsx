@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { saveFiscalArticle } from "../actions";
+import ArticleBodyEditor from "./article-body-editor";
 import styles from "../../painel.module.css";
 export const metadata:Metadata={title:"Editar artigo | Torre de Controle"};
 export const dynamic="force-dynamic";
@@ -31,7 +32,7 @@ export default async function EditorialPage({searchParams}:{searchParams:Promise
  <label>Título<input style={field} name="title" required maxLength={180} defaultValue={selected?.title??""}/></label>
  <label>Slug (letras minúsculas, números e hífens)<input style={field} name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" defaultValue={selected?.slug??""} placeholder="ibs-cbs-na-nfe"/></label>
  <label>Resumo<textarea style={field} name="summary" rows={3} required maxLength={600} defaultValue={selected?.summary??""}/></label>
- <label>Conteúdo<textarea style={field} name="body" rows={14} required defaultValue={selected?.body??""} placeholder="Escreva a análise e seus pontos práticos..."/></label>
+ <ArticleBodyEditor initial={selected?.body??""}/>
  <label>Fontes oficiais / URLs<textarea style={field} name="source_links" rows={3} defaultValue={selected?.source_links??""} placeholder="Uma URL por linha"/></label>
  <button className={styles.openLink} style={{cursor:"pointer",justifySelf:"start"}} type="submit">Salvar conteúdo</button>
  </form>
