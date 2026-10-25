@@ -4,6 +4,7 @@ import { notFound,redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getFiscalAccess } from "@/lib/fiscal/subscription-access";
+import FiscalRichText from "@/components/fiscal-rich-text";
 export const metadata:Metadata={title:"Material exclusivo | Fiscal na Prática",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
 export default async function ExclusiveArticle({params}:{params:Promise<{slug:string}>}){
@@ -23,7 +24,7 @@ export default async function ExclusiveArticle({params}:{params:Promise<{slug:st
  <Link href="/painel/assinatura">← Biblioteca Fiscal na Prática</Link>
  <p style={{color:"#96730e",marginTop:22,fontWeight:800}}>{article.category} · {article.visibility==="public"?"Conteúdo gratuito":"Exclusivo para assinantes"}</p>
  <h1>{article.title}</h1><p style={{fontSize:19}}>{article.summary}</p><hr style={{margin:"25px 0",borderColor:"#d9e1e7"}}/>
- <div style={{whiteSpace:"pre-wrap",lineHeight:1.85,overflowWrap:"anywhere"}}>{article.body}</div>
+ <FiscalRichText body={article.body??""}/>
  {sources.length>0&&<section style={{marginTop:30}}><h2>Fontes</h2>{sources.map((url:string)=><p key={url}><a target="_blank" rel="noopener noreferrer" href={url}>{url}</a></p>)}</section>}
  </article></main>;
 }
