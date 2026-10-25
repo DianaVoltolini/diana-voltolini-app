@@ -19,8 +19,8 @@ export default function CustomerSidebar({diagnostics,subscriber,ebooks}:Props){
     {!diagnostics&&!ebooks&&!subscriber&&<p className={styles.empty}>Nenhuma compra liberada no momento.</p>}
     <p className={styles.group}>OUTROS PRODUTOS</p>
     {!diagnostics&&<a className={styles.link} href="https://dianavoltolini.com.br/diagnostico-ibs-cbs" target="_blank" rel="noopener noreferrer">Diagnóstico IBS/CBS <small>Conhecer →</small></a>}
-    {!ebooks&&<Link className={styles.link} href="/painel/ebooks">E-book IBS/CBS <small>Conhecer ↗</small></a>}
-    {!subscriber&&<Link className={styles.link} href="/painel/assinatura">Fiscal na Prática <small>Conhecer ↗</small></a>}
+    {!ebooks&&<Link className={styles.link} href="/painel/ebooks">E-book IBS/CBS <small>Conhecer →</small></Link>}
+    {!subscriber&&<Link className={styles.link} href="/painel/assinatura">Fiscal na Prática <small>Conhecer →</small></Link>}
     {diagnostics&&ebooks&&subscriber&&<p className={styles.empty}>Confira outras soluções no site.</p>}
    </div>
    <details className={styles.mobile}><summary>Menu e minhas compras</summary><div className={styles.mobileLinks}>
