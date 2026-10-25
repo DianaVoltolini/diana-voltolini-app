@@ -2,7 +2,7 @@
 import { useMemo,useState } from "react";
 import Link from "next/link";
 
-import { updateFiscalArticleQuick } from "./actions";
+import { updateFiscalArticleQuick, deleteFiscalArticle } from "./actions";
 type Article={id:string;title:string;slug:string;category:string;visibility:string;status:string;published_at:string|null};
 type Props={articles:Article[]};
 const date=(value:string|null)=>value?new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo",day:"2-digit",month:"2-digit",year:"numeric"}).format(new Date(value)):"—";
@@ -38,6 +38,11 @@ export default function FiscalArticleTable({articles}:Props){
  <input type="hidden" name="id" value={a.id}/>
  <button type="submit" style={{cursor:"pointer",border:0,background:"#c9a227",borderRadius:7,padding:"10px 13px",fontWeight:800}} title="Salvar alterações" aria-label={`Salvar alterações: ${a.title}`}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg></button>
  <Link href={`/torre/conteudos/editor?editar=${a.id}`} style={{border:"1px solid #d6dfe8",borderRadius:7,padding:"9px 12px",color:"#253649",textDecoration:"none",fontWeight:750}} title="Editar conteúdo" aria-label={`Editar conteúdo: ${a.title}`}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m16 5 3 3M4 20l4.2-.8L20 7.4 16.6 4 4.8 15.8 4 20Z"/></svg></Link>
+ </form>
+ <form action={deleteFiscalArticle} style={{display:"inline-flex",marginLeft:8}} onSubmit={e=>{if(!window.confirm(`Excluir definitivamente o artigo "${a.title}"?\n\nO registro será apagado do Supabase e não poderá mais ser acessado no Blog ou na biblioteca. Esta ação não pode ser desfeita.`))e.preventDefault()}}>
+ <input type="hidden" name="id" value={a.id}/>
+ <input type="hidden" name="slug" value={a.slug}/>
+ <button type="submit" style={{cursor:"pointer",border:"1px solid #e6c4c4",background:"#fff7f7",color:"#a42323",borderRadius:7,padding:"9px 12px"}} title="Excluir definitivamente" aria-label={`Excluir conteúdo: ${a.title}`}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 10v7M14 10v7"/></svg></button>
  </form></td></tr>)}
  {filtered.length===0&&<tr><td colSpan={6} style={{padding:25,textAlign:"center",color:"#64748b"}}>Nenhum conteúdo corresponde aos filtros selecionados.</td></tr>}
  </tbody></table></div>
