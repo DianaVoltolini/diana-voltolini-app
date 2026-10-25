@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { logout } from "../actions";
 import ProductPage from "../product-page";
+import ProductOffer from "../product-offer";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
@@ -40,6 +41,14 @@ export default async function EbooksPage() {
     hasPaidOrder = Boolean(orders?.length);
   }
 
+  if(!hasPaidOrder) return <ProductPage title="IBS e CBS na Prática" description="E-book digital para compreender a Reforma Tributária e aplicar o conhecimento ao faturamento.">
+    <ProductOffer eyebrow="GUIA PRÁTICO · REFORMA TRIBUTÁRIA" headline="Entenda IBS e CBS na prática" lead="Compras, vendas, créditos e notas fiscais explicados de forma simples e objetiva, com exemplos e roteiro para organizar sua preparação." price="R$ 29,90 · pagamento único" checkout="https://dianavoltolini.com.br/checkout/ibs-cbs-na-pratica" cta="Quero garantir meu e-book" features={["E-book digital com 21 páginas","Compras, vendas e créditos","NF-e, CST e cClassTrib","Split payment e transição","Checklist e glossário para consulta","Exemplos práticos para rotinas fiscais"]}>
+    <section style={{background:"#fff",border:"1px solid #e0e7ed",borderRadius:14,padding:30}}>
+      <p style={{color:"#96730e",fontWeight:850,fontSize:12}}>BÔNUS ESPECIAL</p><h2>Roda de conversa ao vivo</h2>
+      <p style={{lineHeight:1.8,color:"#506477"}}>Os 30 primeiros compradores com pagamento confirmado também têm direito a uma conversa educativa de 60 minutos sobre a Reforma Tributária, marcada para 12/11/2026 às 19h30 (Brasília), pelo Google Meet. A disponibilidade de vagas precisa ser confirmada no momento da contratação. Não inclui consultoria ou análise individual de XMLs.</p>
+    </section>
+    </ProductOffer>
+  </ProductPage>;
   return (
     <ProductPage title="Meus E-books" description="Seus materiais digitais e o acesso às compras realizadas.">
         <section style={{ border: "1px solid #e1e7ed", borderTop: "4px solid #c9a227", borderRadius: 9, background: "#fff", padding: "32px" }}>
