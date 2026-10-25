@@ -5,7 +5,7 @@ import styles from "./library.module.css";
 
 export type FiscalLibraryArticle = {
  id: string; slug: string; title: string; summary: string | null;
- category: string | null; published_at: string | null;
+ category: string | null; published_at: string | null; visibility?: string;
 };
 type Props = { articles: FiscalLibraryArticle[] };
 const categories = ["Todos","Atualizações fiscais","NF-e e XML","IBS e CBS","ICMS e DIFAL","Checklists e guias","Agenda fiscal"];
@@ -26,7 +26,7 @@ export default function FiscalLibrary({articles}:Props){
     <span className={styles.date}>Publicado em {date(featured.published_at)}</span></div>
     <Link className={styles.featureLink} href={`/painel/assinatura/${featured.slug}`}>Ler análise <span aria-hidden="true">→</span></Link>
    </section>}
-   <section className={styles.heading}><div><p className={styles.kicker}>BIBLIOTECA DO ASSINANTE</p><h2>Explore os conteúdos</h2><p>Artigos, atualizações e materiais organizados por assunto.</p></div><span className={styles.count}>{articles.length} {articles.length===1?"publicação":"publicações"}</span></section>
+   <section className={styles.heading}><div><p className={styles.kicker}>BIBLIOTECA FISCAL</p><h2>Explore os conteúdos</h2><p>Artigos, atualizações e materiais organizados por assunto.</p></div><span className={styles.count}>{articles.length} {articles.length===1?"publicação":"publicações"}</span></section>
    <div className={styles.controls}>
      <label className={styles.searchLabel} htmlFor="fiscal-search">Pesquisar publicações
       <input id="fiscal-search" type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Pesquise por assunto, imposto ou palavra-chave..." />
@@ -36,7 +36,7 @@ export default function FiscalLibrary({articles}:Props){
     {filters.map(c=><button type="button" key={c} className={category===c?styles.selected:styles.filter} onClick={()=>setCategory(c)} aria-pressed={category===c}>{c}</button>)}
    </div>
    {shown.length>0?<div className={styles.grid}>{shown.map(a=><article key={a.id} className={styles.card}>
-    <span className={styles.category}>{a.category||"Atualização fiscal"}</span>
+    <span className={styles.category}>{a.category||"Atualização fiscal"} · {a.visibility==="public"?"Gratuito":"Assinante"}</span>
     <h3>{a.title}</h3><p>{a.summary||"Acesse esta publicação para consultar as informações completas."}</p>
     <div className={styles.cardFoot}><time>{date(a.published_at)}</time><Link href={`/painel/assinatura/${a.slug}`}>Ler conteúdo →</Link></div>
    </article>)}</div>:<div className={styles.empty}><h3>{articles.length?"Nenhuma publicação encontrada":"A biblioteca está sendo preparada"}</h3><p>{articles.length?"Experimente outro termo de pesquisa ou categoria.":"Os primeiros conteúdos exclusivos serão publicados aqui, após revisão das fontes e informações fiscais."}</p></div>}
