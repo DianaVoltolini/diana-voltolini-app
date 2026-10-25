@@ -13,12 +13,13 @@ const money=(cents:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",curr
 export default async function TorrePage() {
   const {profile}=await requireAdmin();
   const admin=getSupabaseAdmin();
-  const [diagnosticsResult,ordersResult,productsResult]=await Promise.all([
+  const [diagnosticsResult,ordersResult,productsResult,subscriptionsResult]=await Promise.all([
     admin.from("diagnostics").select("id,status", {count:"exact",head:false}).limit(1000),
     admin.from("orders").select("id,product_id,status,amount_cents,created_at").order("created_at",{ascending:false}).limit(1000),
     admin.from("products").select("id,code,name"),
+    admin.from("fiscal_subscriptions").select("id,status,renewal_enabled").limit(1000),
   ]);
-  const hasError=Boolean(diagnosticsResult.error||ordersResult.error||productsResult.error);
+  const hasError=Boolean(diagnosticsResult.error||ordersResult.error||productsResult.error||subscriptionsResult.error);
   const diagnostics=diagnosticsResult.data??[];
   const orders=ordersResult.data??[];
   const products=productsResult.data??[];
@@ -28,10 +29,11 @@ export default async function TorrePage() {
   const paidOrders=orders.filter(x=>x.status==="paid");
   const totalPaid=paidOrders.reduce((sum,x)=>sum+x.amount_cents,0);
   const ebookSold=paidOrders.filter(x=>ebookIds.has(x.product_id)).length;
-  const pendingOrders=orders.filter(x=>x.status==="pending").length;
+
+  const activeSubscriptions=(subscriptionsResult.data??[]).filter(x=>x.status==="active"&&x.renewal_enabled===true).length;
   const navCards=[
-    {title:"Gestão de Serviços",description:"Veja o resumo dos produtos e serviços vendidos e acesse suas áreas específicas.",url:"/torre/servicos",button:"Gerenciar serviços →"},
-    {title:"E-books",description:"Acompanhe os e-books comercializados e suas vendas confirmadas.",url:"/torre/ebooks",button:"Ver e-books →"},
+    {title:"Vendas",description:"Acompanhe produtos vendidos, e-books e assinaturas.",url:"/torre/vendas",button:"Ver vendas →"},
+    {title:"Assinatura Recorrente",description:"Consulte assinantes ativos, vigência e renovações habilitadas.",url:"/torre/assinaturas",button:"Ver assinaturas →"},
     {title:"Diagnósticos",description:"Gerencie questionários, arquivos XML, andamento das análises e entregas.",url:"/torre/diagnosticos",button:"Gerenciar diagnósticos →"},
   ];
   return <main className={styles.page}>
@@ -44,7 +46,7 @@ export default async function TorrePage() {
           <article><span>Diagnósticos</span><strong>{diagnostics.length}</strong><small>Atendimentos registrados</small></article>
           <article><span>E-books vendidos</span><strong>{ebookSold}</strong><small>Pedidos pagos do e-book</small></article>
           <article><span>Pendências operacionais</span><strong>{needsAttention}</strong><small>Diagnósticos em aberto</small></article>
-          <article><span>Pedidos pendentes</span><strong>{pendingOrders}</strong><small>Pagamentos aguardando confirmação</small></article>
+          <article><span>Assinaturas ativas</span><strong>{activeSubscriptions}</strong><small>Renovação habilitada</small></article>
         </section>
         <section className={styles.diagnosticsSection} aria-label="Resultado financeiro resumido">
           <header className={styles.sectionHeader}><div><p className={styles.eyebrow}>RESUMO DE VENDAS</p><h2>Recebimentos registrados</h2></div><Link className={styles.openLink} href="/torre/financeiro">Abrir financeiro →</Link></header>
