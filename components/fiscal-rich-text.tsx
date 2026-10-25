@@ -8,6 +8,9 @@ function inline(text:string):ReactNode[]{
 }
 function isBullet(s:string){return /^\s*[-*•]\s+/.test(s)}
 function isNumber(s:string){return /^\s*\d+[.)]\s+/.test(s)}
+function isChecklist(s:string){return /^\s*(?:(?:[-*•]\s*)?\[[ xX]\]|[☐☑✅✔✓])\s*/.test(s)}
+function cleanChecklist(s:string){return s.trim().replace(/^(?:(?:[-*•]\s*)?\[[ xX]\]|[☐☑✅✔✓])\s*/,"")}
+function isChecked(s:string){return /^\s*(?:(?:[-*•]\s*)?\[[xX]\]|[☑✅✔✓])/.test(s)}
 function cells(line:string){return line.trim().replace(/^\|/,"").replace(/\|$/,"").split("|").map(c=>c.trim())}
 function tableSeparator(line:string){return /^\s*\|?\s*:?-{3,}:?(\s*\|\s*:?-{3,}:?)*\s*\|?\s*$/.test(line)}
 export default function FiscalRichText({body}:{body:string}){
@@ -29,14 +32,19 @@ export default function FiscalRichText({body}:{body:string}){
   if(/^(ATENÇÃO|IMPORTANTE|NA PRÁTICA|RESUMO|DICA):\s*.+/i.test(value)){
    elements.push(<aside key={key} style={{background:"#f8f5eb",borderLeft:"3px solid #c9a227",borderRadius:7,padding:"16px 20px",margin:"18px 0",lineHeight:1.75}}>{inline(value)}</aside>);i++;continue
   }
+  if(isChecklist(value)){
+   const items:{text:string;checked:boolean}[]=[];
+   while(i<lines.length&&isChecklist(lines[i])){items.push({text:cleanChecklist(lines[i]),checked:isChecked(lines[i])});i++}
+   elements.push(<ul key={key} aria-label="Checklist" style={{listStyle:"none",padding:0,margin:"18px 0 25px",display:"grid",gap:9}}>{items.map((item,j)=><li key={j} style={{display:"flex",alignItems:"flex-start",gap:12,background:"#f6f8f8",border:"1px solid #e1e7e9",borderRadius:8,padding:"11px 14px",lineHeight:1.65}}><span aria-hidden="true" style={{fontSize:19,color:"#9b7a21",lineHeight:1.4}}>{item.checked?"☑":"☐"}</span><span>{inline(item.text)}</span></li>)}</ul>);continue
+  }
   if(isBullet(value)||isNumber(value)){
    const ordered=isNumber(value),items:string[]=[];
-   while(i<lines.length&&(ordered?isNumber(lines[i]):isBullet(lines[i]))){items.push(lines[i].trim().replace(ordered?/^\d+[.)]\s+/:/^[-*•]\s+/,""));i++}
+   while(i<lines.length&&!isChecklist(lines[i])&&(ordered?isNumber(lines[i]):isBullet(lines[i]))){items.push(lines[i].trim().replace(ordered?/^\d+[.)]\s+/:/^[-*•]\s+/,""));i++}
    const li=items.map((it,j)=><li key={j} style={{marginBottom:8}}>{inline(it)}</li>);
    elements.push(ordered?<ol key={key} style={{paddingLeft:27,margin:"15px 0 23px",lineHeight:1.8}}>{li}</ol>:<ul key={key} style={{paddingLeft:27,margin:"15px 0 23px",lineHeight:1.8}}>{li}</ul>);continue
   }
   const para=[value];i++;
-  while(i<lines.length&&lines[i].trim()&&!lines[i].trim().startsWith("#")&&!isBullet(lines[i])&&!isNumber(lines[i])&&!lines[i].trim().startsWith("|")){para.push(lines[i].trim());i++}
+  while(i<lines.length&&lines[i].trim()&&!lines[i].trim().startsWith("#")&&!isBullet(lines[i])&&!isNumber(lines[i])&&!isChecklist(lines[i])&&!lines[i].trim().startsWith("|")){para.push(lines[i].trim());i++}
   elements.push(<p key={key} style={{fontSize:16,lineHeight:1.9,color:"#405266",margin:"0 0 20px",overflowWrap:"anywhere"}}>{inline(para.join(" "))}</p>);
  }
  return <div>{elements}</div>;
