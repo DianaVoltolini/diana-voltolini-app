@@ -18,7 +18,7 @@ export default function CustomerSidebar({diagnostics,subscriber,ebooks}:Props){
     {subscriber&&link("/painel/assinatura","Fiscal na Prática","Minha assinatura")}
     {!diagnostics&&!ebooks&&!subscriber&&<p className={styles.empty}>Nenhuma compra liberada no momento.</p>}
     <p className={styles.group}>OUTROS PRODUTOS</p>
-    {!diagnostics&&<a className={styles.link} href="https://dianavoltolini.com.br/diagnostico-ibs-cbs" target="_blank" rel="noopener noreferrer">Diagnóstico IBS/CBS <small>Conhecer →</small></a>}
+    {!diagnostics&&<Link className={styles.link} href="/painel/diagnosticos">Diagnóstico IBS/CBS <small>Conhecer →</small></Link>}
     {!ebooks&&<Link className={styles.link} href="/painel/ebooks">E-book IBS/CBS <small>Conhecer →</small></Link>}
     {!subscriber&&<Link className={styles.link} href="/painel/assinatura">Fiscal na Prática <small>Conhecer →</small></Link>}
     {diagnostics&&ebooks&&subscriber&&<p className={styles.empty}>Confira outras soluções no site.</p>}
@@ -28,6 +28,7 @@ export default function CustomerSidebar({diagnostics,subscriber,ebooks}:Props){
     {diagnostics&&link("/painel/diagnosticos","Diagnósticos")}
     {ebooks&&link("/painel/ebooks","E-books")}
     {subscriber&&link("/painel/assinatura","Fiscal na Prática")}
+    {!diagnostics&&link("/painel/diagnosticos","Conhecer Diagnóstico IBS/CBS")}
     {!ebooks&&link("/painel/ebooks","Conhecer E-book IBS/CBS")}
     {!subscriber&&link("/painel/assinatura","Conhecer Fiscal na Prática")}
    </div></details>
