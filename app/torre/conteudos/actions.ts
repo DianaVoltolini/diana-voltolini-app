@@ -59,3 +59,27 @@ export async function updateFiscalArticleQuick(data: FormData) {
   revalidatePath("/painel/assinatura");
   redirect("/torre/conteudos?salvo=1");
 }
+
+
+/** Exclusão definitiva de um artigo fiscal, disponível somente a administradores. */
+export async function deleteFiscalArticle(data: FormData) {
+  await requireAdmin();
+  const id = String(data.get("id") ?? "");
+  const slug = String(data.get("slug") ?? "");
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+    || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    redirect("/torre/conteudos?erro=excluir");
+  }
+  const db = getSupabaseAdmin();
+  const {data:deleted,error} = await db.from("fiscal_articles")
+    .delete()
+    .eq("id",id)
+    .eq("slug",slug)
+    .select("id,slug");
+  if (error || deleted?.length !== 1) {
+    redirect("/torre/conteudos?erro=excluir");
+  }
+  revalidatePath("/torre/conteudos");
+  revalidatePath("/painel/assinatura");
+  redirect("/torre/conteudos?excluido=1");
+}
