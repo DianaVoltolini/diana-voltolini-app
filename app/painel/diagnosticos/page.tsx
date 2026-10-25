@@ -13,6 +13,7 @@ import { logout } from "../actions";
 
 import styles from "../painel.module.css";
 import ProductPage from "../product-page";
+import ProductOffer from "../product-offer";
 
 export const metadata: Metadata = {
   title: "Meus Diagnósticos",
@@ -489,6 +490,15 @@ export default async function DiagnosticosPage() {
     )[0] ||
     "Cliente";
 
+  if(diagnostics.length===0) return <ProductPage title="Diagnóstico Expresso IBS/CBS" description="Uma análise técnica para verificar a preparação do faturamento para IBS e CBS.">
+    <ProductOffer eyebrow="DIAGNÓSTICO EXPRESSO IBS/CBS" headline="Descubra se seu faturamento está preparado para IBS e CBS" lead="Identifique inconsistências e pontos de atenção nos documentos fiscais selecionados, com recomendações e plano de ação." price="R$ 169,90 · pagamento único" checkout="https://dianavoltolini.com.br/checkout/diagnostico-ibs-cbs" cta="Quero meu diagnóstico" features={["Análise de até cinco documentos fiscais (XMLs)","Conferência individual dos XMLs selecionados","Avaliação das informações sobre ERP e operações","Riscos, pontos positivos e providências","Plano de ação e parecer final","Entrega em até cinco dias úteis após receber todos os documentos necessários"]}>
+      <section style={{background:"#fff",border:"1px solid #e0e7ed",borderRadius:14,padding:30}}>
+        <p style={{color:"#987318",fontWeight:850,fontSize:12}}>COMO FUNCIONA</p><h2>Do questionário à entrega</h2>
+        <p style={{lineHeight:1.9,color:"#536678"}}1. Contratação e confirmação do pagamento. 2. Questionário com informações da empresa. 3. Envio de um a cinco XMLs. 4. Análise técnica. 5. Entrega do relatório com riscos, recomendações e plano de ação na Área do Cliente.</p>
+        <p style={{fontSize:13,color:"#647586"}}O escopo não inclui execução de parametrização no ERP; a classificação tributária deverá ser validada pelo responsável fiscal ou contábil.</p>
+      </section>
+    </ProductOffer>
+  </ProductPage>;
   return (
     <ProductPage title="Meus Diagnósticos" description="Acompanhe suas análises, documentos enviados, andamento e resultados.">
           <section
