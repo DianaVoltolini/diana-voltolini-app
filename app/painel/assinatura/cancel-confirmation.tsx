@@ -19,7 +19,7 @@ export default function CancelSubscriptionConfirm({ paidUntil, subscriptionId }:
 
   return <>
     <button type="button" onClick={() => setOpen(true)}
-      style={{ padding: "12px 18px", border: "1px solid #c9a227", borderRadius: 8, background: "#fff", color: "#715308", fontWeight: 750, cursor: "pointer", margin: "12px 0 25px" }}>
+      style={{ padding: "5px 0", border: "none", borderRadius: 0, background: "transparent", color: "#6d7c8b", fontSize: 12, textDecoration: "underline", textUnderlineOffset: 3, fontWeight: 500, cursor: "pointer", margin: 0 }}>
       Cancelar assinatura
     </button>
     <dialog ref={dialogRef} aria-labelledby="cancel-title" onClose={() => setOpen(false)}
