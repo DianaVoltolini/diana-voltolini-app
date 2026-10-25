@@ -57,11 +57,13 @@ export default async function EbooksPage() {
             </>
           ) : (
             <>
-              <p style={{ color: "#65717e" }}>Nenhuma compra confirmada deste material foi encontrada nesta conta.</p>
-              <a href={PAGE_URL} target="_blank" rel="noopener noreferrer"
-                style={{ display: "inline-block", marginTop: 12, background: "#c9a227", color: "#0d1b2a", padding: "12px 20px", borderRadius: 5, fontWeight: 700 }}>
-                Conhecer o e-book ↗
-              </a>
+              <p style={{color:"#586a7c",lineHeight:1.75}}>Um guia direto para compreender os principais conceitos do IBS e da CBS e seus impactos nas operações de compras, vendas e emissão de notas fiscais.</p>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12,margin:"20px 0"}}>
+               {["Fundamentos do IBS e da CBS","Compras, vendas e créditos","Emissão de notas fiscais","Glossário de termos práticos"].map(item=><div key={item} style={{background:"#f4f6f8",borderRadius:8,padding:15,color:"#243549",fontWeight:700,fontSize:13}}>{item}</div>)}
+              </div>
+              <p style={{fontSize:23,fontWeight:850,color:"#102033"}}>R$ 29,90</p>
+              <a href="https://dianavoltolini.com.br/checkout/ebook-ibs-cbs" style={{display:"inline-block",marginTop:12,background:"#c9a227",color:"#0d1b2a",padding:"13px 20px",borderRadius:8,fontWeight:800,textDecoration:"none"}}>Adquirir meu e-book →</a>
+              <p style={{fontSize:12,color:"#65717e",marginTop:12}}>O pagamento é finalizado pelo checkout seguro do site. Após a confirmação, o e-book ficará disponível nesta mesma Área do Cliente.</p>
             </>
           )}
         </section>

@@ -18,9 +18,9 @@ export default function CustomerSidebar({diagnostics,subscriber,ebooks}:Props){
     {subscriber&&link("/painel/assinatura","Fiscal na Prática","Minha assinatura")}
     {!diagnostics&&!ebooks&&!subscriber&&<p className={styles.empty}>Nenhuma compra liberada no momento.</p>}
     <p className={styles.group}>OUTROS PRODUTOS</p>
-    {!diagnostics&&<a className={styles.link} href="https://dianavoltolini.com.br/diagnostico-ibs-cbs" target="_blank" rel="noopener noreferrer">Diagnóstico IBS/CBS <small>Conhecer ↗</small></a>}
-    {!ebooks&&<a className={styles.link} href="https://dianavoltolini.com.br/ibs-cbs-na-pratica" target="_blank" rel="noopener noreferrer">E-book IBS/CBS <small>Conhecer ↗</small></a>}
-    {!subscriber&&<a className={styles.link} href="https://dianavoltolini.com.br/assinatura-fiscal" target="_blank" rel="noopener noreferrer">Fiscal na Prática <small>Conhecer ↗</small></a>}
+    {!diagnostics&&<a className={styles.link} href="https://dianavoltolini.com.br/diagnostico-ibs-cbs" target="_blank" rel="noopener noreferrer">Diagnóstico IBS/CBS <small>Conhecer →</small></a>}
+    {!ebooks&&<Link className={styles.link} href="/painel/ebooks">E-book IBS/CBS <small>Conhecer ↗</small></a>}
+    {!subscriber&&<Link className={styles.link} href="/painel/assinatura">Fiscal na Prática <small>Conhecer ↗</small></a>}
     {diagnostics&&ebooks&&subscriber&&<p className={styles.empty}>Confira outras soluções no site.</p>}
    </div>
    <details className={styles.mobile}><summary>Menu e minhas compras</summary><div className={styles.mobileLinks}>
@@ -28,7 +28,8 @@ export default function CustomerSidebar({diagnostics,subscriber,ebooks}:Props){
     {diagnostics&&link("/painel/diagnosticos","Diagnósticos")}
     {ebooks&&link("/painel/ebooks","E-books")}
     {subscriber&&link("/painel/assinatura","Fiscal na Prática")}
-    <a className={styles.link} href="https://dianavoltolini.com.br/produtos" target="_blank" rel="noopener noreferrer">Outros produtos ↗</a>
+    {!ebooks&&link("/painel/ebooks","Conhecer E-book IBS/CBS")}
+    {!subscriber&&link("/painel/assinatura","Conhecer Fiscal na Prática")}
    </div></details>
   </nav>
  </aside>;
