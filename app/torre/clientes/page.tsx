@@ -25,7 +25,7 @@ export default async function ClientesPage(){
  }
  for(const o of orders.data??[]){
  const key=norm(o.customer_email)||o.user_id||o.id;
- const item=customers.get(key)??{id:o.user_id||o.id,name:o.customer_name||"Cliente",email:o.customer_email||"",document:"",phone:"",address:"",products:[],registered:date(o.created_at)};
+ const item:Client=customers.get(key)??{id:o.user_id||o.id,name:o.customer_name||"Cliente",email:o.customer_email||"",document:"",phone:"",address:"",products:[],registered:date(o.created_at)};
  if(!item.name||item.name==="Cliente")item.name=o.customer_name||item.name;
  if(!item.document)item.document=o.customer_document||"";
  if(!item.phone)item.phone=o.customer_phone||"";
