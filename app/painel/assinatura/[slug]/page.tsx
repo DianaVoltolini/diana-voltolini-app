@@ -11,16 +11,17 @@ export default async function ExclusiveArticle({params}:{params:Promise<{slug:st
  const uid=typeof data?.claims?.sub==="string"?data.claims.sub:null;
  if(error||!uid)redirect("/login?retorno=%2Fpainel%2Fassinatura");
  const access=await getFiscalAccess(uid);
- if(!access.allowed)redirect("/painel/assinatura");
+
  const db=getSupabaseAdmin();
- const {data:article,error:articleError}=await db.from("fiscal_articles").select("title,summary,category,body,source_links")
- .eq("slug",(await params).slug).eq("status","published").eq("visibility","subscriber").maybeSingle();
+ const {data:article,error:articleError}=await db.from("fiscal_articles").select("title,summary,category,body,source_links,visibility")
+ .eq("slug",(await params).slug).eq("status","published").maybeSingle();
  if(articleError)throw new Error("Não foi possível carregar o material.");
  if(!article)notFound();
+ if(article.visibility!=="public"&&!access.allowed)redirect("/painel/assinatura");
  const sources=String(article.source_links??"").split(/\r?\n/).map((x:string)=>x.trim()).filter((x:string)=>/^https:\/\//i.test(x));
  return <main style={{background:"#f2f6fa",minHeight:"100vh",padding:"45px 20px"}}><article className="container" style={{maxWidth:880,background:"#fff",padding:32,borderRadius:12}}>
  <Link href="/painel/assinatura">← Biblioteca Fiscal na Prática</Link>
- <p style={{color:"#96730e",marginTop:22,fontWeight:800}}>{article.category} · Exclusivo para assinantes</p>
+ <p style={{color:"#96730e",marginTop:22,fontWeight:800}}>{article.category} · {article.visibility==="public"?"Conteúdo gratuito":"Exclusivo para assinantes"}</p>
  <h1>{article.title}</h1><p style={{fontSize:19}}>{article.summary}</p><hr style={{margin:"25px 0",borderColor:"#d9e1e7"}}/>
  <div style={{whiteSpace:"pre-wrap",lineHeight:1.85,overflowWrap:"anywhere"}}>{article.body}</div>
  {sources.length>0&&<section style={{marginTop:30}}><h2>Fontes</h2>{sources.map((url:string)=><p key={url}><a target="_blank" rel="noopener noreferrer" href={url}>{url}</a></p>)}</section>}
