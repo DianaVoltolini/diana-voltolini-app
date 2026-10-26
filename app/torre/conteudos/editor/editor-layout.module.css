@@ -1,0 +1,8 @@
+.form{display:grid;gap:18px;width:100%;min-width:0}
+.mainFields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.form label{min-width:0}
+.toolbar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;width:100%}
+.toolButton{width:100%;min-width:0;border:1px solid #cbd5e1;background:#fff;border-radius:7px;min-height:42px;padding:8px 10px;color:#0d1b2a;font-size:13px;font-weight:650;cursor:pointer}
+.toolButton:hover{background:#f5f0e4;border-color:#c9a227}
+.wideSection{width:100%;min-width:0}
+@media(max-width:720px){.mainFields{grid-template-columns:1fr}.toolbar{display:flex;flex-wrap:wrap}.toolButton{width:auto;flex:1 1 95px}}
