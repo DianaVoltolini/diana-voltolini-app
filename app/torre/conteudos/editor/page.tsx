@@ -8,6 +8,7 @@ import { saveFiscalArticle } from "../actions";
 import ArticleBodyEditor from "./article-body-editor";
 import SeoEditor from "./seo-editor";
 import styles from "../../painel.module.css";
+import layout from "./editor-layout.module.css";
 export const metadata:Metadata={title:"Editar conteúdo | Torre de Controle"};
 export const dynamic="force-dynamic";
 export default async function EditorialPage({searchParams}:{searchParams:Promise<{editar?:string;erro?:string}>}){
@@ -23,12 +24,12 @@ export default async function EditorialPage({searchParams}:{searchParams:Promise
  return <main className={styles.page}><section className={styles.content}><div className="container">
   <header className={styles.pageHeader}><div><p className={styles.eyebrow}>GESTÃO DE CONTEÚDOS</p><h1>{selected?"Editar conteúdo":"Novo conteúdo"}</h1><p>Defina os dados do conteúdo, revise as fontes e escolha quando publicar.</p></div></header>
   {params.erro&&<p className={styles.errorMessage}>Não foi possível salvar. Verifique os campos.</p>}
-  <section className={styles.diagnosticsSection}>
+  <section className={styles.diagnosticsSection} style={{width:"100%",maxWidth:"none"}}>
   <p style={{marginBottom:24}}><Link href="/torre/conteudos" style={{color:"#86650c",fontWeight:750}}>← Ver conteúdos cadastrados</Link></p>
   {categoriesError||!categoryNames.length?<p role="alert" style={{color:"#b42318"}}>Cadastre as categorias do Blog antes de criar conteúdos. <Link href="/torre/categorias">Gerenciar categorias</Link>.</p>:null}
-  <form action={saveFiscalArticle} style={{display:"grid",gap:14,maxWidth:850}}>
+  <form action={saveFiscalArticle} className={layout.form}>
  <input name="id" type="hidden" value={selected?.id??""}/>
- <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:14}}>
+ <div className={layout.mainFields}>
  <label>Categoria<select name="category" style={field} required defaultValue={selected?.category??categoryNames[0]??""}>
  {choices.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
  <label>Visibilidade<select name="visibility" style={field} defaultValue={selected?.visibility??"public"}><option value="public">Público</option><option value="subscriber">Exclusivo para assinantes</option></select></label>
