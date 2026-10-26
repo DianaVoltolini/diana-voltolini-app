@@ -1,0 +1,42 @@
+name: Review remaining npm security fixes
+on:
+  push:
+    branches: [security/audit-fixes-20261026]
+permissions:
+  contents: write
+jobs:
+  check:
+    if: "!contains(github.event.head_commit.message, '[audited-lockfile]')"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Apply only compatible npm security fixes
+        run: npm audit fix --package-lock-only
+      - name: Install corrected lockfile
+        run: npm ci
+      - name: Build production version
+        run: npm run build
+      - name: Record remaining advisories
+        run: npm audit --json > npm-audit-report.json || true
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: npm-audit-report.json
+      - name: Commit changed lockfile after successful build
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "security: compatible npm dependency fixes [audited-lockfile]"
+            git push
+          fi
