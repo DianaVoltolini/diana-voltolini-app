@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { saveFiscalArticle } from "../actions";
 import ArticleBodyEditor from "./article-body-editor";
+import SeoEditor from "./seo-editor";
 import styles from "../../painel.module.css";
 export const metadata:Metadata={title:"Editar conteúdo | Torre de Controle"};
 export const dynamic="force-dynamic";
@@ -36,7 +37,7 @@ export default async function EditorialPage({searchParams}:{searchParams:Promise
  <label>Título<input style={field} name="title" required maxLength={180} defaultValue={selected?.title??""}/></label>
  <label>Slug (letras minúsculas, números e hífens)<input style={field} name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" defaultValue={selected?.slug??""} placeholder="ibs-cbs-na-nfe"/></label>
  <label>Resumo<textarea style={field} name="summary" rows={3} required maxLength={600} defaultValue={selected?.summary??""}/></label>
- <section style={{border:"1px solid #dbe2ea",borderRadius:10,padding:20,background:"#f8fafc",display:"grid",gap:12}}><div><h2 style={{fontSize:20,margin:"0 0 6px"}}>Otimização para o Google (SEO)</h2><p style={{fontSize:13,color:"#536372",margin:0}}>Campos opcionais. Se ficarem vazios, o site utilizará automaticamente o título e o resumo do conteúdo.</p></div><label>Título SEO<input style={field} name="seo_title" maxLength={180} defaultValue={selected?.seo_title??""} placeholder="Título apresentado nos mecanismos de pesquisa"/></label><label>Descrição SEO<textarea style={field} name="seo_description" maxLength={320} rows={3} defaultValue={selected?.seo_description??""} placeholder="Descrição curta e objetiva para resultados de pesquisa"/></label><p style={{fontSize:12,color:"#607080",margin:0}}>Prévia aproximada: o Google pode modificar títulos e descrições nos resultados.</p><div style={{background:"#fff",border:"1px solid #e3e7ec",borderRadius:9,padding:15}}><small style={{color:"#286b42"}}>dianavoltolini.com.br/blog/{selected?.slug??"endereco-do-conteudo"}</small><p style={{color:"#1a0dab",fontSize:18,margin:"7px 0"}}>{selected?.seo_title||selected?.title||"Título do conteúdo"}</p><p style={{color:"#4b5563",fontSize:13,margin:0}}>{selected?.seo_description||selected?.summary||"Resumo do conteúdo"}</p></div></section>
+ <SeoEditor title={selected?.title??""} summary={selected?.summary??""} slug={selected?.slug??""} seoTitle={selected?.seo_title??""} seoDescription={selected?.seo_description??""}/>
  <ArticleBodyEditor initial={selected?.body??""}/>
  <label>Fontes oficiais / URLs<textarea style={field} name="source_links" rows={3} defaultValue={selected?.source_links??""} placeholder="Uma URL por linha"/></label>
  <button className={styles.openLink} style={{cursor:"pointer",justifySelf:"start"}} type="submit">Salvar conteúdo</button>
