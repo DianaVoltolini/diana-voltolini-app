@@ -21,7 +21,7 @@ export default async function EditorialPage({searchParams}:{searchParams:Promise
  const categoryNames=(categoryRows??[]).map(c=>c.name);
  const choices=selected?.category&&!categoryNames.includes(selected.category)?[selected.category,...categoryNames]:categoryNames;
  const field:CSSProperties={display:"block",width:"100%",padding:"12px",border:"1px solid #cbd5e1",borderRadius:7,marginTop:7,background:"#fff",color:"#0d1b2a"};
- return <main className={styles.page}><section className={styles.content}><div className="container">
+ return <main className={styles.page}><section className={styles.content}><div className={layout.fullWidth}>
   <header className={styles.pageHeader}><div><p className={styles.eyebrow}>GESTÃO DE CONTEÚDOS</p><h1>{selected?"Editar conteúdo":"Novo conteúdo"}</h1><p>Defina os dados do conteúdo, revise as fontes e escolha quando publicar.</p></div></header>
   {params.erro&&<p className={styles.errorMessage}>Não foi possível salvar. Verifique os campos.</p>}
   <section className={styles.diagnosticsSection} style={{width:"100%",maxWidth:"none"}}>
