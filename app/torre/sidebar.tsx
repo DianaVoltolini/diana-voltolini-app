@@ -10,7 +10,7 @@ export default function TorreSidebar(){
  const navigation=<nav className={styles.links} aria-label="Navegação administrativa">
  <p className={styles.kicker}>ADMINISTRAÇÃO</p>{admin.map(([url,label])=>item(url,label))}
  <div className={styles.group}><span className={styles.groupLabel}>SERVIÇOS</span>{services.map(([url,label])=>item(url,label))}</div>
- <div className={styles.group}><span className={styles.groupLabel}>BLOG</span>{item("/torre/conteudos","Artigos e Conteúdos")}{item("/torre/categorias","Categorias")}</div>
+ <div className={styles.group}><span className={styles.groupLabel}>BLOG</span>{item("/torre/conteudos","Conteúdos")}{item("/torre/categorias","Categorias")}</div>
  </nav>;
  return <aside className={styles.sidebar}><div className={styles.desktop}>{navigation}</div><details className={styles.mobile}><summary>Menu administrativo</summary>{navigation}</details></aside>;
 }
