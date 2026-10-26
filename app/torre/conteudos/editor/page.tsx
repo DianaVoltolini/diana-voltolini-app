@@ -15,17 +15,21 @@ export default async function EditorialPage({searchParams}:{searchParams:Promise
  const db=getSupabaseAdmin();
  const {data:selected,error}=params.editar?await db.from("fiscal_articles").select("id,title,slug,summary,body,category,visibility,status,source_links").eq("id",params.editar).maybeSingle():{data:null,error:null};
  if(params.editar&&(error||!selected))notFound();
+ const {data:categoryRows,error:categoriesError}=await db.from("fiscal_categories").select("name").order("name",{ascending:true});
+ const categoryNames=(categoryRows??[]).map(c=>c.name);
+ const choices=selected?.category&&!categoryNames.includes(selected.category)?[selected.category,...categoryNames]:categoryNames;
  const field:CSSProperties={display:"block",width:"100%",padding:"12px",border:"1px solid #cbd5e1",borderRadius:7,marginTop:7,background:"#fff",color:"#0d1b2a"};
  return <main className={styles.page}><section className={styles.content}><div className="container">
   <header className={styles.pageHeader}><div><p className={styles.eyebrow}>ARTIGOS E CONTEÚDOS</p><h1>{selected?"Editar conteúdo":"Novo conteúdo"}</h1><p>Defina os dados do artigo, revise as fontes e escolha quando publicar.</p></div></header>
   {params.erro&&<p className={styles.errorMessage}>Não foi possível salvar. Verifique os campos.</p>}
   <section className={styles.diagnosticsSection}>
   <p style={{marginBottom:24}}><Link href="/torre/conteudos" style={{color:"#86650c",fontWeight:750}}>← Ver conteúdos cadastrados</Link></p>
+  {categoriesError||!categoryNames.length?<p role="alert" style={{color:"#b42318"}}>Cadastre as categorias do Blog antes de criar artigos. <Link href="/torre/categorias">Gerenciar categorias</Link>.</p>:null}
   <form action={saveFiscalArticle} style={{display:"grid",gap:14,maxWidth:850}}>
  <input name="id" type="hidden" value={selected?.id??""}/>
  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:14}}>
- <label>Categoria<select name="category" style={field} defaultValue={selected?.category??"Reforma Tributária"}>
- {["Reforma Tributária","NF-e e Faturamento","Tributos na Prática","Sistemas e Parametrização","Obrigações e Prazos","Atualizações fiscais","NF-e e XML","IBS e CBS","ICMS e DIFAL","Checklists e guias","Agenda fiscal"].map(x=><option key={x}>{x}</option>)}</select></label>
+ <label>Categoria<select name="category" style={field} required defaultValue={selected?.category??categoryNames[0]??""}>
+ {choices.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
  <label>Visibilidade<select name="visibility" style={field} defaultValue={selected?.visibility??"public"}><option value="public">Público</option><option value="subscriber">Exclusivo para assinantes</option></select></label>
  <label>Status<select name="status" style={field} defaultValue={selected?.status??"draft"}><option value="draft">Rascunho</option><option value="published">Aprovado para publicação</option></select></label>
  </div>
