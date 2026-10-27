@@ -14,7 +14,7 @@ export async function saveFiscalArticle(data: FormData) {
   const source_links=read("source_links",4000);
   const delivery_type=read("delivery_type",30);
   const seo_title=read("seo_title",180)||null, seo_description=read("seo_description",320)||null;
-  if (!title || !summary || !body || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || !category || !["public","subscriber"].includes(visibility) || !["draft","published"].includes(status) || !["radar","oficina","biblioteca","checklist"].includes(delivery_type)) {
+  if (!title || !summary || !body || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || !category || !["public","subscriber"].includes(visibility) || !["draft","published"].includes(status) || !["geral","radar","oficina","biblioteca","checklist"].includes(delivery_type)) {
     redirect("/torre/conteudos?erro=dados");
   }
   const db=getSupabaseAdmin();
