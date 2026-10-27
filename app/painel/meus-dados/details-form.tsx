@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useState, type FormEvent} from "react";
 import {saveCustomerDetails} from "./actions";
+import styles from "./details-form.module.css";
 type Info={phone:string;zip_code:string;street:string;number:string;complement:string;neighborhood:string;city:string;state:string};
 const initial={ok:false,message:""};
 const formatField=(key:keyof Info,value:string)=>{const n=value.replace(/\D/g,"");if(key==="zip_code")return n.slice(0,8).replace(/^(\d{5})(\d)/,"$1-$2");if(key==="phone"){const x=n.slice(0,11);return x.length>10?x.replace(/^(\d{2})(\d{5})(\d{0,4})$/,"($1) $2-$3"):x.replace(/^(\d{2})(\d{4})(\d{0,4})$/,"($1) $2-$3");}return value;};
@@ -59,14 +60,14 @@ export default function DetailsForm({details}:{details:Info}){
    setState({ok:false,message:"Não foi possível concluir o salvamento. Tente novamente."});
   }finally{setPending(false);}
  };
- const fields:[keyof Info,string][]=[["phone","Telefone / WhatsApp"],["zip_code","CEP"],["street","Endereço"],["number","Número"],["complement","Complemento"],["neighborhood","Bairro"],["city","Cidade"],["state","UF"]];
+ const fields:[keyof Info,string][]=[["zip_code","CEP"],["street","Endereço"],["number","Número"],["complement","Complemento"],["neighborhood","Bairro"],["city","Cidade"],["state","UF"],["phone","Telefone / WhatsApp"]];
  return <form onSubmit={submit} style={{display:"grid",gap:16}}>
   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
    <h2 style={{fontSize:21,margin:0}}>Dados de contato e endereço</h2>
    {!editing&&<button type="button" onClick={()=>setEditing(true)} style={{background:"#c9a227",color:"#0d1b2a",border:0,borderRadius:7,padding:"10px 20px",fontWeight:750,cursor:"pointer"}}>Editar</button>}
   </div>
-  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:14}}>
-   {fields.map(([key,label])=><label key={key} style={{display:"grid",gap:6,fontSize:13,color:"#425569",fontWeight:650}}>{label}<input name={key} value={formatField(key,values[key])} onChange={e=>{const value=(key==="phone"||key==="zip_code")?e.currentTarget.value.replace(/\D/g,""):e.currentTarget.value;setValues(previous=>({...previous,[key]:value}));}} readOnly={!editing} maxLength={180} style={{padding:"12px 13px",border:"1px solid #d7e0e9",borderRadius:7,background:editing?"#fff":"#f5f7fa",color:"#0d1b2a",fontSize:14}}/></label>)}
+  <div className={styles.fields}>
+   {fields.map(([key,label])=><label key={key} className={`${styles.field} ${styles[key]}`}>{label}<input name={key} value={formatField(key,values[key])} onChange={e=>{const value=(key==="phone"||key==="zip_code")?e.currentTarget.value.replace(/\D/g,""):e.currentTarget.value;setValues(previous=>({...previous,[key]:value}));}} readOnly={!editing} maxLength={180} style={{padding:"12px 13px",border:"1px solid #d7e0e9",borderRadius:7,background:editing?"#fff":"#f5f7fa",color:"#0d1b2a",fontSize:14}}/></label>)}
   </div>
   {editing&&(cepLoading||cepMessage)&&<p role="status" style={{fontSize:12,color:cepMessage.includes("não")||cepMessage.includes("Não")?"#ad3939":"#57687a",margin:0}}>{cepLoading?"Consultando CEP...":cepMessage}</p>}
   {state.message&&<p role="status" style={{color:state.ok?"#22663e":"#a33434",fontSize:13}}>{state.message}</p>}
