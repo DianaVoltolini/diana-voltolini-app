@@ -36,15 +36,15 @@ export default async function SubscriptionPage({searchParams}:{searchParams:Prom
  {!active?<ProductOffer eyebrow="FISCAL NA PRÁTICA · ASSINATURA MENSAL" headline="Informação fiscal que vira ação" lead="Acompanhe as mudanças que impactam notas fiscais, impostos e processos da empresa, com orientações aplicadas à rotina do faturamento." price="R$ 39,90/mês" checkout="https://dianavoltolini.com.br/checkout/assinatura-fiscal" cta="Assinar Fiscal na Prática" features={["Uma análise prática aprofundada por semana","Alertas sobre mudanças fiscais relevantes","Checklists, roteiros e exemplos","Biblioteca exclusiva para assinantes","IBS, CBS, NF-e, ICMS e DIFAL","Material educativo aplicado ao faturamento"]}/>:<div className={styles.subscriptionCard}>
  <div className={styles.subscriptionGrid}>
  <div>
- <p style={{margin:"0 0 6px",color:"#65758a",fontSize:12,fontWeight:750}}>SUA ASSINATURA · FISCAL NA PRÁTICA</p>
+ <p style={{margin:"0 0 6px",color:"#65758a",fontSize:12,fontWeight:750}}>SEU ACESSO</p>
  <p className={styles.statusTitle}>{access.cancellationRequested?"Renovação desativada":access.grace?"Pagamento pendente": "Assinatura ativa"}</p>
- <p style={{margin:"8px 0 0",fontSize:13,color:"#65758a"}}>{access.cancellationRequested&&access.paidUntil?"Acesso disponível até "+formatDate(access.paidUntil):access.grace?"Regularize o pagamento para manter o acesso após a carência.":"Acompanhe suas publicações e informações de cobrança abaixo."}</p>
+ <p style={{margin:"8px 0 0",fontSize:13,color:"#65758a"}}>{access.cancellationRequested&&access.paidUntil?"Acesso disponível até "+formatDate(access.paidUntil):access.grace?"Regularize o pagamento para manter o acesso após a carência.":access.paidUntil?"Acesso disponível até "+formatDate(access.paidUntil):"Consulte suas entregas."}</p>
  </div>
- <div className={styles.renewalPanel}>
+ <details className={styles.manageDetails}><summary>Gerenciar assinatura <span aria-hidden="true">⌄</span></summary><div className={styles.renewalPanel}>
  <p style={{margin:"0 0 6px",fontSize:12,color:"#65758a",fontWeight:750}}>{access.cancellationRequested?"Fim do período pago":nextInvoice?"Próxima cobrança":"Próxima renovação prevista"}</p>
  <strong style={{fontSize:21,color:"#102033"}}>{nextDate??"A confirmar"}</strong>
  <p style={{fontSize:12,color:"#748497",margin:"5px 0 0"}}>{nextInvoice?"Cobrança pendente · "+new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(nextInvoice.amount_cents/100):access.cancellationRequested?"Não serão geradas novas renovações":"Previsão conforme o período pago; cobrança ainda não gerada."}</p>
- </div>
+ </div></details>
  </div>
  {!access.cancellationRequested&&access.paidUntil&&access.subscriptionId&&<div style={{borderTop:"1px solid #ecf0f3",paddingTop:12}}><CancelSubscriptionConfirm paidUntil={access.paidUntil} subscriptionId={access.subscriptionId}/></div>}
  </div>}
