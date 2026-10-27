@@ -1,0 +1,25 @@
+"use client";
+import {useActionState,useState} from "react";
+import {saveCustomerDetails} from "./actions";
+type Info={phone:string;zip_code:string;street:string;number:string;complement:string;neighborhood:string;city:string;state:string};
+const initial={ok:false,message:""};
+export default function DetailsForm({details}:{details:Info}){
+ const [editing,setEditing]=useState(false);
+ const [state,action,pending]=useActionState(async(_previous:typeof initial,form:FormData)=>{
+  const result=await saveCustomerDetails(form);
+  if(result.ok)setEditing(false);
+  return result;
+ },initial);
+ const fields:[keyof Info,string][]=[["phone","Telefone / WhatsApp"],["zip_code","CEP"],["street","Endereço"],["number","Número"],["complement","Complemento"],["neighborhood","Bairro"],["city","Cidade"],["state","UF"]];
+ return <form action={action} style={{display:"grid",gap:16}}>
+  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
+   <h2 style={{fontSize:21,margin:0}}>Dados de contato e endereço</h2>
+   {!editing&&<button type="button" onClick={()=>setEditing(true)} style={{background:"#c9a227",color:"#0d1b2a",border:0,borderRadius:7,padding:"10px 20px",fontWeight:750,cursor:"pointer"}}>Editar</button>}
+  </div>
+  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:14}}>
+   {fields.map(([key,label])=><label key={key} style={{display:"grid",gap:6,fontSize:13,color:"#425569",fontWeight:650}}>{label}<input key={editing?"edit-"+key:"view-"+key} name={key} defaultValue={details[key]} readOnly={!editing} maxLength={180} style={{padding:"12px 13px",border:"1px solid #d7e0e9",borderRadius:7,background:editing?"#fff":"#f5f7fa",color:"#0d1b2a",fontSize:14}}/></label>)}
+  </div>
+  {state.message&&<p role="status" style={{color:state.ok?"#22663e":"#a33434",fontSize:13}}>{state.message}</p>}
+  {editing&&<div style={{display:"flex",gap:10}}><button type="submit" disabled={pending} style={{background:"#c9a227",color:"#0d1b2a",border:0,borderRadius:7,padding:"12px 22px",fontWeight:750,cursor:"pointer"}}>{pending?"Salvando...":"Salvar alterações"}</button><button type="button" onClick={()=>setEditing(false)} style={{padding:"12px 16px",border:"1px solid #d7e0e9",borderRadius:7,background:"#fff"}}>Cancelar</button></div>}
+ </form>;
+}
