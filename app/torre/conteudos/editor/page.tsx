@@ -35,7 +35,7 @@ export default async function EditorialPage({searchParams}:{searchParams:Promise
  <label>Visibilidade<select name="visibility" style={field} defaultValue={selected?.visibility??"public"}><option value="public">Público</option><option value="subscriber">Exclusivo para assinantes</option></select></label>
  <label>Status<select name="status" style={field} defaultValue={selected?.status??"draft"}><option value="draft">Rascunho</option><option value="published">Aprovado para publicação</option></select></label>
  </div>
- <label>Tipo de entrega<select name="delivery_type" style={field} required defaultValue={selected?.delivery_type??"biblioteca"}><option value="radar">Radar Fiscal</option><option value="oficina">Oficina Fiscal</option><option value="biblioteca">Biblioteca exclusiva</option><option value="checklist">Checklists</option></select></label>
+ <label>Tipo de entrega<select name="delivery_type" style={field} required defaultValue={selected?.delivery_type??"geral"}><option value="geral">Conteúdo geral / Blog</option><option value="radar">Radar Fiscal</option><option value="oficina">Oficina Fiscal</option><option value="biblioteca">Biblioteca exclusiva</option><option value="checklist">Checklists</option></select></label>
  <label>Título<input style={field} name="title" required maxLength={180} defaultValue={selected?.title??""}/></label>
  <label>Slug (letras minúsculas, números e hífens)<input style={field} name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" defaultValue={selected?.slug??""} placeholder="ibs-cbs-na-nfe"/></label>
  <label>Resumo<textarea style={field} name="summary" rows={3} required maxLength={600} defaultValue={selected?.summary??""}/></label>
