@@ -44,9 +44,9 @@ export default async function SubscriptionPage({searchParams}:{searchParams:Prom
  <p style={{margin:"0 0 6px",fontSize:12,color:"#65758a",fontWeight:750}}>{access.cancellationRequested?"Fim do período pago":nextInvoice?"Próxima cobrança":"Próxima renovação prevista"}</p>
  <strong style={{fontSize:21,color:"#102033"}}>{nextDate??"A confirmar"}</strong>
  <p style={{fontSize:12,color:"#748497",margin:"5px 0 0"}}>{nextInvoice?"Cobrança pendente · "+new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(nextInvoice.amount_cents/100):access.cancellationRequested?"Não serão geradas novas renovações":"Previsão conforme o período pago; cobrança ainda não gerada."}</p>
+ {!access.cancellationRequested&&access.paidUntil&&access.subscriptionId&&<div className={styles.cancelArea}><CancelSubscriptionConfirm paidUntil={access.paidUntil} subscriptionId={access.subscriptionId}/></div>}
  </div></details>
  </div>
- {!access.cancellationRequested&&access.paidUntil&&access.subscriptionId&&<div style={{borderTop:"1px solid #ecf0f3",paddingTop:12}}><CancelSubscriptionConfirm paidUntil={access.paidUntil} subscriptionId={access.subscriptionId}/></div>}
  </div>}
  {articlesError?<p role="alert">Não foi possível carregar seus conteúdos.</p>:<FiscalLibrary initialDelivery={selected} articles={(articles??[]).filter(a=>active||a.visibility==="public")}/>}
  </section>
