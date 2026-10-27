@@ -12,6 +12,7 @@ export default function CustomerSidebar({diagnostics,subscriber,ebooks}:Props){
    <div className={styles.desktop}>
     <p className={styles.intro}>PAINEL DO CLIENTE</p>
     {link("/painel","Visão geral")}
+    {link("/painel/meus-dados","Meus Dados","Cadastro e extrato") }
     <p className={styles.group}>MINHAS COMPRAS</p>
     {diagnostics&&link("/painel/diagnosticos","Diagnósticos","Serviços contratados")}
     {ebooks&&link("/painel/ebooks","E-books","Materiais adquiridos")}
