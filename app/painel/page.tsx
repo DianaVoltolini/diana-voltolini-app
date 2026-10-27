@@ -36,12 +36,7 @@ export default async function PainelPage(){
  return <main className={styles.page}><div className={styles.container}>
   <div className={styles.overline}>ÁREA DO CLIENTE <span> / SEU PORTAL</span></div>
   <section className={styles.hero}>
-   <div><p className={styles.heroEyebrow}>BEM-VINDO AO SEU ESPAÇO</p><h1>Olá, {display}.</h1><p>Seus serviços, materiais e atualizações fiscais em um só lugar.</p></div>
-   <Link className={styles.heroButton} href={hasPurchases?"#meus-acessos":"#atualizacoes"}>{hasPurchases?"Meus acessos":"Explorar conteúdos"} <span aria-hidden="true">→</span></Link>
-  </section>
-  <section className={styles.quick} aria-label="Acessos rápidos">
-    <Link href="/painel/diagnosticos" className={styles.quickCard}><span className={styles.quickIcon}>01</span><div><strong>Meus serviços</strong><small>{diagnostics.length?diagnostics.length+" diagnóstico(s) registrado(s)":"Conheça o Diagnóstico Expresso"}</small></div><b aria-hidden="true">→</b></Link>
-    <Link href="/painel/assinatura" className={styles.quickCard}><span className={styles.quickIcon}>02</span><div><strong>Biblioteca fiscal</strong><small>{access.allowed?"Conteúdo completo para assinantes":"Artigos gratuitos e novidades"}</small></div><b aria-hidden="true">→</b></Link>
+   <div><p className={styles.heroEyebrow}>BEM-VINDO AO SEU ESPAÇO</p><h1>Olá, {display}.</h1><p>Que bom ter você por aqui! Este é o seu espaço para acompanhar seus diagnósticos, acessar os materiais que adquiriu e consultar as novidades da sua assinatura. Tudo organizado para você continuar de onde parou.</p></div>
   </section>
   <section className={styles.section} id="meus-acessos"><div className={styles.sectionTop}><div><p className={styles.kicker}>CONTINUE DE ONDE PAROU</p><h2>Seu espaço, suas próximas ações</h2></div></div>
    {pending>0&&<div className={styles.attention}><div><strong>Você tem {pending} diagnóstico(s) aguardando informações</strong><p>Confira as solicitações para dar continuidade à análise.</p></div><Link href="/painel/diagnosticos">Ver pendências →</Link></div>}
