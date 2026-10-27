@@ -12,14 +12,15 @@ export async function saveFiscalArticle(data: FormData) {
   const summary=read("summary",600),body=read("body",60000);
   const category=read("category",80),visibility=read("visibility",30),status=read("status",30);
   const source_links=read("source_links",4000);
+  const delivery_type=read("delivery_type",30);
   const seo_title=read("seo_title",180)||null, seo_description=read("seo_description",320)||null;
-  if (!title || !summary || !body || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || !category || !["public","subscriber"].includes(visibility) || !["draft","published"].includes(status)) {
+  if (!title || !summary || !body || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || !category || !["public","subscriber"].includes(visibility) || !["draft","published"].includes(status) || !["radar","oficina","biblioteca","checklist"].includes(delivery_type)) {
     redirect("/torre/conteudos?erro=dados");
   }
   const db=getSupabaseAdmin();
   const {data:validCategory,error:categoryError}=await db.from("fiscal_categories").select("id").eq("name",category).maybeSingle();
   if(categoryError||!validCategory)redirect("/torre/conteudos?erro=categoria");
-  const payload={ title,slug,summary,body,category,visibility,status,source_links,seo_title,seo_description,
+  const payload={ title,slug,summary,body,category,visibility,status,source_links,seo_title,seo_description,delivery_type,
     updated_at:new Date().toISOString() };
   if (id) {
     // Registrar a data de primeira publicação ao mudar de rascunho para publicado.
