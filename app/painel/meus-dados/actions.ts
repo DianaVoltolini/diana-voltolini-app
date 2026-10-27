@@ -2,7 +2,8 @@
 import {createClient} from "@/lib/supabase/server";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 
-export async function saveCustomerDetails(form:FormData):Promise<{ok:boolean;message:string}>{
+type ContactFields={phone:string;zip_code:string;street:string;number:string;complement:string;neighborhood:string;city:string;state:string};
+export async function saveCustomerDetails(form:FormData):Promise<{ok:boolean;message:string;details?:ContactFields}>{
  try{
   const client=await createClient();
   const {data,error}=await client.auth.getClaims();
@@ -16,12 +17,12 @@ export async function saveCustomerDetails(form:FormData):Promise<{ok:boolean;mes
   if(state && !/^(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)$/.test(state))return {ok:false,message:"Informe uma UF válida."};
   if(fields.some(k=>raw[k].length>180))return {ok:false,message:"Um dos campos excede o tamanho permitido."};
   const db=getSupabaseAdmin();
-  const {error:saveError}=await db.from("customer_contact_details").upsert({user_id:userId,...raw,phone,zip_code:zip,state,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+  const {data:savedDetails,error:saveError}=await db.from("customer_contact_details").upsert({user_id:userId,...raw,phone,zip_code:zip,state,updated_at:new Date().toISOString()},{onConflict:"user_id"}).select("phone,zip_code,street,number,complement,neighborhood,city,state").single();
   if(saveError){
    console.error("Falha ao salvar customer_contact_details",saveError.code);
    return {ok:false,message:"Não foi possível salvar os dados. Tente novamente ou entre em contato com o suporte."};
   }
-  return {ok:true,message:"Dados atualizados com sucesso."};
+  return {ok:true,message:"Dados atualizados com sucesso.",details:savedDetails as ContactFields};
  }catch(error){
   console.error("Erro na atualização do cadastro",error);
   return {ok:false,message:"Ocorreu um erro ao salvar. Seus dados anteriores foram preservados."};
