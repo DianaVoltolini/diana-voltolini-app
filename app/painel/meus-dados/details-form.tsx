@@ -1,5 +1,5 @@
 "use client";
-import {useState, type FormEvent} from "react";
+import {useEffect,useState, type FormEvent} from "react";
 import {saveCustomerDetails} from "./actions";
 type Info={phone:string;zip_code:string;street:string;number:string;complement:string;neighborhood:string;city:string;state:string};
 const initial={ok:false,message:""};
@@ -10,6 +10,36 @@ export default function DetailsForm({details}:{details:Info}){
  const [values,setValues]=useState<Info>(details);
  const [state,setState]=useState(initial);
  const [pending,setPending]=useState(false);
+ const [cepLoading,setCepLoading]=useState(false);
+ const [cepMessage,setCepMessage]=useState("");
+ useEffect(()=>{
+  const zip=values.zip_code.replace(/\D/g,"");
+  if(!editing||zip.length!==8||zip===saved.zip_code.replace(/\D/g,"")){
+   setCepLoading(false);
+   setCepMessage("");
+   return;
+  }
+  const controller=new AbortController();
+  const timer=setTimeout(async()=>{
+   setCepLoading(true);
+   setCepMessage("");
+   try{
+    const response=await fetch(`https://viacep.com.br/ws/${zip}/json/`,{signal:controller.signal});
+    if(!response.ok)throw new Error("CEP indisponível");
+    const address=await response.json() as {erro?:boolean;logradouro?:string;bairro?:string;localidade?:string;uf?:string};
+    if(controller.signal.aborted)return;
+    if(address.erro){setCepMessage("CEP não encontrado. Confira os números informados.");return;}
+    setValues(previous=>{
+     if(previous.zip_code.replace(/\D/g,"")!==zip)return previous;
+     return {...previous,street:address.logradouro??"",neighborhood:address.bairro??"",city:address.localidade??"",state:address.uf??"",number:"",complement:""};
+    });
+    setCepMessage("Endereço localizado. Preencha o número e o complemento, se houver.");
+   }catch(error){
+    if(!controller.signal.aborted)setCepMessage("Não foi possível consultar o CEP. Preencha o endereço manualmente.");
+   }finally{if(!controller.signal.aborted)setCepLoading(false);}
+  },350);
+  return ()=>{clearTimeout(timer);controller.abort();};
+ },[editing,values.zip_code,saved.zip_code]);
  const submit=async(event:FormEvent<HTMLFormElement>)=>{
   event.preventDefault();
   if(pending)return;
@@ -38,6 +68,7 @@ export default function DetailsForm({details}:{details:Info}){
   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:14}}>
    {fields.map(([key,label])=><label key={key} style={{display:"grid",gap:6,fontSize:13,color:"#425569",fontWeight:650}}>{label}<input name={key} value={formatField(key,values[key])} onChange={e=>{const value=(key==="phone"||key==="zip_code")?e.currentTarget.value.replace(/\D/g,""):e.currentTarget.value;setValues(previous=>({...previous,[key]:value}));}} readOnly={!editing} maxLength={180} style={{padding:"12px 13px",border:"1px solid #d7e0e9",borderRadius:7,background:editing?"#fff":"#f5f7fa",color:"#0d1b2a",fontSize:14}}/></label>)}
   </div>
+  {editing&&(cepLoading||cepMessage)&&<p role="status" style={{fontSize:12,color:cepMessage.includes("não")||cepMessage.includes("Não")?"#ad3939":"#57687a",margin:0}}>{cepLoading?"Consultando CEP...":cepMessage}</p>}
   {state.message&&<p role="status" style={{color:state.ok?"#22663e":"#a33434",fontSize:13}}>{state.message}</p>}
   {editing&&<div style={{display:"flex",gap:10}}><button type="submit" disabled={pending} style={{background:"#c9a227",color:"#0d1b2a",border:0,borderRadius:7,padding:"12px 22px",fontWeight:750,cursor:"pointer"}}>{pending?"Salvando...":"Salvar alterações"}</button><button type="button" onClick={()=>{setValues(saved);setEditing(false);setState(initial);}} style={{padding:"12px 16px",border:"1px solid #d7e0e9",borderRadius:7,background:"#fff"}}>Cancelar</button></div>}
  </form>;
