@@ -16,7 +16,7 @@ export default function CustomerSidebar({diagnostics,subscriber,ebooks}:Props){
     <p className={styles.group}>MINHAS COMPRAS</p>
     {diagnostics&&link("/painel/diagnosticos","Diagnósticos","Serviços contratados")}
     {ebooks&&link("/painel/ebooks","E-books","Materiais adquiridos")}
-    {subscriber&&link("/painel/assinatura","Fiscal na Prática","Minha assinatura")}
+    {subscriber&&<><p className={styles.group}>FISCAL NA PRÁTICA</p>{link("/painel/assinatura","Minha assinatura","Visão geral e pesquisa")}{link("/painel/assinatura?entrega=radar","Radar Fiscal")}{link("/painel/assinatura?entrega=oficina","Oficina Fiscal")}{link("/painel/assinatura?entrega=biblioteca","Biblioteca exclusiva")}{link("/painel/assinatura?entrega=checklist","Checklists")}</>}
     {!diagnostics&&!ebooks&&!subscriber&&<p className={styles.empty}>Nenhuma compra liberada no momento.</p>}
     <p className={styles.group}>OUTROS PRODUTOS</p>
     {!diagnostics&&<Link className={styles.link} href="/painel/diagnosticos">Diagnóstico IBS/CBS <small>Conhecer →</small></Link>}
