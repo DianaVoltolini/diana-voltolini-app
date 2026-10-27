@@ -5,6 +5,7 @@ import {getSupabaseAdmin} from "@/lib/supabase/admin";
 import DetailsForm from "./details-form";
 import {getFiscalAccess} from "@/lib/fiscal/subscription-access";
 import styles from "./meus-dados.module.css";
+import ProductPage from "../product-page";
 export const metadata:Metadata={title:"Meus Dados | Diana Voltolini",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
 type Address={zipCode?:string;street?:string;number?:string;complement?:string;neighborhood?:string;city?:string;state?:string};
@@ -38,16 +39,15 @@ export default async function MyDataPage(){
  const codes=new Map((products??[]).map(p=>[p.id,p.code]));
  const purchased=Array.from(new Map((orders??[]).filter(o=>o.status==="paid").map(o=>[o.product_id,o])).values());
  const purchaseStatus=(id:string)=>{const code=(codes.get(id)??"").toUpperCase();if(code.includes("ASSINATURA")||code.includes("FISCAL-001"))return subscriptionStatus;if(code.includes("EBOOK")||code.includes("E-BOOK"))return "Disponível";if(code.includes("DIAGNOSTICO")||code.includes("DIAGNÓSTICO")||code==="DE001")return diagnosticStatus;return "Disponível";};
- return <main className={styles.page}><div className={styles.container}>
-  <header className={styles.heading}><p>MINHA CONTA</p><h1>Meus Dados</h1><span>Consulte seu cadastro e os produtos que você adquiriu.</span></header>
-  <section className={styles.panel}><h2 style={{fontSize:21,margin:0}}>Identificação</h2><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))",gap:14}}>
+ return <ProductPage title="Meus Dados" description="Consulte e atualize seu cadastro e acompanhe os produtos que você adquiriu."><div className={styles.container}>
+  <section className={styles.panel}><div className={styles.sectionHeader}><div><span>SEU CADASTRO</span><h2>Identificação</h2></div><span className={styles.locked}>Dados protegidos</span></div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))",gap:14}}>
    {[["Nome / razão social",order?.customer_name??profile?.full_name??"Não informado"],["CPF/CNPJ",order?.customer_document?formatCpfCnpj(order.customer_document):"Não informado"],["E-mail",typeof data?.claims?.email==="string"?data.claims.email:order?.customer_email??"Não informado"]].map(([label,value])=><div key={label} style={{display:"grid",gap:7}}><span style={{fontSize:13,color:"#66788a"}}>{label}</span><div style={{border:"1px solid #e3e8ef",background:"#f5f7fa",padding:"12px",borderRadius:7,overflowWrap:"anywhere"}}>{value}</div></div>)}</div><p style={{fontSize:12,color:"#66788a",margin:0}}>E-mail e CPF/CNPJ são protegidos e não podem ser alterados por esta página.</p></section>
-  <section className={styles.panel}><DetailsForm details={details}/></section>
+  <section className={styles.panel}><div className={styles.accentLine} aria-hidden="true"/><DetailsForm details={details}/></section>
   <section className={styles.panel}>
     <div className={styles.sectionHeader}><div><span>HISTÓRICO</span><h2>Minhas compras</h2></div><small>{purchased.length} {purchased.length===1?"produto adquirido":"produtos adquiridos"}</small></div>
     {purchased.length?<div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Produto / serviço</th><th>Compra</th><th>Valor</th><th>Status</th></tr></thead><tbody>
     {purchased.map(o=>{const status=purchaseStatus(o.product_id);return <tr key={o.id}><td><strong>{names.get(o.product_id)??"Produto contratado"}</strong></td><td>{date(o.created_at)}</td><td>{money(o.amount_cents)}</td><td><span className={status==="Assinatura pendente"||status==="Em andamento"?styles.statusPending:status==="Assinatura cancelada"?styles.statusCanceled:styles.statusActive}>{status}</span></td></tr>})}
     </tbody></table></div>:<p className={styles.empty}>Nenhuma compra confirmada vinculada à sua conta.</p>}
   </section>
- </div></main>;
+ </div></ProductPage>;
 }
