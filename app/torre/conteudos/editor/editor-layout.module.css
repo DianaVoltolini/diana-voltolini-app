@@ -7,3 +7,6 @@
 .toolButton:hover{background:#f5f0e4;border-color:#c9a227}
 .wideSection{width:100%;min-width:0}
 @media(max-width:720px){.mainFields{grid-template-columns:1fr}.toolbar{display:flex;flex-wrap:wrap}.toolButton{width:auto;flex:1 1 95px}}
+
+/* Editorial em duas colunas, com SEO ao lado dos dados principais. */
+.editorColumns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:20px;min-width:0}.editorMain{display:grid;gap:17px;min-width:0}.accessHint{color:#64748b;font-size:12px;margin:-9px 0 0}.editorColumns>section{min-width:0;height:100%;align-content:start}.mainFields{grid-template-columns:repeat(3,minmax(0,1fr))}@media(max-width:900px){.editorColumns{grid-template-columns:1fr}}
