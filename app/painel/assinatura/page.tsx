@@ -8,6 +8,7 @@ import CancelSubscriptionConfirm from "./cancel-confirmation";
 import ProductPage from "../product-page";
 import ProductOffer from "../product-offer";
 import FiscalLibrary from "./fiscal-library";
+import styles from "./subscription-layout.module.css";
 export const metadata:Metadata={title:"Fiscal na Prática | Minha assinatura",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
 export default async function SubscriptionPage(){
@@ -30,15 +31,15 @@ export default async function SubscriptionPage(){
  const nextDate=nextInvoice?.due_date?formatDate(nextInvoice.due_date):access.paidUntil?formatDate(access.paidUntil):null;
  return <ProductPage title="Fiscal na Prática" description="Análises fiscais, materiais e orientações para aplicar na rotina de faturamento.">
 
- <section style={{display:"grid",gap:22}}>
- {!active?<ProductOffer eyebrow="FISCAL NA PRÁTICA · ASSINATURA MENSAL" headline="Informação fiscal que vira ação" lead="Acompanhe as mudanças que impactam notas fiscais, impostos e processos da empresa, com orientações aplicadas à rotina do faturamento." price="R$ 39,90/mês" checkout="https://dianavoltolini.com.br/checkout/assinatura-fiscal" cta="Assinar Fiscal na Prática" features={["Uma análise prática aprofundada por semana","Alertas sobre mudanças fiscais relevantes","Checklists, roteiros e exemplos","Biblioteca exclusiva para assinantes","IBS, CBS, NF-e, ICMS e DIFAL","Material educativo aplicado ao faturamento"]}/>:<div style={{background:"#fff",border:"1px solid #dfe6ed",borderRadius:12,padding:"22px 26px",display:"grid",gap:12}}>
- <div style={{display:"flex",justifyContent:"space-between",gap:22,alignItems:"start",flexWrap:"wrap"}}>
+ <section className={styles.sections}>
+ {!active?<ProductOffer eyebrow="FISCAL NA PRÁTICA · ASSINATURA MENSAL" headline="Informação fiscal que vira ação" lead="Acompanhe as mudanças que impactam notas fiscais, impostos e processos da empresa, com orientações aplicadas à rotina do faturamento." price="R$ 39,90/mês" checkout="https://dianavoltolini.com.br/checkout/assinatura-fiscal" cta="Assinar Fiscal na Prática" features={["Uma análise prática aprofundada por semana","Alertas sobre mudanças fiscais relevantes","Checklists, roteiros e exemplos","Biblioteca exclusiva para assinantes","IBS, CBS, NF-e, ICMS e DIFAL","Material educativo aplicado ao faturamento"]}/>:<div className={styles.subscriptionCard}>
+ <div className={styles.subscriptionGrid}>
  <div>
  <p style={{margin:"0 0 6px",color:"#65758a",fontSize:12,fontWeight:750}}>SUA ASSINATURA · FISCAL NA PRÁTICA</p>
- <p style={{margin:0,fontSize:19,fontWeight:800,color:"#102033"}}>{access.cancellationRequested?"Renovação desativada":access.grace?"Pagamento pendente": "Assinatura ativa"}</p>
+ <p className={styles.statusTitle}>{access.cancellationRequested?"Renovação desativada":access.grace?"Pagamento pendente": "Assinatura ativa"}</p>
  <p style={{margin:"8px 0 0",fontSize:13,color:"#65758a"}}>{access.cancellationRequested&&access.paidUntil?"Acesso disponível até "+formatDate(access.paidUntil):access.grace?"Regularize o pagamento para manter o acesso após a carência.":"Acompanhe suas publicações e informações de cobrança abaixo."}</p>
  </div>
- <div style={{textAlign:"left"}}>
+ <div className={styles.renewalPanel}>
  <p style={{margin:"0 0 6px",fontSize:12,color:"#65758a",fontWeight:750}}>{access.cancellationRequested?"Fim do período pago":nextInvoice?"Próxima cobrança":"Próxima renovação prevista"}</p>
  <strong style={{fontSize:21,color:"#102033"}}>{nextDate??"A confirmar"}</strong>
  <p style={{fontSize:12,color:"#748497",margin:"5px 0 0"}}>{nextInvoice?"Cobrança pendente · "+new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(nextInvoice.amount_cents/100):access.cancellationRequested?"Não serão geradas novas renovações":"Previsão conforme o período pago; cobrança ainda não gerada."}</p>
