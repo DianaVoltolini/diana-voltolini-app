@@ -11,7 +11,7 @@ import FiscalLibrary from "./fiscal-library";
 import styles from "./subscription-layout.module.css";
 export const metadata:Metadata={title:"Fiscal na Prática | Minha assinatura",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
-export default async function SubscriptionPage(){
+export default async function SubscriptionPage({searchParams}:{searchParams:Promise<{entrega?:string}>}){
  const client=await createClient();
  const {data,error}=await client.auth.getClaims();
  const uid=typeof data?.claims?.sub==="string"?data.claims.sub:null;
@@ -19,9 +19,10 @@ export default async function SubscriptionPage(){
  const db=getSupabaseAdmin();
  const [access,{data:articles,error:articlesError}]=await Promise.all([
  getFiscalAccess(uid),
- db.from("fiscal_articles").select("id,slug,title,summary,category,published_at,visibility").eq("status","published").order("published_at",{ascending:false}).limit(100)
+ db.from("fiscal_articles").select("id,slug,title,summary,category,published_at,visibility,delivery_type").eq("status","published").order("published_at",{ascending:false}).limit(100)
  ]);
  const active=access.allowed;
+ const selected=(await searchParams).entrega??"todos";
  const {data:nextInvoices}=access.subscriptionId?await db.from("fiscal_subscription_invoices")
   .select("due_date,status,amount_cents")
   .eq("subscription_id",access.subscriptionId).eq("status","pending")
@@ -47,7 +48,7 @@ export default async function SubscriptionPage(){
  </div>
  {!access.cancellationRequested&&access.paidUntil&&access.subscriptionId&&<div style={{borderTop:"1px solid #ecf0f3",paddingTop:12}}><CancelSubscriptionConfirm paidUntil={access.paidUntil} subscriptionId={access.subscriptionId}/></div>}
  </div>}
- {articlesError?<p role="alert">Não foi possível carregar seus conteúdos.</p>:<FiscalLibrary articles={(articles??[]).filter(a=>active||a.visibility==="public")}/>}
+ {articlesError?<p role="alert">Não foi possível carregar seus conteúdos.</p>:<FiscalLibrary initialDelivery={selected} articles={(articles??[]).filter(a=>active||a.visibility==="public")}/>}
  </section>
  </ProductPage>;
 }
