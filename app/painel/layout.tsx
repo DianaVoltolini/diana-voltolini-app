@@ -83,6 +83,7 @@ export default async function PainelLayout({
   return <div className={styles.shell}>
     <header className={styles.topbar}>
       <a className={styles.brand} href="https://dianavoltolini.com.br" aria-label="Diana Voltolini — voltar ao site"><Image src="/brand/logo-light.png" alt="Diana Voltolini" width={1535} height={538} priority /></a>
+      <details className={styles.mobileTopMenu}><summary aria-label="Abrir menu">☰ Menu</summary><nav aria-label="Menu do cliente"><a href="/painel">Visão geral</a><a href="/painel/meus-dados">Meus Dados</a>{hasDiagnostics&&<a href="/painel/diagnosticos">Diagnósticos</a>}{hasEbook&&<a href="/painel/ebooks">E-books</a>}{hasSubscription&&<a href="/painel/assinatura">Fiscal na Prática</a>}<a href="https://dianavoltolini.com.br/blog">Blog Fiscal</a><form action={logout}><button type="submit">Sair da conta</button></form></nav></details>
       <div className={styles.headerActions}>
         <a className={styles.siteLink} href="https://dianavoltolini.com.br" target="_blank" rel="noopener noreferrer">Visitar site ↗</a>
         <form action={logout}><button className={styles.logout} type="submit">Sair</button></form>
