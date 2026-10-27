@@ -22,7 +22,7 @@ export default function FiscalArticleTable({articles}:Props){
  <label style={{fontSize:12,fontWeight:700}}>Status<select style={{...inputStyle,display:"block",width:"100%",marginTop:7}} value={status} onChange={e=>setStatus(e.target.value)}><option value="all">Todos</option><option value="draft">Rascunho</option><option value="published">Aprovado</option></select></label>
  <label style={{fontSize:12,fontWeight:700}}>Categoria<select style={{...inputStyle,display:"block",width:"100%",marginTop:7}} value={category} onChange={e=>setCategory(e.target.value)}><option value="all">Todas</option>{categories.map(c=><option key={c} value={c}>{c}</option>)}</select></label>
  </div>
- <p style={{fontSize:12,color:"#65758a",margin:"0 0 12px"}}>{filtered.length} {filtered.length===1?"conteúdo encontrado":"conteúdos encontrados"}. Altere acesso e status na linha e clique no ícone de salvar. Aprovado significa publicação imediata para o público selecionado.</p>
+ <p style={{fontSize:12,color:"#65758a",margin:"0 0 12px"}}>{filtered.length} {filtered.length===1?"conteúdo encontrado":"conteúdos encontrados"}. Altere o status na linha e clique em salvar. O acesso é definido automaticamente pelo tipo de entrega.</p>
  <div style={{overflowX:"auto",width:"100%"}}>
  <table style={{width:"100%",borderCollapse:"collapse",background:"#fff",fontSize:14}}>
  <thead><tr style={{textAlign:"left",background:"#f1f5f9",color:"#41546a"}}>
@@ -31,7 +31,7 @@ export default function FiscalArticleTable({articles}:Props){
  <td style={{padding:"16px 12px",borderBottom:"1px solid #e0e7ee",whiteSpace:"nowrap"}}>{date(a.published_at)}</td>
  <td style={{padding:"16px 12px",borderBottom:"1px solid #e0e7ee",minWidth:220}}><strong>{a.title}</strong><small style={{display:"block",color:"#758397",marginTop:6}}>{a.slug}</small></td>
  <td style={{padding:"16px 12px",borderBottom:"1px solid #e0e7ee",minWidth:140}}>{a.category}</td>
- <td style={{padding:"16px 12px",borderBottom:"1px solid #e0e7ee"}}><select form={`quick-${a.id}`} name="visibility" defaultValue={a.visibility} aria-label={`Acesso: ${a.title}`} style={inputStyle}><option value="subscriber">Assinante</option><option value="public">Gratuito</option></select></td>
+ <td style={{padding:"16px 12px",borderBottom:"1px solid #e0e7ee",fontSize:12,color:"#64748b"}}>{a.visibility==="public"?"Gratuito":"Assinantes"}</td>
  <td style={{padding:"16px 12px",borderBottom:"1px solid #e0e7ee"}}><select form={`quick-${a.id}`} name="status" defaultValue={a.status} aria-label={`Status: ${a.title}`} style={inputStyle}><option value="draft">Rascunho</option><option value="published">Aprovado</option></select></td>
  <td style={{padding:"16px 12px",borderBottom:"1px solid #e0e7ee",whiteSpace:"nowrap"}}>
  <form id={`quick-${a.id}`} action={updateFiscalArticleQuick} style={{display:"inline-flex",gap:8,alignItems:"center"}}>
