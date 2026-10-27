@@ -1,5 +1,7 @@
 "use server";
 import {redirect} from "next/navigation";
+import {headers} from "next/headers";
+import {createHash} from "node:crypto";
 import {revalidatePath} from "next/cache";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
@@ -36,6 +38,18 @@ export async function captureLead(f:FormData){
  const db=getSupabaseAdmin();
  const {data:landing}=await db.from("marketing_landings").select("id,status,file_path").eq("slug",slug).eq("status","published").maybeSingle();
  if(!landing?.file_path)redirect("/l/"+slug+"?erro=indisponivel");
+ const h=await headers();
+ const forwarded=h.get("x-forwarded-for")?.split(",")[0]?.trim();
+ const ip=forwarded||h.get("x-real-ip")||"unknown";
+ const digest=(value:string)=>createHash("sha256").update(value).digest("hex");
+ const keys=[
+  {key:"ip:"+digest(ip),max:5},
+  {key:"email:"+digest(landing.id+":"+email),max:3}
+ ];
+ for(const item of keys){
+  const {data:allowed,error:limitError}=await db.rpc("consume_marketing_submission_limit",{p_key:item.key,p_max:item.max,p_window_seconds:900});
+  if(limitError||allowed!==true)redirect("/l/"+slug+"?erro=limite");
+ }
  const newsletter_opt_in=f.get("newsletter")==="yes";
  const {data:existing}=await db.from("marketing_leads").select("id,delivery_token,newsletter_opt_in,newsletter_consented_at").eq("landing_id",landing.id).eq("email",email).maybeSingle();
  const now=new Date().toISOString();
