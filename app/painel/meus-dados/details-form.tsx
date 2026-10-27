@@ -1,18 +1,30 @@
 "use client";
-import {useActionState,useState} from "react";
+import {useState} from "react";
+import {useRouter} from "next/navigation";
 import {saveCustomerDetails} from "./actions";
 type Info={phone:string;zip_code:string;street:string;number:string;complement:string;neighborhood:string;city:string;state:string};
 const initial={ok:false,message:""};
 const formatField=(key:keyof Info,value:string)=>{const n=value.replace(/\D/g,"");if(key==="zip_code")return n.slice(0,8).replace(/^(\d{5})(\d)/,"$1-$2");if(key==="phone"){const x=n.slice(0,11);return x.length>10?x.replace(/^(\d{2})(\d{5})(\d{0,4})$/,"($1) $2-$3"):x.replace(/^(\d{2})(\d{4})(\d{0,4})$/,"($1) $2-$3");}return value;};
 export default function DetailsForm({details}:{details:Info}){
  const [editing,setEditing]=useState(false);
- const [state,action,pending]=useActionState(async(_previous:typeof initial,form:FormData)=>{
-  const result=await saveCustomerDetails(form);
-  if(result.ok)setEditing(false);
-  return result;
- },initial);
+ const router=useRouter();
+ const [state,setState]=useState(initial);
+ const [pending,setPending]=useState(false);
+ const submit=async(event:React.FormEvent<HTMLFormElement>)=>{
+  event.preventDefault();
+  if(pending)return;
+  setPending(true);
+  setState(initial);
+  try{
+   const result=await saveCustomerDetails(new FormData(event.currentTarget));
+   setState(result);
+   if(result.ok){setEditing(false);router.refresh();}
+  }catch{
+   setState({ok:false,message:"Não foi possível concluir o salvamento. Tente novamente."});
+  }finally{setPending(false);}
+ };
  const fields:[keyof Info,string][]=[["phone","Telefone / WhatsApp"],["zip_code","CEP"],["street","Endereço"],["number","Número"],["complement","Complemento"],["neighborhood","Bairro"],["city","Cidade"],["state","UF"]];
- return <form action={action} style={{display:"grid",gap:16}}>
+ return <form onSubmit={submit} style={{display:"grid",gap:16}}>
   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
    <h2 style={{fontSize:21,margin:0}}>Dados de contato e endereço</h2>
    {!editing&&<button type="button" onClick={()=>setEditing(true)} style={{background:"#c9a227",color:"#0d1b2a",border:0,borderRadius:7,padding:"10px 20px",fontWeight:750,cursor:"pointer"}}>Editar</button>}
