@@ -6,7 +6,7 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { saveFiscalArticle } from "../actions";
 import ArticleBodyEditor from "./article-body-editor";
-import SeoEditor from "./seo-editor";
+import ContentAndSeoFields from "./content-and-seo-fields";
 import styles from "../../painel.module.css";
 import layout from "./editor-layout.module.css";
 export const metadata:Metadata={title:"Editar conteúdo | Torre de Controle"};
@@ -32,13 +32,11 @@ export default async function EditorialPage({searchParams}:{searchParams:Promise
  <div className={layout.mainFields}>
  <label>Categoria<select name="category" style={field} required defaultValue={selected?.category??categoryNames[0]??""}>
  {choices.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
+ <label>Tipo de entrega<select name="delivery_type" style={field} required defaultValue={selected?.delivery_type??"geral"}><option value="geral">Conteúdo geral / Blog</option><option value="radar">Radar Fiscal</option><option value="oficina">Oficina Fiscal</option><option value="biblioteca">Biblioteca exclusiva</option><option value="checklist">Checklists</option></select></label>
  <label>Status<select name="status" style={field} defaultValue={selected?.status??"draft"}><option value="draft">Rascunho</option><option value="published">Aprovado para publicação</option></select></label>
  </div>
- <label>Tipo de entrega <small style={{fontWeight:400,color:"#64748b"}}>— Blog: gratuito · Demais entregas: assinantes</small><select name="delivery_type" style={field} required defaultValue={selected?.delivery_type??"geral"}><option value="geral">Conteúdo geral / Blog</option><option value="radar">Radar Fiscal</option><option value="oficina">Oficina Fiscal</option><option value="biblioteca">Biblioteca exclusiva</option><option value="checklist">Checklists</option></select></label>
- <label>Título<input style={field} name="title" required maxLength={180} defaultValue={selected?.title??""}/></label>
- <label>Slug (letras minúsculas, números e hífens)<input style={field} name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" defaultValue={selected?.slug??""} placeholder="ibs-cbs-na-nfe"/></label>
- <label>Resumo<textarea style={field} name="summary" rows={3} required maxLength={600} defaultValue={selected?.summary??""}/></label>
- <SeoEditor title={selected?.title??""} summary={selected?.summary??""} slug={selected?.slug??""} seoTitle={selected?.seo_title??""} seoDescription={selected?.seo_description??""}/>
+ <p className={layout.accessHint}>Blog: acesso gratuito · Radar, Oficina, Biblioteca e Checklists: exclusivos para assinantes.</p>
+ <ContentAndSeoFields title={selected?.title??""} summary={selected?.summary??""} slug={selected?.slug??""} seoTitle={selected?.seo_title??""} seoDescription={selected?.seo_description??""}/>
  <ArticleBodyEditor initial={selected?.body??""}/>
  <label>Fontes oficiais / URLs<textarea style={field} name="source_links" rows={3} defaultValue={selected?.source_links??""} placeholder="Uma URL por linha"/></label>
  <button className={styles.openLink} style={{cursor:"pointer",justifySelf:"start"}} type="submit">Salvar conteúdo</button>
