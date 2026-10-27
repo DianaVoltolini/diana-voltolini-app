@@ -676,3 +676,34 @@
     justify-content: space-between;
   }
 }
+/* Diagnóstico: jornada vertical em dispositivos móveis, sem rolagem lateral. */
+@media (max-width: 760px) {
+  .journeyBlock { padding: 22px 18px 25px; }
+  .journeyHeader { gap: 6px; margin-bottom: 22px; }
+  .journeyHeader small { font-size: .75rem; line-height: 1.5; }
+  .journey {
+    overflow: visible;
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding-left: 6px;
+  }
+  .journeyStep {
+    grid-template-columns: 34px minmax(0, 1fr);
+    justify-items: start;
+    align-items: center;
+    column-gap: 15px;
+    min-height: 61px;
+    padding: 5px 0;
+    text-align: left;
+  }
+  .journeyStep > span { grid-column: 1; grid-row: 1; }
+  .journeyStep strong { grid-column: 2; grid-row: 1; font-size: .82rem; line-height: 1.4; }
+  .journeyStep:not(:last-child)::after {
+    top: 39px;
+    left: 15px;
+    width: 2px;
+    height: calc(100% - 30px);
+  }
+  .factCard { padding: 15px 18px; }
+  .factCard > span { min-height: 0; }
+}
