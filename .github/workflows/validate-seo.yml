@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feat/blog-seo-fields-20261026
+      - feature/landing-leads-20261027
   workflow_dispatch:
 
 permissions:
