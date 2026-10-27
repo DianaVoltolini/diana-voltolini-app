@@ -1,5 +1,5 @@
 "use client";
-import {useState} from "react";
+import {useState, type FormEvent} from "react";
 import {useRouter} from "next/navigation";
 import {saveCustomerDetails} from "./actions";
 type Info={phone:string;zip_code:string;street:string;number:string;complement:string;neighborhood:string;city:string;state:string};
@@ -10,7 +10,7 @@ export default function DetailsForm({details}:{details:Info}){
  const router=useRouter();
  const [state,setState]=useState(initial);
  const [pending,setPending]=useState(false);
- const submit=async(event:React.FormEvent<HTMLFormElement>)=>{
+ const submit=async(event:FormEvent<HTMLFormElement>)=>{
   event.preventDefault();
   if(pending)return;
   setPending(true);
