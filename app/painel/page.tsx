@@ -46,6 +46,6 @@ export default async function PainelPage(){
     {!hasPurchases&&<div className={styles.empty}><h3>Seu portal está pronto</h3><p>Comece explorando os materiais fiscais gratuitos ou conheça os produtos e serviços disponíveis.</p><Link href="/painel/assinatura">Explorar biblioteca fiscal →</Link></div>}
    </div>
   </section>
-  <section className={styles.section}><div className={styles.sectionTop}><div><p className={styles.kicker}>CONHECIMENTO FISCAL</p><h2>Explore o Blog Fiscal</h2><p>Conteúdos gratuitos sobre Reforma Tributária, NF-e, impostos e faturamento.</p></div></div><div className={styles.blogInvite}><div><strong>Quer continuar se atualizando?</strong><p>Visite nosso blog e encontre orientações práticas e publicações para consultar sempre que precisar.</p></div><a href="https://dianavoltolini.com.br/blog" target="_blank" rel="noopener noreferrer">Acessar Blog Fiscal →</a></div></section>
+  {!access.allowed&&<section className={styles.section}><div className={styles.sectionTop}><div><p className={styles.kicker}>CONHECIMENTO FISCAL</p><h2>Explore o Blog Fiscal</h2><p>Conteúdos gratuitos sobre Reforma Tributária, NF-e, impostos e faturamento.</p></div></div><div className={styles.blogInvite}><div><strong>Quer continuar se atualizando?</strong><p>Visite nosso blog e encontre orientações práticas e publicações para consultar sempre que precisar.</p></div><a href="https://dianavoltolini.com.br/blog" target="_blank" rel="noopener noreferrer">Acessar Blog Fiscal →</a></div></section>}
  </div></main>;
 }
