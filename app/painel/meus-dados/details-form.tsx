@@ -20,7 +20,7 @@ export default function DetailsForm({details}:{details:Info}){
    const result=await saveCustomerDetails(submitted);
    setState(result);
    if(result.ok){
-    const updated={...values};
+    const updated=result.details??{...values};
     setSaved(updated);
     setValues(updated);
     setEditing(false);
@@ -36,7 +36,7 @@ export default function DetailsForm({details}:{details:Info}){
    {!editing&&<button type="button" onClick={()=>setEditing(true)} style={{background:"#c9a227",color:"#0d1b2a",border:0,borderRadius:7,padding:"10px 20px",fontWeight:750,cursor:"pointer"}}>Editar</button>}
   </div>
   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:14}}>
-   {fields.map(([key,label])=><label key={key} style={{display:"grid",gap:6,fontSize:13,color:"#425569",fontWeight:650}}>{label}<input key={editing?"edit-"+key:"view-"+key} name={key} value={formatField(key,values[key])} onChange={e=>{const value=(key==="phone"||key==="zip_code")?e.currentTarget.value.replace(/\D/g,""):e.currentTarget.value;setValues(previous=>({...previous,[key]:value}));}} readOnly={!editing} maxLength={180} style={{padding:"12px 13px",border:"1px solid #d7e0e9",borderRadius:7,background:editing?"#fff":"#f5f7fa",color:"#0d1b2a",fontSize:14}}/></label>)}
+   {fields.map(([key,label])=><label key={key} style={{display:"grid",gap:6,fontSize:13,color:"#425569",fontWeight:650}}>{label}<input name={key} value={formatField(key,values[key])} onChange={e=>{const value=(key==="phone"||key==="zip_code")?e.currentTarget.value.replace(/\D/g,""):e.currentTarget.value;setValues(previous=>({...previous,[key]:value}));}} readOnly={!editing} maxLength={180} style={{padding:"12px 13px",border:"1px solid #d7e0e9",borderRadius:7,background:editing?"#fff":"#f5f7fa",color:"#0d1b2a",fontSize:14}}/></label>)}
   </div>
   {state.message&&<p role="status" style={{color:state.ok?"#22663e":"#a33434",fontSize:13}}>{state.message}</p>}
   {editing&&<div style={{display:"flex",gap:10}}><button type="submit" disabled={pending} style={{background:"#c9a227",color:"#0d1b2a",border:0,borderRadius:7,padding:"12px 22px",fontWeight:750,cursor:"pointer"}}>{pending?"Salvando...":"Salvar alterações"}</button><button type="button" onClick={()=>{setValues(saved);setEditing(false);setState(initial);}} style={{padding:"12px 16px",border:"1px solid #d7e0e9",borderRadius:7,background:"#fff"}}>Cancelar</button></div>}
