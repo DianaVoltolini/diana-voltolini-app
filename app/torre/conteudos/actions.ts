@@ -10,11 +10,12 @@ export async function saveFiscalArticle(data: FormData) {
   const id=read("id",40);
   const title=read("title",180),slug=read("slug",160).toLowerCase();
   const summary=read("summary",600),body=read("body",60000);
-  const category=read("category",80),visibility=read("visibility",30),status=read("status",30);
+  const category=read("category",80),status=read("status",30);
   const source_links=read("source_links",4000);
   const delivery_type=read("delivery_type",30);
+  const visibility=delivery_type==="geral"?"public":"subscriber";
   const seo_title=read("seo_title",180)||null, seo_description=read("seo_description",320)||null;
-  if (!title || !summary || !body || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || !category || !["public","subscriber"].includes(visibility) || !["draft","published"].includes(status) || !["geral","radar","oficina","biblioteca","checklist"].includes(delivery_type)) {
+  if (!title || !summary || !body || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || !category || !["draft","published"].includes(status) || !["geral","radar","oficina","biblioteca","checklist"].includes(delivery_type)) {
     redirect("/torre/conteudos?erro=dados");
   }
   const db=getSupabaseAdmin();
@@ -41,17 +42,16 @@ export async function saveFiscalArticle(data: FormData) {
 export async function updateFiscalArticleQuick(data: FormData) {
   await requireAdmin();
   const id=String(data.get("id")??"");
-  const visibility=String(data.get("visibility")??"");
   const status=String(data.get("status")??"");
   if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
-    || !["public","subscriber"].includes(visibility)
     || !["draft","published"].includes(status)) {
     redirect("/torre/conteudos?erro=dados");
   }
   const db=getSupabaseAdmin();
   const {data:existing,error:readError}=await db.from("fiscal_articles")
-    .select("id,published_at,status").eq("id",id).maybeSingle();
+    .select("id,published_at,status,delivery_type").eq("id",id).maybeSingle();
   if(readError||!existing)redirect("/torre/conteudos?erro=salvar");
+  const visibility=existing.delivery_type==="geral"?"public":"subscriber";
   const now=new Date().toISOString();
   const published_at=status==="published" ? (existing.published_at??now) : existing.published_at;
   const {error}=await db.from("fiscal_articles")
