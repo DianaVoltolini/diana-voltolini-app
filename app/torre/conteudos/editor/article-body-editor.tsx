@@ -33,6 +33,21 @@ function autoFormatFiscal(source:string){
 export default function ArticleBodyEditor({initial}:Props){
  const [body,setBody]=useState(initial);
  const [preview,setPreview]=useState(false);
+ const [proposal,setProposal]=useState<string|null>(null);
+ const [formatting,setFormatting]=useState(false);
+ const [formatError,setFormatError]=useState("");
+ async function formatWithAI(){
+  if(formatting)return;
+  setFormatting(true);setFormatError("");setProposal(null);
+  try{
+   const res=await fetch("/api/torre/conteudos/formatar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({body})});
+   const data=await res.json() as {formatted?:string;error?:string};
+   if(!res.ok||!data.formatted)throw new Error(data.error||"Falha ao preparar a formatação.");
+   setProposal(data.formatted);setPreview(false);
+  }catch(error){setFormatError(error instanceof Error?error.message:"Não foi possível preparar a formatação.");}
+  finally{setFormatting(false)}
+ }
+
  function applyFormat(prefix:string,suffix=""){
   const el=document.getElementById("fiscal-editor-body") as HTMLTextAreaElement|null;
   if(!el)return;
@@ -67,9 +82,22 @@ export default function ArticleBodyEditor({initial}:Props){
     <button type="button" onClick={()=>insertEditorialBlock("checklist")} className={layout.toolButton}>Checklist</button>
     <button type="button" onClick={()=>insertEditorialBlock("conclusao")} className={layout.toolButton}>Conclusão</button>
    </div>
-   <p style={{fontSize:12,color:"#607184",margin:0}}>Clique em Formatar e visualizar para organizar automaticamente as seções reconhecidas. Os botões acima ficam disponíveis para ajustes manuais. Confira a prévia antes de salvar.</p>
-   <textarea id="fiscal-editor-body" name="body" rows={17} required value={body} onChange={e=>{setBody(e.target.value);setPreview(false)}} style={{...field,marginTop:0,lineHeight:1.65}} placeholder="Cole aqui o texto do conteúdo..." />
-   <button type="button" onClick={()=>{if(preview){setPreview(false);return}setBody(current=>autoFormatFiscal(current));setPreview(true)}} style={{justifySelf:"start",padding:"11px 16px",background:"#f5edda",border:"1px solid #d8bc70",borderRadius:7,cursor:"pointer",fontWeight:800,color:"#76570a"}}>{preview?"Ocultar prévia":"Formatar e visualizar"}</button>
+   <p style={{fontSize:12,color:"#607184",margin:0}}>A IA prepara uma prévia para revisão, sem alterar o texto original. Os botões manuais permanecem disponíveis.</p>
+   <textarea id="fiscal-editor-body" name="body" rows={17} required value={body} onChange={e=>{setBody(e.target.value);setPreview(false);setProposal(null);setFormatError("")}} style={{...field,marginTop:0,lineHeight:1.65}} placeholder="Cole aqui o texto do conteúdo..." />
+   <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+    <button type="button" onClick={formatWithAI} disabled={formatting} style={{padding:"11px 16px",background:"#c9a227",border:0,borderRadius:7,cursor:"pointer",fontWeight:800,color:"#102033"}}>{formatting?"Preparando formatação…":"Formatar e visualizar com IA"}</button>
+    <button type="button" onClick={()=>setPreview(v=>!v)} style={{padding:"11px 16px",background:"#f5edda",border:"1px solid #d8bc70",borderRadius:7,cursor:"pointer",fontWeight:800,color:"#76570a"}}>{preview?"Ocultar prévia original":"Visualizar texto atual"}</button>
+   </div>
+   {formatError&&<p role="alert" style={{color:"#b42318"}}>{formatError}</p>}
+   {proposal!==null&&<section style={{display:"grid",gap:15,border:"1px solid #e2e8ee",borderRadius:10,padding:20,background:"#fff"}}>
+    <strong style={{fontSize:13,color:"#896813"}}>PRÉVIA GERADA — CONFIRA AS INFORMAÇÕES FISCAIS ANTES DE APLICAR</strong>
+    <p style={{fontSize:12,color:"#607184"}}>O texto original continua no editor. Verifique códigos, valores, datas, tabelas e referências. Apenas Aplicar formatação substitui o texto do editor; Salvar conteúdo continua sendo necessário.</p>
+    <div style={{maxHeight:560,overflow:"auto",border:"1px solid #e2e8ee",padding:18,borderRadius:8}}><FiscalRichText body={proposal}/></div>
+    <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+     <button type="button" onClick={()=>{setBody(proposal);setProposal(null);setPreview(true)}} style={{background:"#c9a227",border:0,borderRadius:7,padding:"11px 16px",fontWeight:800,cursor:"pointer"}}>Aplicar formatação ao editor</button>
+     <button type="button" onClick={()=>setProposal(null)} style={{background:"#fff",border:"1px solid #cad5e0",borderRadius:7,padding:"11px 16px",cursor:"pointer"}}>Descartar prévia</button>
+    </div>
+   </section>}
    {preview&&<section aria-label="Pré-visualização do conteúdo" style={{background:"#fff",padding:"24px",border:"1px solid #e2e8ee",borderRadius:10}}><strong style={{display:"block",fontSize:12,color:"#96710d",letterSpacing:1,marginBottom:22}}>PRÉ-VISUALIZAÇÃO · COMO O LEITOR VERÁ</strong><FiscalRichText body={body}/></section>}
  </div>
 }
