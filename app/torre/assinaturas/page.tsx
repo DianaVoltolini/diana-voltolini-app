@@ -9,19 +9,40 @@ const date=(v:string|null)=>v?new Intl.DateTimeFormat("pt-BR",{timeZone:"America
 export default async function AssinaturasPage(){
  await requireAdmin();
  const db=getSupabaseAdmin();
- const [{data:rows,error},{data:profiles}]=await Promise.all([
+ const [{data:rows,error},{data:profiles},{data:invoices,error:invoiceError}]=await Promise.all([
  db.from("fiscal_subscriptions").select("id,user_id,status,paid_until,renewal_enabled,cancellation_requested_at,billing_day,created_at").order("created_at",{ascending:false}).limit(300),
- db.from("profiles").select("id,full_name,email").limit(1000)
+ db.from("profiles").select("id,full_name,email").limit(1000),
+ db.from("fiscal_subscription_invoices").select("*").order("due_date",{ascending:false}).limit(2000)
  ]);
  const items=rows??[],users=new Map((profiles??[]).map(u=>[u.id,u]));
+ const invoicesBySubscription=new Map<string,typeof invoices>();
+ for(const invoice of invoices??[]){
+  const id=String(invoice.subscription_id??"");
+  const group=invoicesBySubscription.get(id)??[];
+  group.push(invoice);
+  invoicesBySubscription.set(id,group);
+ }
+ const paymentDate=(x:(typeof items)[number])=>{
+  const paid=(invoicesBySubscription.get(x.id)??[]).filter(i=>i.status==="paid");
+  const values=paid.map(i=>String(i.paid_at??i.paid_on??i.payment_confirmed_at??"")).filter(Boolean).sort();
+  return values[0]?date(values[0]):"Não identificado";
+ };
+ const charge=(x:(typeof items)[number])=>{
+  const pending=(invoicesBySubscription.get(x.id)??[]).filter(i=>i.status==="pending");
+  if(!pending.length)return "Não emitida";
+  const target=x.paid_until?new Date(x.paid_until).getTime():null;
+  const upcoming=pending.find(i=>target!==null&&Math.abs(new Date(String(i.due_date)).getTime()-target)<86400000*4);
+  return upcoming?"Emitida · pendente":"Pendente de outro período";
+ };
  const active=items.filter(x=>x.status==="active"&&x.renewal_enabled===true);
  const canceled=items.filter(x=>x.renewal_enabled===false);
  return <main className={styles.page}><section className={styles.content}><div className="container">
  <header className={styles.pageHeader}><div><p className={styles.eyebrow}>SERVIÇOS</p><h1>Assinatura Recorrente</h1><p>Acompanhe assinantes, vigência, renovação e cancelamentos do Fiscal na Prática.</p></div></header>
+ {invoiceError&&<p className={styles.errorMessage}>Não foi possível consultar as cobranças. Verifique os dados antes de interpretar os vencimentos.</p>}
  {error?<p className={styles.errorMessage}>Não foi possível consultar assinaturas.</p>:<>
  <section className={styles.summaryGrid}><article><span>Assinaturas</span><strong>{items.length}</strong><small>Registros consultados</small></article><article><span>Ativas com renovação</span><strong>{active.length}</strong><small>Renovação habilitada</small></article><article><span>Renovação desativada</span><strong>{canceled.length}</strong><small>Não gerar novas cobranças</small></article><article><span>Valor mensal por assinatura</span><strong style={{fontSize:28}}>R$ 39,90</strong><small>Preço atual do produto</small></article></section>
- <section className={styles.diagnosticsSection}><header className={styles.sectionHeader}><div><p className={styles.eyebrow}>ACOMPANHAMENTO</p><h2>Assinaturas cadastradas</h2></div></header><div className={styles.tableWrapper}><table className={styles.table}><thead><tr><th>Cliente</th><th>Status</th><th>Próxima data de referência</th><th>Dia de cobrança</th><th>Renovação</th></tr></thead><tbody>
- {items.map(x=><tr key={x.id}><td><strong>{users.get(x.user_id)?.full_name||"Cliente"}</strong><small>{users.get(x.user_id)?.email||"E-mail não localizado"}</small></td><td>{x.status}</td><td>{date(x.paid_until)}</td><td>{x.billing_day??"—"}</td><td>{x.renewal_enabled?"Habilitada":"Desabilitada"}</td></tr>)}
- {!items.length&&<tr><td colSpan={5}>Nenhuma assinatura cadastrada.</td></tr>}</tbody></table></div><p style={{fontSize:12,color:"#657386"}}>A data exibida corresponde ao fim do período pago, não à confirmação de uma nova cobrança. O módulo não executa renovações.</p></section></>}
+ <section className={styles.diagnosticsSection}><header className={styles.sectionHeader}><div><p className={styles.eyebrow}>ACOMPANHAMENTO</p><h2>Assinaturas cadastradas</h2></div></header><div className={styles.tableWrapper}><table className={styles.table}><thead><tr><th>Cliente</th><th>Cliente desde</th><th>Status</th><th>Próximo vencimento</th><th>Cobrança</th><th>Dia de cobrança</th><th>Renovação</th></tr></thead><tbody>
+ {items.map(x=><tr key={x.id}><td><strong>{users.get(x.user_id)?.full_name||"Cliente"}</strong><small>{users.get(x.user_id)?.email||"E-mail não localizado"}</small></td><td>{paymentDate(x)}</td><td>{x.status==="active"?"Ativa":x.status==="canceled"?"Cancelada":x.status==="pending"?"Pendente":x.status}</td><td>{date(x.paid_until)}<small>{charge(x)==="Não emitida"?"Previsão do fim do período pago":""}</small></td><td>{charge(x)}</td><td>{x.billing_day??"—"}</td><td>{x.renewal_enabled?"Habilitada":"Desabilitada"}</td></tr>)}
+ {!items.length&&<tr><td colSpan={7}>Nenhuma assinatura cadastrada.</td></tr>}</tbody></table></div><p style={{fontSize:12,color:"#657386"}}>Próximo vencimento usa o fim do período pago como referência quando não há cobrança correspondente. Cliente desde apresenta a primeira data de pagamento confirmada registrada nas cobranças. O módulo não gera renovações.</p></section></>}
  </div></section></main>;
 }
