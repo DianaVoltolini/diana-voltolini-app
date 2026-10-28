@@ -30,12 +30,35 @@ function isPlainSectionHeading(value:string){
  if(value.length>115||!value.endsWith("?")||value.includes("  ")||value.includes("\t"))return false;
  return /^(?:O que|Qual(?: é| a| o| são|quer)?|Quais|Como|Por que|Quando|Quem|E quanto|Para que|Em que|Há|Existe|Quais são)\b/i.test(value);
 }
+
+type EditorialKind="atencao"|"exemplo"|"checklist"|"conclusao";
+const editorialLabels:Record<EditorialKind,string>={
+ atencao:"PONTO DE ATENÇÃO",exemplo:"EXEMPLO PRÁTICO",checklist:"CHECKLIST DE CONFERÊNCIA",conclusao:"CONCLUSÃO"
+};
+function isEditorialKind(value:string):value is EditorialKind{
+ return value==="atencao"||value==="exemplo"||value==="checklist"||value==="conclusao";
+}
 export default function FiscalRichText({body}:{body:string}){
  const lines=body.replace(/\r\n?/g,"\n").split("\n");
  const elements:ReactNode[]=[];let i=0;
  while(i<lines.length){
   const value=lines[i].trim();if(!value){i++;continue}
   const key=i;
+  const blockStart=value.match(/^:::([a-z]+)$/);
+  if(blockStart&&isEditorialKind(blockStart[1])){
+   const blockKind=blockStart[1];
+   let end=i+1;
+   while(end<lines.length&&lines[end].trim()!==":::")end++;
+   if(end<lines.length){
+    const content=lines.slice(i+1,end).join("\n").trim();
+    const background=blockKind==="conclusao"?"#f2f5f8":"#fbf8f1";
+    elements.push(<section key={key} aria-label={editorialLabels[blockKind]} style={{margin:"25px 0",padding:"20px 23px",borderLeft:"4px solid #c9a227",background,borderRadius:9}}>
+     <p style={{fontSize:12,color:"#9a7413",letterSpacing:1,fontWeight:800,margin:"0 0 12px"}}>{editorialLabels[blockKind]}</p>
+     {content&&<FiscalRichText body={content}/>}
+    </section>);
+    i=end+1;continue;
+   }
+  }
   if(isExampleTableHeader(lines[i])){
    const heads=pastedCells(lines[i])!;
    i++;
