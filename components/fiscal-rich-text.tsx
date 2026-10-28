@@ -51,7 +51,12 @@ export default function FiscalRichText({body}:{body:string}){
    let end=i+1;
    while(end<lines.length&&lines[end].trim()!==":::")end++;
    if(end<lines.length){
-    let innerLines=lines.slice(i+1,end);\n    if(blockKind==="conclusao"){\n     const first=innerLines.findIndex(line=>line.trim().length>0);\n     if(first>=0&&/^(?:#{1,3}\\s*)?Conclus[aã]o\\s*:?[\\s]*$/i.test(innerLines[first].trim()))innerLines=innerLines.filter((_,idx)=>idx!==first);\n    }\n    const content=innerLines.join("\n").trim();
+    let innerLines=lines.slice(i+1,end);
+    if(blockKind==="conclusao"){
+     const first=innerLines.findIndex(line=>line.trim().length>0);
+     if(first>=0&&/^(?:#{1,3}\s*)?Conclus[aã]o\s*:?\s*$/i.test(innerLines[first].trim()))innerLines=innerLines.filter((_,idx)=>idx!==first);
+    }
+    const content=innerLines.join("\n").trim();
 
     elements.push(<section key={key} aria-label={editorialLabels[blockKind]} className={`${styles.block} ${styles[blockKind]}`}>
      <p className={styles.blockLabel}>{editorialLabels[blockKind]}</p>
