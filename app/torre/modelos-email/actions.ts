@@ -17,9 +17,22 @@ export async function saveEmailTemplate(f:FormData){
 }
 export async function saveEmailDraft(f:FormData){
  await requireAdmin();
- const subject=value(f,"subject",180),body=value(f,"body",14000),interest=value(f,"interest",120),template_id=value(f,"template_id",50),landing_id=value(f,"landing_id",50);
+ const id=value(f,"id",50),subject=value(f,"subject",180),body=value(f,"body",14000),interest=value(f,"interest",120),template_id=value(f,"template_id",50),landing_id=value(f,"landing_id",50);
  if(!subject||!body)redirect("/torre/leads/enviar?erro=campos");
- const {error}=await getSupabaseAdmin().from("marketing_email_campaigns").insert({subject,body,interest:interest||null,template_id:template_id||null,landing_id:landing_id||null,status:"draft"});
+ const payload={subject,body,interest:interest||null,template_id:template_id||null,landing_id:landing_id||null};
+ const db=getSupabaseAdmin();
+ const {error}=id?await db.from("marketing_email_campaigns").update(payload).eq("id",id).eq("status","draft"):await db.from("marketing_email_campaigns").insert({...payload,status:"draft"});
  if(error)redirect("/torre/leads/enviar?erro=salvar");
+ revalidatePath("/torre/leads/enviar");
  redirect("/torre/leads/enviar?salvo=1");
+}
+
+export async function deleteEmailDraft(f:FormData){
+ await requireAdmin();
+ const id=value(f,"id",50);
+ if(!/^[0-9a-f-]{36}$/i.test(id))redirect("/torre/leads/enviar?erro=excluir");
+ const {error}=await getSupabaseAdmin().from("marketing_email_campaigns").delete().eq("id",id).eq("status","draft");
+ if(error)redirect("/torre/leads/enviar?erro=excluir");
+ revalidatePath("/torre/leads/enviar");
+ redirect("/torre/leads/enviar?excluido=1");
 }
