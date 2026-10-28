@@ -74,7 +74,7 @@ export default function FiscalRichText({body}:{body:string}){
    elements.push(<div key={key} className={styles.tableWrap}><table className={styles.table}><thead><tr>{heads.map((c,j)=><th key={j} scope="col" >{inline(c)}</th>)}</tr></thead><tbody>{rows.map((row,j)=><tr key={j}>{heads.map((_,k)=><td key={k} >{inline(row[k]??"")}</td>)}</tr>)}</tbody></table></div>);continue
   }
   const h=value.match(/^(#{1,3})\s+(.+)$/);
-  if(h){const H=h[1].length===1?"h2":h[1].length===2?"h3":"h4";elements.push(<H key={key} className={styles.heading}>{inline(heading(value))}</H>);i++;continue}
+  if(h){const H=h[1].length===1?"h2":h[1].length===2?"h3":"h4";const title=heading(value);const numbered=title.match(/^(\\d{1,2})[.)]\\s+(.+)$/);elements.push(<H key={key} className={numbered?styles.numberedHeading:styles.heading}>{numbered?<><span className={styles.sectionNumber}>{numbered[1].padStart(2,"0")}</span><span>{inline(numbered[2])}</span></>:inline(title)}</H>);i++;continue}
   if(isPlainSectionHeading(value)){
    elements.push(<h3 key={key} className={styles.heading}>{inline(value)}</h3>);
    i++;continue;
@@ -94,7 +94,7 @@ export default function FiscalRichText({body}:{body:string}){
    const ordered=isNumber(value),items:string[]=[];
    while(i<lines.length&&!isChecklist(lines[i])&&(ordered?isNumber(lines[i]):isBullet(lines[i]))){items.push(lines[i].trim().replace(ordered?/^\d+[.)]\s+/:/^[-*•]\s+/,""));i++}
    const li=items.map((it,j)=><li key={j} >{inline(it)}</li>);
-   elements.push(ordered?<ol key={key} className={styles.list}>{li}</ol>:<ul key={key} style={{paddingLeft:27,margin:"15px 0 23px",lineHeight:1.8}}>{li}</ul>);continue
+   elements.push(ordered?<ol key={key} className={`${styles.list} ${styles.orderedList}`}>{li}</ol>:<ul key={key} className={`${styles.list} ${styles.bulletList}`}>{li}</ul>);continue
   }
   i++;
   elements.push(<p key={key} className={styles.paragraph}>{inline(value)}</p>);
