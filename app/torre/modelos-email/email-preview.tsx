@@ -1,6 +1,7 @@
 "use client";
 import {useState} from "react";
 type Props={subjectId:string;bodyId:string};
+const content=(body:string)=>body.split(/(\[BOTAO:\s*[^\]\n]+\s*\|\s*https:\/\/[^\]\s]+\])/g).map((part,i)=>{const match=part.match(/^\[BOTAO:\s*(.+?)\s*\|\s*(https:\/\/[^\]\s]+)\]$/);if(!match)return <span key={i}>{part}</span>;let link:URL;try{link=new URL(match[2])}catch{return <span key={i}>{part}</span>}if(link.hostname!=="dianavoltolini.com.br"&&link.hostname!=="www.dianavoltolini.com.br")return <span key={i}>{part}</span>;return <a key={i} href={link.toString()} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",background:"#c9a227",color:"#102033",padding:"12px 18px",fontWeight:700,textDecoration:"none",borderRadius:6,margin:"8px 0"}}>{match[1].trim()}</a>});
 export default function EmailPreview({subjectId,bodyId}:Props){
  const [open,setOpen]=useState(false);
  const [subject,setSubject]=useState("");
@@ -22,7 +23,7 @@ export default function EmailPreview({subjectId,bodyId}:Props){
     </header>
     <div style={{padding:"clamp(20px,4vw,35px)"}}>
      <h2 style={{font:"bold 25px/1.3 Georgia,serif",color:"#102033",margin:"0 0 23px",overflowWrap:"anywhere"}}>{subject||"Assunto do e-mail"}</h2>
-     <div style={{font:"15px/1.85 Arial,sans-serif",color:"#405266",whiteSpace:"pre-wrap",overflowWrap:"anywhere"}}>{body||"Escreva a mensagem para visualizar."}</div>
+     <div style={{font:"15px/1.85 Arial,sans-serif",color:"#405266",whiteSpace:"pre-wrap",overflowWrap:"anywhere"}}>{content(body||"Escreva a mensagem para visualizar.")}</div>
     </div>
     <footer style={{borderTop:"1px solid #e5eaf0",padding:"19px 25px",background:"#f7f9fb",textAlign:"center"}}>
      <strong style={{fontSize:13,color:"#102033"}}>Diana Voltolini</strong>
