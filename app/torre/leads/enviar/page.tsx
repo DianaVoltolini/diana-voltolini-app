@@ -21,11 +21,12 @@ export default async function EmailCampaign({searchParams}:{searchParams:Promise
  {query.erro&&<p role="alert" style={{color:"#b42318"}}>Não foi possível salvar o rascunho. Confira a migração SQL.</p>}
  <section className={styles.diagnosticsSection}>
  {modelError?<p role="alert">Não foi possível consultar modelos de e-mail.</p>:<form action={saveEmailDraft} style={{display:"grid",gap:15,maxWidth:880}}>
- <label style={{display:"grid",gap:6}}>Modelo
- <select name="template_id" defaultValue={selected?.id??""} style={{padding:12,border:"1px solid #d7e0e9",borderRadius:7}}>
- <option value="">Mensagem personalizada</option>{(models??[]).map(x=><option key={x.id} value={x.id}>{x.name}</option>)}
- </select></label>
- <p style={{fontSize:12,color:"#647381",margin:0}}>Para carregar o texto de um modelo, <Link href="/torre/modelos-email">abra Modelos de E-mail</Link> e selecione o modelo na lista abaixo. A troca de modelo nesta tela altera apenas a associação do rascunho.</p>
+ <div style={{display:"grid",gap:8}}><strong>Escolher modelo</strong>
+ <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+ <Link href="/torre/leads/enviar" style={{padding:"9px 12px",border:"1px solid #d7e0e9",borderRadius:7}}>Mensagem personalizada</Link>
+ {(models??[]).map(x=><Link key={x.id} href={"/torre/leads/enviar?modelo="+x.id} style={{padding:"9px 12px",border:"1px solid #d7e0e9",borderRadius:7,background:selected?.id===x.id?"#fff1d0":"#fff"}}>{x.name}</Link>)}
+ </div><input type="hidden" name="template_id" value={selected?.id??""}/>
+ </div>
  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(230px,1fr))",gap:12}}>
  <label style={{display:"grid",gap:6}}>Interesse
  <select name="interest" style={{padding:12,border:"1px solid #d7e0e9",borderRadius:7}}><option value="">Todos os interesses</option>{unique.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
