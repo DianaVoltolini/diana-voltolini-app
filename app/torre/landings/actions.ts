@@ -31,10 +31,11 @@ export async function saveLanding(f:FormData){
   if(upError||!uploaded)redirect("/torre/landings?erro=capa");
   cover_path=uploaded.path;
  }
+ const removeCover=f.get("remove_cover")==="yes";
  let previousPath:string|null=null;
  if(id){const {data:old}=await db.from("marketing_landings").select("file_path").eq("id",id).maybeSingle();previousPath=old?.file_path??null;}
  if(status==="published"&&!file_path&&!previousPath)redirect("/torre/landings?erro=arquivo");
- const payload={title,slug,summary,eyebrow,button_text,delivery_title,status,campaign_name:safe(f,"campaign_name",120)||null,benefit_1:safe(f,"benefit_1",160)||null,benefit_2:safe(f,"benefit_2",160)||null,benefit_3:safe(f,"benefit_3",160)||null,...(cover_path?{cover_path}:{}),updated_at:new Date().toISOString(),...(file_path?{file_path}:{})};
+ const payload={title,slug,summary,eyebrow,button_text,delivery_title,status,campaign_name:safe(f,"campaign_name",120)||null,benefit_1:safe(f,"benefit_1",160)||null,benefit_2:safe(f,"benefit_2",160)||null,benefit_3:safe(f,"benefit_3",160)||null,...(removeCover&&!cover_path?{cover_path:null}:{}),...(cover_path?{cover_path}:{}),updated_at:new Date().toISOString(),...(file_path?{file_path}:{})};
  const {error}=id?await db.from("marketing_landings").update(payload).eq("id",id):await db.from("marketing_landings").insert(payload);
  if(error)redirect("/torre/landings?erro=salvar");
  revalidatePath("/torre/landings");

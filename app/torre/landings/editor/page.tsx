@@ -25,7 +25,7 @@ export default async function EditLanding({searchParams}:{searchParams:Promise<{
  <label>Benefício 2<input name="benefit_2" maxLength={160} defaultValue={data?.benefit_2??""}/></label>
  <label>Benefício 3<input name="benefit_3" maxLength={160} defaultValue={data?.benefit_3??""}/></label>
  </div>
- <label>Capa da landing (PNG, JPG, WebP ou PDF, máximo 5 MB)<input type="file" name="cover" accept=".png,.jpg,.jpeg,.webp,.pdf,image/png,image/jpeg,image/webp,application/pdf"/>{data?.cover_path&&<small>Capa já cadastrada. Selecione uma nova para substituir.</small>}</label>
+ <label>Capa da landing (PNG, JPG, WebP ou PDF, máximo 5 MB)<input type="file" name="cover" accept=".png,.jpg,.jpeg,.webp,.pdf,image/png,image/jpeg,image/webp,application/pdf"/>{data?.cover_path&&<div style={{display:"flex",alignItems:"center",gap:10,marginTop:8}}><label style={{display:"flex",alignItems:"center",gap:8}}><input type="checkbox" name="remove_cover" value="yes" style={{width:18,height:18}}/>Remover capa atual ao salvar</label><small>Ou selecione outro arquivo para substituir.</small></div>}</label>
  <label>Título da entrega<input name="delivery_title" maxLength={180} defaultValue={data?.delivery_title??"Seu material está pronto"}/></label>
  <label>Material para download — PDF (máximo 10 MB)<input type="file" name="file" accept="application/pdf"/>{data?.file_path&&<small>Arquivo já cadastrado. Envie outro apenas para substituir a entrega nas próximas inscrições.</small>}</label>
  <label>Status<select name="status" defaultValue={data?.status??"draft"}><option value="draft">Rascunho</option><option value="published">Publicada</option></select></label>
