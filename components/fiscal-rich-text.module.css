@@ -33,3 +33,17 @@
 .checkItem{display:flex;align-items:flex-start;gap:12px;background:#f7f9fb;border:1px solid #dce4eb;border-radius:7px;padding:12px 15px;line-height:1.65}
 .checkMark{color:#a17a17;font-size:19px;line-height:1.3}
 @media(max-width:640px){.reader{font-size:14px}.paragraph{font-size:14px;line-height:1.75}.reader .heading{font-size:20px;margin-top:27px}.block{padding:17px;margin:20px 0}.conclusao{padding:21px}.table{font-size:12px}.table th,.table td{padding:10px}.checkItem{padding:10px}}
+
+/* Capítulos e listas com hierarquia visual de publicação editorial. */
+.numberedHeading{display:flex;gap:16px;align-items:flex-start;margin:42px 0 19px;padding-top:23px;border-top:1px solid #e5eaf0;color:#102033;font:700 clamp(21px,2.1vw,27px)/1.32 Georgia,"Times New Roman",serif}
+.sectionNumber{flex:0 0 40px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:9px;background:#f7efdb;color:#947014;font:800 14px/1 Arial,sans-serif}
+.bulletList{list-style:none;display:grid;gap:0;padding:0;margin:19px 0 27px;border:1px solid #e2e7ec;border-left:3px solid #c9a227;border-radius:8px;overflow:hidden;background:#fff}
+.bulletList li{position:relative;margin:0;padding:11px 17px 11px 39px;line-height:1.55;border-bottom:1px solid #edf0f3;color:#35485a}
+.bulletList li:last-child{border-bottom:0}
+.bulletList li::before{content:"";position:absolute;left:19px;top:21px;width:7px;height:7px;border-radius:2px;background:#c49a24}
+.bulletList li:nth-child(even){background:#fafbfc}
+.orderedList{counter-reset:editorialList;list-style:none;padding:0;margin:19px 0 26px;display:grid;gap:8px}
+.orderedList li{counter-increment:editorialList;position:relative;margin:0;padding:10px 14px 10px 52px;min-height:42px;background:#f7f9fb;border:1px solid #e4eaf0;border-radius:7px;line-height:1.55}
+.orderedList li::before{content:counter(editorialList,decimal-leading-zero);position:absolute;left:14px;top:11px;color:#a47e16;font:800 12px/1.7 Arial,sans-serif}
+.checklist .orderedList li{border:0;border-bottom:1px solid #e1e7ed;border-radius:0;background:transparent}
+@media(max-width:640px){.numberedHeading{gap:11px;margin:29px 0 14px;padding-top:17px;font-size:21px}.sectionNumber{flex-basis:33px;width:33px;height:33px;font-size:12px}.bulletList li{padding:10px 12px 10px 33px}.bulletList li::before{left:14px;top:19px}}
