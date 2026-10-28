@@ -20,6 +20,12 @@ export default async function EditLanding({searchParams}:{searchParams:Promise<{
  <label>Texto do botão<input name="button_text" maxLength={100} defaultValue={data?.button_text??"Receber material gratuito"}/></label>
  </div>
  <label>Descrição da oferta<textarea required name="summary" rows={4} maxLength={1000} defaultValue={data?.summary??""}/></label>
+ <div className={styles.grid}>
+ <label>Benefício 1<input name="benefit_1" maxLength={160} defaultValue={data?.benefit_1??""}/></label>
+ <label>Benefício 2<input name="benefit_2" maxLength={160} defaultValue={data?.benefit_2??""}/></label>
+ <label>Benefício 3<input name="benefit_3" maxLength={160} defaultValue={data?.benefit_3??""}/></label>
+ </div>
+ <label>Capa da landing (PNG, JPG, WebP ou PDF, máximo 5 MB)<input type="file" name="cover" accept=".png,.jpg,.jpeg,.webp,.pdf,image/png,image/jpeg,image/webp,application/pdf"/>{data?.cover_path&&<small>Capa já cadastrada. Selecione uma nova para substituir.</small>}</label>
  <label>Título da entrega<input name="delivery_title" maxLength={180} defaultValue={data?.delivery_title??"Seu material está pronto"}/></label>
  <label>Material para download — PDF (máximo 10 MB)<input type="file" name="file" accept="application/pdf"/>{data?.file_path&&<small>Arquivo já cadastrado. Envie outro apenas para substituir a entrega nas próximas inscrições.</small>}</label>
  <label>Status<select name="status" defaultValue={data?.status??"draft"}><option value="draft">Rascunho</option><option value="published">Publicada</option></select></label>
