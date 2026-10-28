@@ -34,7 +34,7 @@ export async function sendMarketingTest(to:string,subject:string,body:string){
  const transport=nodemailer.createTransport({host,port,secure,auth:{user,pass},connectionTimeout:12000,greetingTimeout:12000,socketTimeout:20000});
  try{
   const sent=await transport.sendMail({from:{name:process.env.SMTP_FROM_NAME||"Diana Voltolini",address:from},to,subject:"[TESTE] "+subject,html:renderMarketingEmail(subject,body),text:"[TESTE] "+subject+"\n\n"+body+"\n\nMensagem administrativa de teste."});
-  if(!sent.accepted.some(address=>address.toLowerCase()===to.toLowerCase()))throw new Error("Destinatário não aceito pelo SMTP");
+  if(!sent.accepted.some(address=>(typeof address==="string"?address:address.address).toLowerCase()===to.toLowerCase()))throw new Error("Destinatário não aceito pelo SMTP");
   return sent.messageId;
  }finally{transport.close()}
 }
