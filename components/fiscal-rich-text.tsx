@@ -13,12 +13,31 @@ function cleanChecklist(s:string){return s.trim().replace(/^(?:(?:[-*•]\s*)?\[
 function isChecked(s:string){return /^\s*(?:(?:[-*•]\s*)?\[[xX]\]|[☑✅✔✓])/.test(s)}
 function cells(line:string){return line.trim().replace(/^\|/,"").replace(/\|$/,"").split("|").map(c=>c.trim())}
 function tableSeparator(line:string){return /^\s*\|?\s*:?-{3,}:?(\s*\|\s*:?-{3,}:?)*\s*\|?\s*$/.test(line)}
+
+// Recognizes pasted two-column examples separated by tabs or 2+ spaces.
+// Existing Markdown tables are handled by the original parser below.
+function pastedCells(line:string){
+ const parts=line.trim().split(/\t+| {2,}/).map(x=>x.trim()).filter(Boolean);
+ return parts.length===2?parts:null;
+}
+function isExampleTableHeader(line:string){
+ const parts=pastedCells(line);
+ return !!parts&&/^(informa[cç][aã]o|campo|item)$/i.test(parts[0])&&/^(exemplo|valor|descri[cç][aã]o)$/i.test(parts[1]);
+}
 export default function FiscalRichText({body}:{body:string}){
  const lines=body.replace(/\r\n?/g,"\n").split("\n");
  const elements:ReactNode[]=[];let i=0;
  while(i<lines.length){
   const value=lines[i].trim();if(!value){i++;continue}
   const key=i;
+  if(isExampleTableHeader(lines[i])){
+   const heads=pastedCells(lines[i])!;
+   i++;
+   const rows:string[][]=[];
+   while(i<lines.length&&pastedCells(lines[i])&&rows.length<35){rows.push(pastedCells(lines[i])!);i++}
+   elements.push(<div key={key} style={{overflowX:"auto",margin:"22px 0"}}><table style={{width:"100%",borderCollapse:"collapse",fontSize:14}}><thead><tr>{heads.map((h,j)=><th key={j} scope="col" style={{textAlign:"left",padding:12,background:"#f0f2f3",borderBottom:"2px solid #c9a227"}}>{inline(h)}</th>)}</tr></thead><tbody>{rows.map((row,j)=><tr key={j}>{row.map((v,k)=><td key={k} style={{padding:12,borderBottom:"1px solid #e2e7eb",verticalAlign:"top"}}>{inline(v)}</td>)}</tr>)}</tbody></table></div>);
+   continue;
+  }
   if(value.startsWith("|")&&i+1<lines.length&&tableSeparator(lines[i+1])){
    const heads=cells(lines[i]);i+=2;const rows:string[][]=[];
    while(i<lines.length&&lines[i].trim().startsWith("|")){rows.push(cells(lines[i]));i++}
@@ -43,9 +62,8 @@ export default function FiscalRichText({body}:{body:string}){
    const li=items.map((it,j)=><li key={j} style={{marginBottom:8}}>{inline(it)}</li>);
    elements.push(ordered?<ol key={key} style={{paddingLeft:27,margin:"15px 0 23px",lineHeight:1.8}}>{li}</ol>:<ul key={key} style={{paddingLeft:27,margin:"15px 0 23px",lineHeight:1.8}}>{li}</ul>);continue
   }
-  const para=[value];i++;
-  while(i<lines.length&&lines[i].trim()&&!lines[i].trim().startsWith("#")&&!isBullet(lines[i])&&!isNumber(lines[i])&&!isChecklist(lines[i])&&!lines[i].trim().startsWith("|")){para.push(lines[i].trim());i++}
-  elements.push(<p key={key} style={{fontSize:16,lineHeight:1.9,color:"#405266",margin:"0 0 20px",overflowWrap:"anywhere"}}>{inline(para.join(" "))}</p>);
+  i++;
+  elements.push(<p key={key} style={{fontSize:16,lineHeight:1.9,color:"#405266",margin:"0 0 20px",overflowWrap:"anywhere"}}>{inline(value)}</p>);
  }
  return <div>{elements}</div>;
 }
