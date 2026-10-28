@@ -24,7 +24,7 @@ export default function SendTestEmail({subjectId,bodyId}:{subjectId:string;bodyI
     <input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)} style={{marginTop:3}}/>
     Confirmo o envio de apenas uma mensagem para o endereço informado.
    </label>
-   <button type="submit" disabled={pending||!confirmed} style={{justifySelf:"start",background:"#c9a227",border:0,borderRadius:7,padding:"12px 17px",color:"#102033",fontWeight:800,cursor:"pointer",opacity:pending||!confirmed?.6:1}}>{pending?"Enviando teste…":"Enviar teste"}</button>
+   <button type="submit" onClick={()=>{const subj=(document.getElementById(subjectId) as HTMLInputElement|null)?.value||"";const msg=(document.getElementById(bodyId) as HTMLTextAreaElement|null)?.value||"";if(subjectRef.current)subjectRef.current.value=subj;if(bodyRef.current)bodyRef.current.value=msg;}} disabled={pending||!confirmed} style={{justifySelf:"start",background:"#c9a227",border:0,borderRadius:7,padding:"12px 17px",color:"#102033",fontWeight:800,cursor:"pointer",opacity:pending||!confirmed?.6:1}}>{pending?"Enviando teste…":"Enviar teste"}</button>
   </form>
   {localError&&<p role="alert" style={{color:"#b42318",fontSize:13}}>{localError}</p>}
   {pending&&<p role="status" style={{color:"#647587",fontSize:13}}>Solicitando envio ao servidor SMTP…</p>}
