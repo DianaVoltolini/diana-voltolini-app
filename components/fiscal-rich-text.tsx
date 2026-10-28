@@ -1,4 +1,5 @@
 import type {ReactNode} from "react";
+import styles from "./fiscal-rich-text.module.css";
 
 /** Safe plain-text/Markdown reader. Never injects HTML or changes fiscal calculations. */
 const heading=(s:string)=>s.replace(/^#{1,3}\s+/,"").trim();
@@ -51,9 +52,9 @@ export default function FiscalRichText({body}:{body:string}){
    while(end<lines.length&&lines[end].trim()!==":::")end++;
    if(end<lines.length){
     const content=lines.slice(i+1,end).join("\n").trim();
-    const background=blockKind==="conclusao"?"#f2f5f8":"#fbf8f1";
-    elements.push(<section key={key} aria-label={editorialLabels[blockKind]} style={{margin:"25px 0",padding:"20px 23px",borderLeft:"4px solid #c9a227",background,borderRadius:9}}>
-     <p style={{fontSize:12,color:"#9a7413",letterSpacing:1,fontWeight:800,margin:"0 0 12px"}}>{editorialLabels[blockKind]}</p>
+
+    elements.push(<section key={key} aria-label={editorialLabels[blockKind]} className={`${styles.block} ${styles[blockKind]}`}>
+     <p className={styles.blockLabel}>{editorialLabels[blockKind]}</p>
      {content&&<FiscalRichText body={content}/>}
     </section>);
     i=end+1;continue;
@@ -64,39 +65,39 @@ export default function FiscalRichText({body}:{body:string}){
    i++;
    const rows:string[][]=[];
    while(i<lines.length&&pastedCells(lines[i])&&rows.length<35){rows.push(pastedCells(lines[i])!);i++}
-   elements.push(<div key={key} style={{overflowX:"auto",margin:"22px 0"}}><table style={{width:"100%",borderCollapse:"collapse",fontSize:14}}><thead><tr>{heads.map((h,j)=><th key={j} scope="col" style={{textAlign:"left",padding:12,background:"#f0f2f3",borderBottom:"2px solid #c9a227"}}>{inline(h)}</th>)}</tr></thead><tbody>{rows.map((row,j)=><tr key={j}>{row.map((v,k)=><td key={k} style={{padding:12,borderBottom:"1px solid #e2e7eb",verticalAlign:"top"}}>{inline(v)}</td>)}</tr>)}</tbody></table></div>);
+   elements.push(<div key={key} className={styles.tableWrap}><table className={styles.table}><thead><tr>{heads.map((h,j)=><th key={j} scope="col" >{inline(h)}</th>)}</tr></thead><tbody>{rows.map((row,j)=><tr key={j}>{row.map((v,k)=><td key={k} >{inline(v)}</td>)}</tr>)}</tbody></table></div>);
    continue;
   }
   if(value.startsWith("|")&&i+1<lines.length&&tableSeparator(lines[i+1])){
    const heads=cells(lines[i]);i+=2;const rows:string[][]=[];
    while(i<lines.length&&lines[i].trim().startsWith("|")){rows.push(cells(lines[i]));i++}
-   elements.push(<div key={key} style={{overflowX:"auto",margin:"22px 0"}}><table style={{width:"100%",borderCollapse:"collapse",fontSize:14}}><thead><tr>{heads.map((c,j)=><th key={j} scope="col" style={{textAlign:"left",padding:12,background:"#f0f2f3",borderBottom:"2px solid #c9a227"}}>{inline(c)}</th>)}</tr></thead><tbody>{rows.map((row,j)=><tr key={j}>{heads.map((_,k)=><td key={k} style={{padding:12,borderBottom:"1px solid #e2e7eb",verticalAlign:"top"}}>{inline(row[k]??"")}</td>)}</tr>)}</tbody></table></div>);continue
+   elements.push(<div key={key} className={styles.tableWrap}><table className={styles.table}><thead><tr>{heads.map((c,j)=><th key={j} scope="col" >{inline(c)}</th>)}</tr></thead><tbody>{rows.map((row,j)=><tr key={j}>{heads.map((_,k)=><td key={k} >{inline(row[k]??"")}</td>)}</tr>)}</tbody></table></div>);continue
   }
   const h=value.match(/^(#{1,3})\s+(.+)$/);
-  if(h){const H=h[1].length===1?"h2":h[1].length===2?"h3":"h4";const sizes={h2:26,h3:21,h4:17};elements.push(<H key={key} style={{fontFamily:"Georgia,serif",fontSize:sizes[H],lineHeight:1.3,margin:"30px 0 12px",color:"#102033"}}>{inline(heading(value))}</H>);i++;continue}
+  if(h){const H=h[1].length===1?"h2":h[1].length===2?"h3":"h4";elements.push(<H key={key} className={styles.heading}>{inline(heading(value))}</H>);i++;continue}
   if(isPlainSectionHeading(value)){
-   elements.push(<h3 key={key} style={{fontFamily:"Georgia,serif",fontSize:21,lineHeight:1.35,color:"#102033",margin:"27px 0 12px"}}>{inline(value)}</h3>);
+   elements.push(<h3 key={key} className={styles.heading}>{inline(value)}</h3>);
    i++;continue;
   }
   if(/^(Resumo|Em resumo|Atenção|Importante|Aplicação prática|Na prática|Checklist|O que mudou|O que fazer agora|Conclusão|Exemplo prático|Fontes):?$/i.test(value)){
-   elements.push(<h3 key={key} style={{fontFamily:"Georgia,serif",fontSize:21,color:"#102033",margin:"27px 0 10px"}}>{value.replace(/:$/,"")}</h3>);i++;continue
+   elements.push(<h3 key={key} className={styles.heading}>{value.replace(/:$/,"")}</h3>);i++;continue
   }
   if(/^(ATENÇÃO|IMPORTANTE|NA PRÁTICA|RESUMO|DICA):\s*.+/i.test(value)){
-   elements.push(<aside key={key} style={{background:"#f8f5eb",borderLeft:"3px solid #c9a227",borderRadius:7,padding:"16px 20px",margin:"18px 0",lineHeight:1.75}}>{inline(value)}</aside>);i++;continue
+   elements.push(<aside key={key} className={`${styles.block} ${styles.atencao}`}>{inline(value)}</aside>);i++;continue
   }
   if(isChecklist(value)){
    const items:{text:string;checked:boolean}[]=[];
    while(i<lines.length&&isChecklist(lines[i])){items.push({text:cleanChecklist(lines[i]),checked:isChecked(lines[i])});i++}
-   elements.push(<ul key={key} aria-label="Checklist" style={{listStyle:"none",padding:0,margin:"18px 0 25px",display:"grid",gap:9}}>{items.map((item,j)=><li key={j} style={{display:"flex",alignItems:"flex-start",gap:12,background:"#f6f8f8",border:"1px solid #e1e7e9",borderRadius:8,padding:"11px 14px",lineHeight:1.65}}><span aria-hidden="true" style={{fontSize:19,color:"#9b7a21",lineHeight:1.4}}>{item.checked?"☑":"☐"}</span><span>{inline(item.text)}</span></li>)}</ul>);continue
+   elements.push(<ul key={key} aria-label="Checklist" className={styles.checkList}>{items.map((item,j)=><li key={j} className={styles.checkItem}><span aria-hidden="true" className={styles.checkMark}>{item.checked?"☑":"☐"}</span><span>{inline(item.text)}</span></li>)}</ul>);continue
   }
   if(isBullet(value)||isNumber(value)){
    const ordered=isNumber(value),items:string[]=[];
    while(i<lines.length&&!isChecklist(lines[i])&&(ordered?isNumber(lines[i]):isBullet(lines[i]))){items.push(lines[i].trim().replace(ordered?/^\d+[.)]\s+/:/^[-*•]\s+/,""));i++}
-   const li=items.map((it,j)=><li key={j} style={{marginBottom:8}}>{inline(it)}</li>);
-   elements.push(ordered?<ol key={key} style={{paddingLeft:27,margin:"15px 0 23px",lineHeight:1.8}}>{li}</ol>:<ul key={key} style={{paddingLeft:27,margin:"15px 0 23px",lineHeight:1.8}}>{li}</ul>);continue
+   const li=items.map((it,j)=><li key={j} >{inline(it)}</li>);
+   elements.push(ordered?<ol key={key} className={styles.list}>{li}</ol>:<ul key={key} style={{paddingLeft:27,margin:"15px 0 23px",lineHeight:1.8}}>{li}</ul>);continue
   }
   i++;
-  elements.push(<p key={key} style={{fontSize:16,lineHeight:1.9,color:"#405266",margin:"0 0 20px",overflowWrap:"anywhere"}}>{inline(value)}</p>);
+  elements.push(<p key={key} className={styles.paragraph}>{inline(value)}</p>);
  }
- return <div>{elements}</div>;
+ return <div className={styles.reader}>{elements}</div>;
 }
