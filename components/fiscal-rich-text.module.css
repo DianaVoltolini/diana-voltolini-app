@@ -47,3 +47,10 @@
 .orderedList li::before{content:counter(editorialList,decimal-leading-zero);position:absolute;left:14px;top:11px;color:#a47e16;font:800 12px/1.7 Arial,sans-serif}
 .checklist .orderedList li{border:0;border-bottom:1px solid #e1e7ed;border-radius:0;background:transparent}
 @media(max-width:640px){.numberedHeading{gap:11px;margin:29px 0 14px;padding-top:17px;font-size:21px}.sectionNumber{flex-basis:33px;width:33px;height:33px;font-size:12px}.bulletList li{padding:10px 12px 10px 33px}.bulletList li::before{left:14px;top:19px}}
+
+/* Ajuste de ritmo de leitura e contraste dentro da conclusão */
+.reader>.paragraph{margin-bottom:14px;line-height:1.72}
+.numberedHeading+.paragraph{margin-top:4px}
+.conclusao .reader strong{color:#fff}
+.conclusao .reader>.paragraph{margin-bottom:12px;line-height:1.7}
+.conclusao .reader>.paragraph:last-child{margin-bottom:0}

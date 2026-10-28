@@ -51,7 +51,7 @@ export default function FiscalRichText({body}:{body:string}){
    let end=i+1;
    while(end<lines.length&&lines[end].trim()!==":::")end++;
    if(end<lines.length){
-    const content=lines.slice(i+1,end).join("\n").trim();
+    let innerLines=lines.slice(i+1,end);\n    if(blockKind==="conclusao"){\n     const first=innerLines.findIndex(line=>line.trim().length>0);\n     if(first>=0&&/^(?:#{1,3}\\s*)?Conclus[aã]o\\s*:?[\\s]*$/i.test(innerLines[first].trim()))innerLines=innerLines.filter((_,idx)=>idx!==first);\n    }\n    const content=innerLines.join("\n").trim();
 
     elements.push(<section key={key} aria-label={editorialLabels[blockKind]} className={`${styles.block} ${styles[blockKind]}`}>
      <p className={styles.blockLabel}>{editorialLabels[blockKind]}</p>
@@ -74,7 +74,7 @@ export default function FiscalRichText({body}:{body:string}){
    elements.push(<div key={key} className={styles.tableWrap}><table className={styles.table}><thead><tr>{heads.map((c,j)=><th key={j} scope="col" >{inline(c)}</th>)}</tr></thead><tbody>{rows.map((row,j)=><tr key={j}>{heads.map((_,k)=><td key={k} >{inline(row[k]??"")}</td>)}</tr>)}</tbody></table></div>);continue
   }
   const h=value.match(/^(#{1,3})\s+(.+)$/);
-  if(h){const H=h[1].length===1?"h2":h[1].length===2?"h3":"h4";const title=heading(value);const numbered=title.match(/^(\\d{1,2})[.)]\\s+(.+)$/);elements.push(<H key={key} className={numbered?styles.numberedHeading:styles.heading}>{numbered?<><span className={styles.sectionNumber}>{numbered[1].padStart(2,"0")}</span><span>{inline(numbered[2])}</span></>:inline(title)}</H>);i++;continue}
+  if(h){const H=h[1].length===1?"h2":h[1].length===2?"h3":"h4";const title=heading(value);const numbered=title.match(/^(\d{1,2})[.)]\s+(.+)$/);elements.push(<H key={key} className={numbered?styles.numberedHeading:styles.heading}>{numbered?<><span className={styles.sectionNumber}>{numbered[1].padStart(2,"0")}</span><span>{inline(numbered[2])}</span></>:inline(title)}</H>);i++;continue}
   if(isPlainSectionHeading(value)){
    elements.push(<h3 key={key} className={styles.heading}>{inline(value)}</h3>);
    i++;continue;
