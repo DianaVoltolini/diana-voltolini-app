@@ -24,6 +24,12 @@ function isExampleTableHeader(line:string){
  const parts=pastedCells(line);
  return !!parts&&/^(informa[cç][aã]o|campo|item)$/i.test(parts[0])&&/^(exemplo|valor|descri[cç][aã]o)$/i.test(parts[1]);
 }
+// Short standalone questions are section headings in pasted fiscal lessons.
+// Only use explicit question forms to avoid promoting ordinary sentences.
+function isPlainSectionHeading(value:string){
+ if(value.length>115||!value.endsWith("?")||value.includes("  ")||value.includes("\t"))return false;
+ return /^(?:O que|Qual(?: é| a| o| são|quer)?|Quais|Como|Por que|Quando|Quem|E quanto|Para que|Em que|Há|Existe|Quais são)\b/i.test(value);
+}
 export default function FiscalRichText({body}:{body:string}){
  const lines=body.replace(/\r\n?/g,"\n").split("\n");
  const elements:ReactNode[]=[];let i=0;
@@ -45,6 +51,10 @@ export default function FiscalRichText({body}:{body:string}){
   }
   const h=value.match(/^(#{1,3})\s+(.+)$/);
   if(h){const H=h[1].length===1?"h2":h[1].length===2?"h3":"h4";const sizes={h2:26,h3:21,h4:17};elements.push(<H key={key} style={{fontFamily:"Georgia,serif",fontSize:sizes[H],lineHeight:1.3,margin:"30px 0 12px",color:"#102033"}}>{inline(heading(value))}</H>);i++;continue}
+  if(isPlainSectionHeading(value)){
+   elements.push(<h3 key={key} style={{fontFamily:"Georgia,serif",fontSize:21,lineHeight:1.35,color:"#102033",margin:"27px 0 12px"}}>{inline(value)}</h3>);
+   i++;continue;
+  }
   if(/^(Resumo|Em resumo|Atenção|Importante|Aplicação prática|Na prática|Checklist|O que mudou|O que fazer agora|Conclusão|Exemplo prático|Fontes):?$/i.test(value)){
    elements.push(<h3 key={key} style={{fontFamily:"Georgia,serif",fontSize:21,color:"#102033",margin:"27px 0 10px"}}>{value.replace(/:$/,"")}</h3>);i++;continue
   }
