@@ -20,7 +20,7 @@ export default function LeadFilters({query,subscribed,interest,interests}:Props)
   return ()=>clearTimeout(handle);
  },[search,inscrito,selectedInterest,query,subscribed,interest,router]);
  const inputStyle={border:"1px solid #d7e0e9",padding:"11px 12px",borderRadius:7,color:"#102033",background:"#fff",width:"100%"};
- return <div style={{display:"grid",gridTemplateColumns:"minmax(220px,2fr) repeat(2,minmax(145px,1fr))",gap:12,alignItems:"end",margin:"22px 0"}}>
+ return <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:12,alignItems:"end",margin:"22px 0"}}>
   <label style={{display:"grid",gap:7,fontWeight:700,fontSize:13}}>Pesquisar
    <input aria-label="Pesquisar por nome ou e-mail" placeholder="Digite nome ou e-mail" value={search} onChange={e=>setSearch(e.target.value)} style={inputStyle}/>
   </label>
