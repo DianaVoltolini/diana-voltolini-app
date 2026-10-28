@@ -1,3 +1,4 @@
+import EmailPreview from "./email-preview";
 import Link from "next/link";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
@@ -20,9 +21,10 @@ export default async function EmailTemplates({searchParams}:{searchParams:Promis
  <label style={{display:"grid",gap:5}}>Utilização<select name="kind" defaultValue={selected?.kind??"welcome"} style={{padding:12,border:"1px solid #d6e0eb",borderRadius:7}}><option value="welcome">Boas-vindas</option><option value="manual">Campanha manual</option></select></label>
  <label style={{display:"grid",gap:5}}>Situação<select name="active" defaultValue={selected?.active?"yes":"no"} style={{padding:12,border:"1px solid #d6e0eb",borderRadius:7}}><option value="no">Rascunho</option><option value="yes">Ativo para seleção</option></select></label>
  </div>
- <label style={{display:"grid",gap:5}}>Assunto<input required name="subject" maxLength={180} defaultValue={selected?.subject??"Boas-vindas ao Conhecimento Fiscal, {{nome}}!"} style={{padding:12,border:"1px solid #d6e0eb",borderRadius:7}}/></label>
- <label style={{display:"grid",gap:5}}>Mensagem<textarea required name="body" rows={15} maxLength={14000} defaultValue={selected?.body??welcome} style={{padding:13,border:"1px solid #d6e0eb",borderRadius:7,font:"inherit",lineHeight:1.6}}/></label>
+ <label style={{display:"grid",gap:5}}>Assunto<input id="email-preview-subject" required name="subject" maxLength={180} defaultValue={selected?.subject??"Boas-vindas ao Conhecimento Fiscal, {{nome}}!"} style={{padding:12,border:"1px solid #d6e0eb",borderRadius:7}}/></label>
+ <label style={{display:"grid",gap:5}}>Mensagem<textarea id="email-preview-body" required name="body" rows={15} maxLength={14000} defaultValue={selected?.body??welcome} style={{padding:13,border:"1px solid #d6e0eb",borderRadius:7,font:"inherit",lineHeight:1.6}}/></label>
  <small>Use {"{{nome}}"} para personalizar a saudação. A automação e o descadastro serão configurados antes de liberar envios.</small>
+ <EmailPreview subjectId="email-preview-subject" bodyId="email-preview-body"/>
  <div><button type="submit" style={{padding:"13px 20px",background:"#c9a227",color:"#102033",border:0,borderRadius:7,fontWeight:800}}>Salvar modelo</button></div>
  </form></section>
  <section className={styles.diagnosticsSection}><h2>Modelos cadastrados</h2>

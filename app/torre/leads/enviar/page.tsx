@@ -1,3 +1,4 @@
+import EmailPreview from "../../modelos-email/email-preview";
 import Link from "next/link";
 import DeleteDraftButton from "./delete-draft-button";
 import {requireAdmin} from "@/lib/auth/require-admin";
@@ -39,8 +40,9 @@ export default async function EmailCampaign({searchParams}:{searchParams:Promise
  <select key={draft?.id??"new-landing"} defaultValue={draft?.landing_id??""} name="landing_id" style={{padding:12,border:"1px solid #d7e0e9",borderRadius:7}}><option value="">Todas as landings</option>{(landings??[]).map(x=><option key={x.id} value={x.id}>{x.title}</option>)}</select></label>
  </div>
  <p style={{fontSize:13,color:"#647381",margin:0}}>Destinatários elegíveis: somente leads que autorizaram a newsletter. A contagem final e a exclusão de descadastros serão implementadas antes de liberar os disparos.</p>
- <label style={{display:"grid",gap:6}}>Assunto<input key={draft?.id??selected?.id??"custom"} required name="subject" defaultValue={draft?.subject??selected?.subject??""} maxLength={180} style={{padding:12,border:"1px solid #d7e0e9",borderRadius:7}}/></label>
- <label style={{display:"grid",gap:6}}>Mensagem<textarea key={draft?.id??selected?.id??"custom"} required name="body" defaultValue={draft?.body??selected?.body??""} rows={15} maxLength={14000} style={{padding:12,border:"1px solid #d7e0e9",borderRadius:7,font:"inherit",lineHeight:1.6}}/></label>
+ <label style={{display:"grid",gap:6}}>Assunto<input key={draft?.id??selected?.id??"custom"} id="email-preview-subject" required name="subject" defaultValue={draft?.subject??selected?.subject??""} maxLength={180} style={{padding:12,border:"1px solid #d7e0e9",borderRadius:7}}/></label>
+ <label style={{display:"grid",gap:6}}>Mensagem<textarea key={draft?.id??selected?.id??"custom"} id="email-preview-body" required name="body" defaultValue={draft?.body??selected?.body??""} rows={15} maxLength={14000} style={{padding:12,border:"1px solid #d7e0e9",borderRadius:7,font:"inherit",lineHeight:1.6}}/></label>
+ <EmailPreview subjectId="email-preview-subject" bodyId="email-preview-body"/>
  <div><button type="submit" style={{background:"#c9a227",border:0,borderRadius:7,padding:"13px 18px",fontWeight:800,color:"#102033"}}>{draft?"Salvar alterações":"Salvar rascunho"}</button>{draft&&<Link href="/torre/leads/enviar" style={{marginLeft:14}}>Cancelar edição</Link>}</div>
  </form>}</section>
  <section className={styles.diagnosticsSection}><h2>Rascunhos recentes</h2>{(drafts??[]).map(x=><div key={x.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,padding:"12px 0",borderBottom:"1px solid #e4eaf0"}}><span style={{overflowWrap:"anywhere"}}>{x.subject} · Rascunho</span><div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}><Link href={"/torre/leads/enviar?editar="+x.id+"#editar"} aria-label="Editar rascunho" title="Editar rascunho" style={{display:"inline-flex",padding:8,border:"1px solid #d7e0e9",borderRadius:7,background:"#fff",color:"#102033"}}><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 20h9M4 17l-1 4 4-1L19 8l-3-3L4 17ZM14 7l3 3"/></svg></Link><DeleteDraftButton id={x.id}/></div></div>)}{!drafts?.length&&<p>Nenhum rascunho cadastrado.</p>}</section>
