@@ -1,4 +1,5 @@
 import LeadFilters from "./lead-filters";
+import Link from "next/link";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 export const dynamic="force-dynamic";
@@ -28,7 +29,7 @@ export default async function LeadsPage({searchParams}:{searchParams:Promise<{pa
   <p style={{color:"#9b7516",fontWeight:800,fontSize:12,letterSpacing:"0.1em"}}>MARKETING</p>
   <h1 style={{fontFamily:"Georgia,serif",fontSize:38,margin:"12px 0"}}>Leads</h1>
   <p style={{color:"#607184"}}>Pessoas que solicitaram materiais gratuitos nas landing pages. O consentimento da newsletter é apresentado separadamente.</p>
-  <strong>{total} cadastro(s) encontrado(s)</strong>
+  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}><strong>{total} cadastro(s) encontrado(s)</strong><Link href="/torre/leads/enviar" style={{background:"#c9a227",padding:"12px 18px",borderRadius:7,color:"#102033",fontWeight:800,textDecoration:"none"}}>Enviar e-mail</Link></div>
   <LeadFilters query={q} subscribed={inscrito} interest={interesse} interests={interests}/>
   {error?<p role="alert">Não foi possível consultar os leads.</p>:<div style={{overflowX:"auto",background:"#fff",border:"1px solid #dce4ec",borderRadius:12}}>
    <table style={{borderCollapse:"collapse",width:"100%",minWidth:780,fontSize:13}}>
