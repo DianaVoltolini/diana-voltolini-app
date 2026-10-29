@@ -1,75 +1,31 @@
 "use client";
 import {useState} from "react";
+import dynamic from "next/dynamic";
 import FiscalRichText from "@/components/fiscal-rich-text";
 import layout from "./editor-layout.module.css";
+const VisualEditor=dynamic(()=>import("./visual-editor"),{ssr:false});
 type Props={initial:string};
-const field={display:"block",width:"100%",padding:12,border:"1px solid #cbd5e1",borderRadius:7,marginTop:7,background:"#fff",color:"#0d1b2a"};
-
-function autoFormatFiscal(source:string){
- const lines=source.replace(/\r\n?/g,"\n").split("\n");
- if(lines.some(line=>/^:::(?:atencao|exemplo|checklist|conclusao)\s*$/.test(line.trim())))return source;
- const section=(line:string)=>{
-  const value=line.trim().replace(/^#{1,3}\s+/,"").replace(/:$/,"").trim();
-  if(/^(?:Exemplo prático|Como funciona na prática\??)$/i.test(value))return "exemplo";
-  if(/^(?:O que a empresa deve fazer\??|Checklist(?: de conferência)?|Roteiro de conferência)$/i.test(value))return "checklist";
-  if(/^(?:Conclusão|Considerações finais)$/i.test(value))return "conclusao";
-  if(/^(?:Ponto de atenção|Atenção|Importante)$/i.test(value))return "atencao";
-  return null;
- };
- const heading=(line:string)=>/^#{1,3}\s+/.test(line.trim())||/^(?:O que|Qual|Quais|Como|Quando|Por que|E quanto|Conclusão|Considerações finais|Checklist|Exemplo prático|Atenção|Importante|Ponto de atenção)\b.{0,110}[?:]?$/i.test(line.trim())&&line.trim().length<120;
- const output:string[]=[];
- for(let i=0;i<lines.length;){
-  const kind=section(lines[i]);
-  if(!kind){output.push(lines[i]);i++;continue}
-  let end=i+1;
-  while(end<lines.length&&!heading(lines[end]))end++;
-  const contents=lines.slice(i+1,end);
-  if(!contents.some(x=>x.trim())){output.push(lines[i]);i++;continue}
-  output.push(":::"+kind,lines[i],...contents,":::");
-  i=end;
- }
- return output.join("\n");
-}
+const legacyBlocks=(value:string)=>/^:::(atencao|exemplo|checklist|conclusao)\s*$/m.test(value);
 export default function ArticleBodyEditor({initial}:Props){
  const [body,setBody]=useState(initial);
- const [preview,setPreview]=useState(false);
- function applyFormat(prefix:string,suffix=""){
-  const el=document.getElementById("fiscal-editor-body") as HTMLTextAreaElement|null;
-  if(!el)return;
-  const start=el.selectionStart,end=el.selectionEnd,selected=body.slice(start,end);
-  const replacement=prefix+(selected||"Texto")+suffix;
-  setBody(body.slice(0,start)+replacement+body.slice(end));
-  setPreview(false);
- }
- function insertEditorialBlock(kind:"atencao"|"exemplo"|"checklist"|"conclusao"){
-  const el=document.getElementById("fiscal-editor-body") as HTMLTextAreaElement|null;
-  if(!el)return;
-  const {selectionStart:start,selectionEnd:end}=el;
-  const selected=body.slice(start,end).trim();
-  const inner=selected||"Escreva aqui o conteúdo deste destaque.";
-  const value=`\n\n:::${kind}\n${inner}\n:::\n\n`;
-  setBody(body.slice(0,start)+value+body.slice(end));
-  setPreview(false);
- }
- return <div style={{display:"grid",gap:13}}>
-   <label htmlFor="fiscal-editor-body" style={{fontWeight:700}}>Conteúdo</label>
-   <p style={{fontSize:13,color:"#607184",margin:0}}>Cole o texto completo. Ao clicar em Formatar e visualizar, o editor organiza títulos, listas, tabelas e blocos editoriais identificáveis sem reescrever as informações fiscais.</p>
-   <div className={layout.toolbar} role="toolbar" aria-label="Formatação do conteúdo">
-    <button type="button" onClick={()=>applyFormat("## ")} title="Título de seção" className={layout.toolButton}>Título</button>
-    <button type="button" onClick={()=>applyFormat("### ")} className={layout.toolButton}>Subtítulo</button>
-    <button type="button" onClick={()=>applyFormat("**","**")} className={layout.toolButton}>Negrito</button>
-    <button type="button" onClick={()=>applyFormat("- ")} className={layout.toolButton}>Lista</button>
-    <button type="button" onClick={()=>applyFormat("ATENÇÃO: ")} className={layout.toolButton}>Destaque</button>
+ const [mode,setMode]=useState<"visual"|"markdown">(initial.trim()?"markdown":"visual");
+ const [preview,setPreview]=useState(true);
+ const block=legacyBlocks(body);
+ return <section style={{display:"grid",gap:14}}>
+  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+   <div><strong style={{display:"block",color:"#102033",fontSize:17}}>Conteúdo</strong><p style={{margin:"5px 0",fontSize:13,color:"#607184"}}>Importe Markdown estruturado ou edite visualmente os títulos, parágrafos, listas e tabelas.</p></div>
+   <div className={layout.toolbar}>
+    <button type="button" className={layout.toolButton} aria-pressed={mode==="visual"} disabled={block} onClick={()=>setMode("visual")}>Editor visual</button>
+    <button type="button" className={layout.toolButton} aria-pressed={mode==="markdown"} onClick={()=>setMode("markdown")}>Importar / Markdown</button>
    </div>
-   <div className={layout.toolbar} role="toolbar" aria-label="Blocos editoriais">
-    <button type="button" onClick={()=>insertEditorialBlock("atencao")} className={layout.toolButton}>Ponto de atenção</button>
-    <button type="button" onClick={()=>insertEditorialBlock("exemplo")} className={layout.toolButton}>Exemplo prático</button>
-    <button type="button" onClick={()=>insertEditorialBlock("checklist")} className={layout.toolButton}>Checklist</button>
-    <button type="button" onClick={()=>insertEditorialBlock("conclusao")} className={layout.toolButton}>Conclusão</button>
-   </div>
-   <p style={{fontSize:12,color:"#607184",margin:0}}>Clique em Formatar e visualizar para organizar automaticamente as seções reconhecidas. Os botões acima ficam disponíveis para ajustes manuais. Confira a prévia antes de salvar.</p>
-   <textarea id="fiscal-editor-body" name="body" rows={17} required value={body} onChange={e=>{setBody(e.target.value);setPreview(false)}} style={{...field,marginTop:0,lineHeight:1.65}} placeholder="Cole aqui o texto do conteúdo..." />
-   <button type="button" onClick={()=>{if(preview){setPreview(false);return}setBody(current=>autoFormatFiscal(current));setPreview(true)}} style={{justifySelf:"start",padding:"11px 16px",background:"#f5edda",border:"1px solid #d8bc70",borderRadius:7,cursor:"pointer",fontWeight:800,color:"#76570a"}}>{preview?"Ocultar prévia":"Formatar e visualizar"}</button>
-   {preview&&<section aria-label="Pré-visualização do conteúdo" style={{background:"#fff",padding:"24px",border:"1px solid #e2e8ee",borderRadius:10}}><strong style={{display:"block",fontSize:12,color:"#96710d",letterSpacing:1,marginBottom:22}}>PRÉ-VISUALIZAÇÃO · COMO O LEITOR VERÁ</strong><FiscalRichText body={body}/></section>}
- </div>
+  </div>
+  {block&&<p role="status" style={{padding:12,background:"#faf7ed",borderLeft:"3px solid #c9a227",color:"#6d531a",fontSize:13}}>Este conteúdo contém blocos especiais do editor anterior. Para evitar perda de informação, mantenha a edição em Markdown. O texto original será preservado.</p>}
+  <input type="hidden" name="body" value={body}/>
+  {mode==="visual"&&!block?<VisualEditor value={body} onChange={setBody}/>:<textarea value={body} onChange={e=>setBody(e.target.value)} rows={21} aria-label="Texto Markdown do conteúdo" style={{width:"100%",boxSizing:"border-box",padding:18,border:"1px solid #cbd5e1",borderRadius:9,font:"14px/1.75 ui-monospace,monospace",minHeight:450,background:"#fff",color:"#102033"}} placeholder={"## Título da seção\n\nEscreva um parágrafo.\n\n| Informação | Valor |\n| --- | --- |\n| Base de cálculo | R$ 18.750,00 |"}/>}
+  <div style={{display:"flex",alignItems:"center",gap:12}}>
+   <button type="button" onClick={()=>setPreview(p=>!p)} className={layout.toolButton}>{preview?"Ocultar prévia":"Mostrar prévia"}</button>
+   <span style={{fontSize:12,color:"#607184"}}>O texto não é reescrito automaticamente. Confira a prévia antes de salvar.</span>
+  </div>
+  {preview&&<section aria-label="Pré-visualização do conteúdo" style={{background:"#fff",padding:"clamp(15px,3vw,28px)",border:"1px solid #e2e8ee",borderRadius:10}}><strong style={{display:"block",fontSize:12,color:"#96710d",letterSpacing:1,marginBottom:20}}>PRÉ-VISUALIZAÇÃO · COMO O LEITOR VERÁ</strong><FiscalRichText body={body}/></section>}
+ </section>;
 }
