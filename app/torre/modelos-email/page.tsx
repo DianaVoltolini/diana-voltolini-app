@@ -17,7 +17,7 @@ export default async function EmailTemplates({searchParams}:{searchParams:Promis
  <header className={styles.pageHeader}><div><p className={styles.eyebrow}>MARKETING</p><h1>Modelos de E-mail</h1><p>Preencha a campanha e confira o resultado automaticamente. Nenhum e-mail é enviado nesta tela.</p></div></header>
  {params.salvo&&<p role="status" style={{color:"#177246"}}>Modelo salvo com sucesso.</p>}
  {params.erro&&<p role="alert" style={{color:"#b42318"}}>Não foi possível salvar. Confirme os campos e a migração SQL.</p>}
- <section className={styles.diagnosticsSection}>
+ <section id="editar" className={styles.diagnosticsSection}>
  {error?<p role="alert">Não foi possível carregar os modelos. Execute o SQL da atualização antes de utilizar o editor.</p>:<TemplateEditor key={selected?.id??"novo"} selected={selected} interests={interests} landings={landings??[]}/>}
  </section>
  <section className={styles.diagnosticsSection}><h2>Modelos cadastrados</h2>
