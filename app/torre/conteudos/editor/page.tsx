@@ -37,8 +37,7 @@ export default async function EditorialPage({searchParams}:{searchParams:Promise
  </div>
  <p className={layout.accessHint}>Blog: acesso gratuito · Radar, Oficina, Biblioteca e Checklists: exclusivos para assinantes.</p>
  <ContentAndSeoFields title={selected?.title??""} summary={selected?.summary??""} slug={selected?.slug??""} seoTitle={selected?.seo_title??""} seoDescription={selected?.seo_description??""}/>
- <ArticleBodyEditor initial={selected?.body??""}/>
- <label>Fontes oficiais / URLs<textarea style={field} name="source_links" rows={3} defaultValue={selected?.source_links??""} placeholder="Uma URL por linha"/></label>
+ <ArticleBodyEditor initial={selected?.body??""} sources={selected?.source_links??""}/>
  <button className={styles.openLink} style={{cursor:"pointer",justifySelf:"start"}} type="submit">Salvar conteúdo</button>
  </form>
   </section>
