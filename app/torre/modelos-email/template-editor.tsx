@@ -1,5 +1,5 @@
 "use client";
-import {useState} from "react";
+import {useState,useRef,useEffect} from "react";
 import Link from "next/link";
 import {saveEmailTemplate} from "./actions";
 import css from "./template-editor.module.css";
@@ -25,11 +25,14 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
  const [interest,setInterest]=useState(selected?.interest??"");
  const [landing,setLanding]=useState(selected?.landing_id??"");
  const [active,setActive]=useState(selected?.active??false);
+ const bodyRef=useRef<HTMLTextAreaElement>(null);
+ useEffect(()=>{const el=bodyRef.current;if(el){el.style.height="auto";el.style.height=Math.max(320,el.scrollHeight)+"px"}},[body]);
  return <form action={saveEmailTemplate} className={css.grid}>
   <input type="hidden" name="id" value={selected?.id??""}/>
   <input type="hidden" name="kind" value={selected?.kind??"manual"}/>
   <input type="hidden" name="active" value={active?"yes":"no"}/>
   <section className={css.headFields}>
+   <div className={css.sectionIntro}><span>01 · IDENTIFICAÇÃO</span><h2>Dados da campanha</h2><p>Identificação e público de referência para este modelo.</p></div>
    <label>Nome da Campanha<input name="name" required maxLength={120} value={name} onChange={e=>setName(e.target.value)} placeholder="Ex.: Boas-vindas ao Conhecimento Fiscal"/></label>
    <label>Descrição<textarea name="description" maxLength={500} rows={2} value={description} onChange={e=>setDescription(e.target.value)} placeholder="Finalidade desta campanha"/></label>
    <div className={css.duo}>
@@ -38,8 +41,9 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
    </div>
   </section>
   <section className={css.fields}>
+   <div className={css.sectionIntro}><span>02 · MENSAGEM</span><h2>Conteúdo do e-mail</h2><p>Escreva a mensagem e defina o botão de acesso.</p></div>
    <label>Assunto<input name="subject" required maxLength={180} value={subject} onChange={e=>setSubject(e.target.value)} placeholder="Assunto exibido no e-mail"/></label>
-   <label>Texto<textarea name="body" required maxLength={14000} rows={10} value={body} onChange={e=>setBody(e.target.value)} placeholder="Escreva a mensagem"/></label>
+   <label>Texto<textarea ref={bodyRef} name="body" required maxLength={14000} rows={13} value={body} onChange={e=>setBody(e.target.value)} placeholder="Escreva a mensagem"/></label>
    <div className={css.cta}>
     <strong>CTA — Botão de acesso</strong>
     <div className={css.duo}>
@@ -51,7 +55,7 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
    <div className={css.buttons}><button type="submit">Salvar modelo</button>{selected&&<Link href="/torre/modelos-email">Cancelar</Link>}</div>
   </section>
   <aside className={css.previewPanel}>
-   <span className={css.previewTitle}>PRÉ-VISUALIZAÇÃO AUTOMÁTICA</span>
+   <div className={css.previewHeader}><span className={css.previewTitle}>03 · VISUALIZAÇÃO AUTOMÁTICA</span><p>O resultado aparece ao lado enquanto você escreve.</p></div>
    <div className={css.mail}>
     <header><img src="/brand/logo-light.png" alt="Diana Voltolini"/></header>
     <div className={css.mailBody}>
