@@ -52,7 +52,7 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
     </div>
    </div>
    <label className={css.checkbox}><input type="checkbox" checked={active} onChange={e=>setActive(e.target.checked)}/> Modelo disponível para seleção</label>
-   <div className={css.buttons}><button type="submit">Salvar modelo</button>{selected&&<Link href="/torre/modelos-email">Cancelar</Link>}</div>
+   <div className={css.buttons}><button type="submit">Salvar modelo</button><Link href="/torre/modelos-email" className={css.backButton}>Voltar</Link></div>
   </section>
   <aside className={css.previewPanel}>
    <div className={css.previewHeader}><span className={css.previewTitle}>03 · VISUALIZAÇÃO AUTOMÁTICA</span><p>O resultado aparece ao lado enquanto você escreve.</p></div>
