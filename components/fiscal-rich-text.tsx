@@ -5,7 +5,7 @@ import styles from "./fiscal-rich-text.module.css";
 const heading=(s:string)=>s.replace(/^#{1,3}\s+/,"").trim();
 function inline(text:string):ReactNode[]{
  const pieces=text.split(/(\*\*[^*\n]+\*\*|\*[^*\n]+\*|\`[^\`\n]+\`)/g);
- return pieces.map((part,i)=>part.startsWith("**")&&part.endsWith("**")?<strong key={i}>{part.slice(2,-2)}</strong>:part.startsWith("*")&&part.endsWith("*")?<em key={i}>{part.slice(1,-1)}</em>:part.startsWith("`")&&part.endsWith("`")?<code key={i}>{part.slice(1,-1)}</code>:part);
+ return pieces.map((part,i)=>{const link=part.match(/^\\[([^\\]\\n]+)\\]\\((https?:\\/\\/[^)\\s]+)\\)$/);if(link){try{const url=new URL(link[2]);if(url.protocol==="https:"||url.protocol==="http:")return <a key={i} href={url.toString()} target="_blank" rel="noopener noreferrer">{link[1]}</a>}catch{}}return part.startsWith("**")&&part.endsWith("**")?<strong key={i}>{part.slice(2,-2)}</strong>:part.startsWith("*")&&part.endsWith("*")?<em key={i}>{part.slice(1,-1)}</em>:part.startsWith("`")&&part.endsWith("`")?<code key={i}>{part.slice(1,-1)}</code>:part);
 }
 function isBullet(s:string){return /^\s*[-*•]\s+/.test(s)}
 function isNumber(s:string){return /^\s*\d+[.)]\s+/.test(s)}
