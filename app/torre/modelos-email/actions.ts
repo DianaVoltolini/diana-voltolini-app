@@ -10,13 +10,13 @@ export async function saveEmailTemplate(f:FormData){
  const kind=value(f,"kind",20)==="welcome"?"welcome":"manual";
  const description=value(f,"description",500),interest=value(f,"interest",120),landing_id=value(f,"landing_id",50),cta_label=value(f,"cta_label",80),cta_url=value(f,"cta_url",300);
  const allowed=["https://dianavoltolini.com.br/blog","https://dianavoltolini.com.br/ibs-cbs-na-pratica","https://dianavoltolini.com.br/diagnostico-ibs-cbs","https://dianavoltolini.com.br/fiscal-na-pratica","https://dianavoltolini.com.br/produtos","https://dianavoltolini.com.br"];
- if(!allowed.includes(cta_url)||!cta_label)redirect("/torre/modelos-email?erro=cta");
- if(!name||!subject||!body)redirect("/torre/modelos-email?erro=campos");
+ if(!allowed.includes(cta_url)||!cta_label)redirect("/torre/modelos-email/editor?erro=cta");
+ if(!name||!subject||!body)redirect("/torre/modelos-email/editor?erro=campos");
  const db=getSupabaseAdmin();
  const payload={name,description:description||null,subject,body,kind,interest:interest||null,landing_id:landing_id||null,cta_label,cta_url,active:f.get("active")==="yes",updated_at:new Date().toISOString()};
  const {error}=id?await db.from("marketing_email_templates").update(payload).eq("id",id):await db.from("marketing_email_templates").insert(payload);
- if(error)redirect("/torre/modelos-email?erro=salvar");
- revalidatePath("/torre/modelos-email");redirect("/torre/modelos-email?salvo=1"+(id?"&editar="+encodeURIComponent(id):""));
+ if(error)redirect("/torre/modelos-email/editor?erro=salvar");
+ revalidatePath("/torre/modelos-email");redirect("/torre/modelos-email?salvo=1");
 }
 export async function saveEmailDraft(f:FormData){
  await requireAdmin();
