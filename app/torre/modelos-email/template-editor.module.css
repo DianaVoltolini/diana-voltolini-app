@@ -36,3 +36,6 @@
 .mail footer span{color:#a07b17;text-decoration:underline}
 @media(max-width:1120px){.grid{grid-template-columns:1fr}.previewPanel{position:static}.headFields,.fields{padding:22px}}
 @media(max-width:680px){.headFields{grid-template-columns:1fr}.duo{grid-template-columns:1fr}.headFields,.fields{padding:17px}.mailBody{padding:20px}.previewPanel{padding:12px}}
+
+.backButton{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:12px 19px;border:1px solid #cfdbe6;border-radius:7px;background:#fff;color:#102033!important;font-weight:700;text-decoration:none!important}
+.backButton:hover{background:#f6f8fb}
