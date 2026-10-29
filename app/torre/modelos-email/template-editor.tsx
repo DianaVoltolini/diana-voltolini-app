@@ -29,14 +29,15 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
   <input type="hidden" name="id" value={selected?.id??""}/>
   <input type="hidden" name="kind" value={selected?.kind??"manual"}/>
   <input type="hidden" name="active" value={active?"yes":"no"}/>
-  <section className={css.fields}>
-   <h2>{selected?"Editar modelo":"Novo modelo"}</h2>
+  <section className={css.headFields}>
    <label>Nome da Campanha<input name="name" required maxLength={120} value={name} onChange={e=>setName(e.target.value)} placeholder="Ex.: Boas-vindas ao Conhecimento Fiscal"/></label>
    <label>Descrição<textarea name="description" maxLength={500} rows={2} value={description} onChange={e=>setDescription(e.target.value)} placeholder="Finalidade desta campanha"/></label>
    <div className={css.duo}>
     <label>Interesse<select name="interest" value={interest} onChange={e=>setInterest(e.target.value)}><option value="">Todos os interesses</option>{interests.map(i=><option key={i} value={i}>{i}</option>)}</select></label>
     <label>Landing de origem<select name="landing_id" value={landing} onChange={e=>setLanding(e.target.value)}><option value="">Todas as landings</option>{landings.map(l=><option key={l.id} value={l.id}>{l.title}</option>)}</select></label>
    </div>
+  </section>
+  <section className={css.fields}>
    <label>Assunto<input name="subject" required maxLength={180} value={subject} onChange={e=>setSubject(e.target.value)} placeholder="Assunto exibido no e-mail"/></label>
    <label>Texto<textarea name="body" required maxLength={14000} rows={10} value={body} onChange={e=>setBody(e.target.value)} placeholder="Escreva a mensagem"/></label>
    <div className={css.cta}>
@@ -47,7 +48,7 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
     </div>
    </div>
    <label className={css.checkbox}><input type="checkbox" checked={active} onChange={e=>setActive(e.target.checked)}/> Modelo disponível para seleção</label>
-   <div className={css.buttons}><button type="submit">Salvar modelo</button>{selected&&<Link href="/torre/modelos-email">Novo modelo</Link>}</div>
+   <div className={css.buttons}><button type="submit">Salvar modelo</button>{selected&&<Link href="/torre/modelos-email">Cancelar</Link>}</div>
   </section>
   <aside className={css.previewPanel}>
    <span className={css.previewTitle}>PRÉ-VISUALIZAÇÃO AUTOMÁTICA</span>
@@ -56,7 +57,7 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
     <div className={css.mailBody}>
      <h2>{(subject||"Assunto do e-mail").replaceAll("{{nome}}","Diana")}</h2>
      <div className={css.message}>{(body||"Sua mensagem aparecerá aqui.").replaceAll("{{nome}}","Diana")}</div>
-     {cta.trim()&&<a href={url} target="_blank" rel="noopener noreferrer" className={css.mailButton}>{cta}</a>}
+     {cta.trim()&&<div className={css.ctaCenter}><a href={url} target="_blank" rel="noopener noreferrer" className={css.mailButton}>{cta}</a></div>}
     </div>
     <footer><strong>Diana Voltolini</strong><p>Especialista em Faturamento e Inteligência Fiscal</p><p>Você está recebendo este e-mail por ter autorizado nossas comunicações. Se não desejar continuar recebendo a Newsletter Fiscal, poderá cancelar sua inscrição pelo link de descadastro.</p><span>Cancelar inscrição (link disponível na próxima etapa)</span></footer>
    </div>
