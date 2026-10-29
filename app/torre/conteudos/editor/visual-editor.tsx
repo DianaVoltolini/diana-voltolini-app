@@ -2,10 +2,10 @@
 import {useEditor,EditorContent} from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {Markdown} from "@tiptap/markdown";
-import Table from "@tiptap/extension-table";
-import TableRow from "@tiptap/extension-table-row";
-import TableHeader from "@tiptap/extension-table-header";
-import TableCell from "@tiptap/extension-table-cell";
+import {Table} from "@tiptap/extension-table";
+import {TableRow} from "@tiptap/extension-table-row";
+import {TableHeader} from "@tiptap/extension-table-header";
+import {TableCell} from "@tiptap/extension-table-cell";
 import css from "./visual-editor.module.css";
 export default function VisualEditor({value,onChange}:{value:string;onChange:(markdown:string)=>void}){
  const editor=useEditor({
