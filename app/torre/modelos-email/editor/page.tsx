@@ -1,5 +1,6 @@
 import Link from "next/link";
 import TemplateEditor from "../template-editor";
+import ControlledNewsletterTest from "../controlled-test";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 import styles from "../../painel.module.css";
@@ -16,5 +17,6 @@ export default async function EmailTemplateEditor({searchParams}:{searchParams:P
  <header className={styles.pageHeader}><div><p className={styles.eyebrow}>MARKETING · MODELOS DE E-MAIL</p><h1>{selected?"Editar modelo":"Novo modelo"}</h1><p>Preencha os dados e acompanhe a prévia automaticamente.</p></div></header>
  {params.erro&&<p role="alert" style={{color:"#b42318"}}>Não foi possível salvar. Verifique os campos preenchidos.</p>}
  {error||params.editar&&!selected?<p role="alert">Modelo não encontrado.</p>:<section className={styles.diagnosticsSection}><TemplateEditor key={selected?.id??"novo"} selected={selected} interests={interests} landings={landings??[]}/></section>}
+ {selected&&<ControlledNewsletterTest templateId={selected.id}/>}
  </div></section></main>;
 }
