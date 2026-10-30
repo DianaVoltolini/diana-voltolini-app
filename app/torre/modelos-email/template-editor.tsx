@@ -3,7 +3,7 @@ import {useState,useRef,useEffect} from "react";
 import Link from "next/link";
 import {saveEmailTemplate} from "./actions";
 import css from "./template-editor.module.css";
-type Template={id:string;name:string;subject:string;body:string;kind:string;active:boolean;description:string|null;interest:string|null;landing_id:string|null;cta_label:string|null;cta_url:string|null};
+type Template={id:string;name:string;subject:string;body:string;kind:string;active:boolean;description:string|null;interest:string|null;landing_id:string|null;cta_label:string|null;cta_url:string|null;auto_enabled?:boolean;auto_include_existing?:boolean};
 type Landing={id:string;title:string};
 const links=[
  ["Blog Fiscal","https://dianavoltolini.com.br/blog"],
@@ -25,12 +25,16 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
  const [interest,setInterest]=useState(selected?.interest??"");
  const [landing,setLanding]=useState(selected?.landing_id??"");
  const [active,setActive]=useState(selected?.active??false);
+ const [automatic,setAutomatic]=useState(selected?.auto_enabled??false);
+ const [existing,setExisting]=useState(selected?.auto_include_existing??false);
  const bodyRef=useRef<HTMLTextAreaElement>(null);
  useEffect(()=>{const el=bodyRef.current;if(el){el.style.height="auto";el.style.height=Math.max(320,el.scrollHeight)+"px"}},[body]);
  return <form action={saveEmailTemplate} className={css.grid}>
   <input type="hidden" name="id" value={selected?.id??""}/>
   <input type="hidden" name="kind" value={selected?.kind??"manual"}/>
   <input type="hidden" name="active" value={active?"yes":"no"}/>
+  <input type="hidden" name="auto_enabled" value={automatic?"yes":"no"}/>
+  <input type="hidden" name="auto_include_existing" value={existing?"yes":"no"}/>
   <section className={css.headFields}>
    <div className={css.sectionIntro}><span>01 · IDENTIFICAÇÃO</span><h2>Dados da campanha</h2><p>Identificação e público de referência para este modelo.</p></div>
    <label>Nome da Campanha<input name="name" required maxLength={120} value={name} onChange={e=>setName(e.target.value)} placeholder="Ex.: Boas-vindas ao Conhecimento Fiscal"/></label>
@@ -50,6 +54,12 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
      <label>Destino<select name="cta_url" value={url} onChange={e=>{setUrl(e.target.value);setCta("Acessar "+(links.find(x=>x[1]===e.target.value)?.[0]??"site"));}}>{links.map(x=><option key={x[1]} value={x[1]}>{x[0]}</option>)}</select></label>
      <label>Texto do botão<input name="cta_label" required maxLength={80} value={cta} onChange={e=>setCta(e.target.value)}/></label>
     </div>
+   </div>
+   <div style={{display:"grid",gap:12,padding:"18px 0",borderTop:"1px solid #e2e8f0"}}>
+    <strong>Envio automático — Newsletter</strong>
+    <label className={css.checkbox}><input type="checkbox" checked={automatic} onChange={e=>setAutomatic(e.target.checked)}/> Ativar para novos leads inscritos</label>
+    {automatic&&<label className={css.checkbox}><input type="checkbox" checked={existing} onChange={e=>setExisting(e.target.checked)}/> Incluir leads existentes que ainda não receberam</label>}
+    <p style={{fontSize:12,color:"#607184"}}>Obrigatório selecionar uma landing específica. A ativação somente produzirá envios após configurar o executor seguro no servidor.</p>
    </div>
    <label className={css.checkbox}><input type="checkbox" checked={active} onChange={e=>setActive(e.target.checked)}/> Modelo disponível para seleção</label>
    <div className={css.buttons}><button type="submit">Salvar modelo</button><Link href="/torre/modelos-email" className={css.backButton}>Voltar</Link></div>
