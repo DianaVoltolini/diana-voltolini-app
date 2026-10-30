@@ -8,7 +8,7 @@ export default async function EmailTemplates({searchParams}:{searchParams:Promis
  await requireAdmin();const params=await searchParams;
  const {data:models,error}=await getSupabaseAdmin().from("marketing_email_templates").select("id,name,description,subject,active,created_at").order("created_at",{ascending:false}).limit(200);
  return <main className={styles.page}><section className={styles.content}><div className="container">
- <header className={styles.pageHeader} style={{display:"flex",alignItems:"end",justifyContent:"space-between",gap:24,flexWrap:"wrap"}}><div><p className={styles.eyebrow}>MARKETING</p><h1>Modelos de E-mail</h1><p>Organize os modelos utilizados nas campanhas e comunicações.</p></div><Link className={styles.openLink} href="/torre/modelos-email/editor">+ Novo modelo</Link></header>
+ <header className={styles.pageHeader} style={{display:"flex",alignItems:"end",justifyContent:"space-between",gap:24,flexWrap:"wrap"}}><div><p className={styles.eyebrow}>MARKETING</p><h1>Modelos de E-mail</h1><p>Organize os modelos utilizados nas campanhas e comunicações.</p></div><div style={{display:"flex",gap:10,flexWrap:"wrap"}}><Link className={styles.openLink} href="/torre/modelos-email/resultados" style={{background:"#fff",border:"1px solid #d7e0e9",color:"#102033"}}>Resultados dos envios</Link><Link className={styles.openLink} href="/torre/modelos-email/editor">+ Novo modelo</Link></div></header>
  {params.salvo&&<p role="status" style={{color:"#177246"}}>Modelo salvo com sucesso.</p>}
  {params.erro&&<p role="alert" style={{color:"#b42318"}}>Não foi possível salvar o modelo.</p>}
  <section className={styles.diagnosticsSection}><h2>Modelos cadastrados</h2>
