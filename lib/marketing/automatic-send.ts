@@ -6,7 +6,7 @@ const normal=(email:string)=>email.trim().toLowerCase();
 const valid=(email:string)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 export async function runWelcomeAutomation(){
  const db=getSupabaseAdmin();
- const {data:models,error:modelsError}=await db.from("marketing_email_templates").select("id,subject,body,cta_label,cta_url,interest,landing_id,auto_include_existing,auto_activated_at").eq("auto_enabled",true).eq("active",true).not("landing_id","is",null).limit(10);
+ const {data:models,error:modelsError}=await db.from("marketing_email_templates").select("id,subject,body,cta_label,cta_url,interest,landing_id,kind,auto_include_existing,auto_activated_at").eq("auto_enabled",true).eq("active",true).limit(10);
  if(modelsError)throw modelsError;
  const host=process.env.SMTP_HOST,user=process.env.SMTP_USER,pass=process.env.SMTP_PASS,from=process.env.SMTP_FROM_EMAIL;
  if(!host||!user||!pass||!from)throw new Error("SMTP não configurado");
@@ -15,8 +15,9 @@ export async function runWelcomeAutomation(){
  try{
  for(const model of models??[]){
   if(sent+failed>=10)break;
-  let query=db.from("marketing_leads").select("id,name,email,created_at").eq("newsletter_opt_in",true).eq("landing_id",model.landing_id).order("created_at",{ascending:true}).limit(1000);
-  if(model.interest)query=query.eq("interest",model.interest);
+  if(model.kind!=="welcome"&&!model.landing_id)continue;
+  let query=model.kind==="welcome"?db.from("marketing_newsletter_subscribers").select("id,name,email,created_at").eq("newsletter_opt_in",true).order("created_at",{ascending:true}).limit(1000):db.from("marketing_leads").select("id,name,email,created_at").eq("newsletter_opt_in",true).eq("landing_id",model.landing_id).order("created_at",{ascending:true}).limit(1000);
+  if(model.kind!=="welcome"&&model.interest)query=query.eq("interest",model.interest);
   if(!model.auto_include_existing&&model.auto_activated_at)query=query.gte("created_at",model.auto_activated_at);
   const {data:leads,error:leadError}=await query;
   if(leadError)throw leadError;
