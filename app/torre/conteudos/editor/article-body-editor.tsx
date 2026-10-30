@@ -1,6 +1,6 @@
 "use client";
 // app/torre/conteudos/editor/article-body-editor.tsx
-import {useState} from "react";
+import {useRef,useState} from "react";
 import dynamic from "next/dynamic";
 import FiscalRichText from "@/components/fiscal-rich-text";
 import layout from "./editor-layout.module.css";
@@ -12,6 +12,28 @@ export default function ArticleBodyEditor({initial,sources}:Props){
  const [mode,setMode]=useState<"visual"|"markdown">(initial.trim()?"markdown":"visual");
  const [preview,setPreview]=useState(true);
  const [revision,setRevision]=useState(0);
+ const fileRef=useRef<HTMLInputElement>(null);
+ const [fileStatus,setFileStatus]=useState("");
+ const [fileError,setFileError]=useState("");
+ const [loadingFile,setLoadingFile]=useState(false);
+ const importFile=async(file?:File)=>{
+  if(!file)return;
+  setFileError("");
+  if(!/\.(md|markdown|txt)$/i.test(file.name)){setFileError("Selecione um arquivo .md, .markdown ou .txt.");return;}
+  if(file.size>2*1024*1024){setFileError("O arquivo excede o limite de 2 MB.");return;}
+  if(body.trim()&&!window.confirm("Importar este arquivo substituirá o texto atualmente no editor. Deseja continuar?"))return;
+  setLoadingFile(true);
+  try{
+   const content=(await file.text()).replace(/^\uFEFF/,"").replace(/\r\n?/g,"\n");
+   if(!content.trim()){setFileError("O arquivo está vazio.");return;}
+   setBody(content);
+   setMode("markdown");
+   setRevision(v=>v+1);
+   setPreview(true);
+   setFileStatus(`Arquivo importado: ${file.name}. Confira a prévia e clique em Salvar conteúdo para gravar.`);
+  }catch{setFileError("Não foi possível ler o arquivo. Verifique se é um arquivo de texto UTF-8.");}
+  finally{setLoadingFile(false);if(fileRef.current)fileRef.current.value="";}
+ };
  const block=legacyBlocks(body);
  const clear=()=>{
   if(!body.trim())return;
@@ -28,6 +50,13 @@ export default function ArticleBodyEditor({initial,sources}:Props){
     <button type="button" onClick={clear} disabled={!body.trim()} style={{padding:"9px 13px",border:"1px solid #e4bdba",borderRadius:7,color:"#a42323",background:"#fff7f7",cursor:"pointer",fontWeight:700}}>Limpar conteúdo</button>
    </div>
   </div>
+  <div style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
+   <input ref={fileRef} type="file" accept=".md,.markdown,.txt,text/markdown,text/plain" aria-label="Selecionar arquivo Markdown" style={{display:"none"}} onChange={e=>{void importFile(e.target.files?.[0]);}}/>
+   <button type="button" className={layout.toolButton} disabled={loadingFile} onClick={()=>fileRef.current?.click()}>{loadingFile?"Lendo arquivo…":"Selecionar arquivo .md / .txt"}</button>
+   <span style={{fontSize:12,color:"#607184"}}>O arquivo substitui somente o texto do editor; não altera título, resumo ou fontes.</span>
+  </div>
+  {fileError&&<p role="alert" style={{color:"#b42318"}}>{fileError}</p>}
+  {fileStatus&&<p role="status" style={{color:"#12683d"}}>{fileStatus}</p>}
   {block&&<p role="status" style={{padding:12,background:"#faf7ed",borderLeft:"3px solid #c9a227",color:"#6d531a",fontSize:13}}>O conteúdo utiliza blocos especiais antigos. Para preservar o texto, mantenha a edição em Markdown. A prévia permanece disponível.</p>}
   <input type="hidden" name="body" value={body}/>
   {mode==="visual"&&!block?<VisualEditor key={revision} value={body} onChange={setBody}/>:<>
