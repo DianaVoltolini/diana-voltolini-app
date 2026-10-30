@@ -7,7 +7,7 @@ export const dynamic="force-dynamic";
 export default async function EmailTemplateEditor({searchParams}:{searchParams:Promise<{editar?:string;erro?:string}>}){
  await requireAdmin();const params=await searchParams;const db=getSupabaseAdmin();
  const [{data:selected,error},{data:landings},{data:interestRows}]=await Promise.all([
- params.editar?db.from("marketing_email_templates").select("id,name,description,subject,body,kind,active,interest,landing_id,cta_label,cta_url").eq("id",params.editar).maybeSingle():Promise.resolve({data:null,error:null}),
+ params.editar?db.from("marketing_email_templates").select("id,name,description,subject,body,kind,active,interest,landing_id,cta_label,cta_url,auto_enabled,auto_include_existing").eq("id",params.editar).maybeSingle():Promise.resolve({data:null,error:null}),
  db.from("marketing_landings").select("id,title").order("created_at",{ascending:false}).limit(100),
  db.from("marketing_leads").select("interest").not("interest","is",null).limit(2000)
  ]);
