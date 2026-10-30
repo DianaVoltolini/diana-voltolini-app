@@ -28,21 +28,35 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
  const [automatic,setAutomatic]=useState(selected?.auto_enabled??false);
  const [existing,setExisting]=useState(selected?.auto_include_existing??false);
  const [source,setSource]=useState(selected?.kind==="welcome"?"home":"landing");
+ const [sendType,setSendType]=useState<"automatic"|"manual">(selected?.auto_enabled?"automatic":"manual");
  const bodyRef=useRef<HTMLTextAreaElement>(null);
  useEffect(()=>{const el=bodyRef.current;if(el){el.style.height="auto";el.style.height=Math.max(320,el.scrollHeight)+"px"}},[body]);
  return <form action={saveEmailTemplate} className={css.grid}>
   <input type="hidden" name="id" value={selected?.id??""}/>
-  <input type="hidden" name="kind" value={source==="home"?"welcome":"manual"}/>
+  <input type="hidden" name="kind" value={sendType==="automatic"&&source==="home"?"welcome":"manual"}/>
   <input type="hidden" name="active" value={active?"yes":"no"}/>
-  <input type="hidden" name="auto_enabled" value={automatic?"yes":"no"}/>
+  <input type="hidden" name="auto_enabled" value={sendType==="automatic"&&automatic?"yes":"no"}/>
+  <input type="hidden" name="landing_id" value={sendType==="automatic"&&source==="landing"?landing:""}/>
+  <input type="hidden" name="interest" value={sendType==="automatic"&&source==="landing"?interest:""}/>
   <input type="hidden" name="auto_include_existing" value={existing?"yes":"no"}/>
   <section className={css.headFields}>
    <div className={css.sectionIntro}><span>01 · IDENTIFICAÇÃO</span><h2>Dados da campanha</h2><p>Identificação e público de referência para este modelo.</p></div>
    <label>Nome da Campanha<input name="name" required maxLength={120} value={name} onChange={e=>setName(e.target.value)} placeholder="Ex.: Boas-vindas ao Conhecimento Fiscal"/></label>
    <label>Descrição<textarea name="description" maxLength={500} rows={2} value={description} onChange={e=>setDescription(e.target.value)} placeholder="Finalidade desta campanha"/></label>
-   <div className={css.duo}>
-    <label>Interesse<select name="interest" disabled={source==="home"} value={interest} onChange={e=>setInterest(e.target.value)}><option value="">Todos os interesses</option>{interests.map(i=><option key={i} value={i}>{i}</option>)}</select></label>
-    <label>Landing de origem<select name="landing_id" disabled={source==="home"} value={landing} onChange={e=>setLanding(e.target.value)}><option value="">Todas as landings</option>{landings.map(l=><option key={l.id} value={l.id}>{l.title}</option>)}</select></label>
+   <div style={{display:"grid",gap:13,borderTop:"1px solid #e2e8f0",paddingTop:20}}>
+    <div className={css.sectionIntro}><span>02 · CONFIGURAÇÃO DO ENVIO</span><h2>Quando enviar esta mensagem?</h2><p>Defina o envio manual ou automático e a origem dos destinatários.</p></div>
+    <label>Tipo de envio<select value={sendType} onChange={e=>{const v=e.target.value as "manual"|"automatic";setSendType(v);if(v==="manual")setAutomatic(false);else setAutomatic(true);}}><option value="manual">Manual — escolher destinatários na Torre</option><option value="automatic">Automático — após cadastro no site</option></select></label>
+    {sendType==="automatic"&&<>
+     <label>Origem do cadastro<select value={source} onChange={e=>{setSource(e.target.value);setLanding("");setInterest("");}}><option value="landing">Landing de material gratuito</option><option value="home">Newsletter da página principal</option></select></label>
+     {source==="landing"&&<div className={css.duo}>
+      <label>Landing de origem<select value={landing} onChange={e=>setLanding(e.target.value)} required><option value="">Selecione uma landing</option>{landings.map(l=><option key={l.id} value={l.id}>{l.title}</option>)}</select></label>
+      <label>Interesse<select value={interest} onChange={e=>setInterest(e.target.value)}><option value="">Todos os interesses</option>{interests.map(i=><option key={i} value={i}>{i}</option>)}</select></label>
+     </div>}
+     <label className={css.checkbox}><input type="checkbox" checked={automatic} onChange={e=>setAutomatic(e.target.checked)}/> Ativar o envio automático</label>
+     {automatic&&<label className={css.checkbox}><input type="checkbox" checked={existing} onChange={e=>setExisting(e.target.checked)}/> Incluir inscritos anteriores que ainda não receberam este modelo</label>}
+     <p style={{fontSize:12,color:"#607184"}}>O cron verifica novos inscritos e respeita o consentimento e os descadastros. A ativação poderá iniciar envios reais.</p>
+    </>}
+    {sendType==="manual"&&<p style={{fontSize:13,color:"#607184"}}>O modelo ficará disponível na Torre para você selecionar os destinatários e confirmar o envio. Nenhuma mensagem será disparada automaticamente.</p>}
    </div>
   </section>
   <section className={css.fields}>
@@ -55,13 +69,6 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
      <label>Destino<select name="cta_url" value={url} onChange={e=>{setUrl(e.target.value);setCta("Acessar "+(links.find(x=>x[1]===e.target.value)?.[0]??"site"));}}>{links.map(x=><option key={x[1]} value={x[1]}>{x[0]}</option>)}</select></label>
      <label>Texto do botão<input name="cta_label" required maxLength={80} value={cta} onChange={e=>setCta(e.target.value)}/></label>
     </div>
-   </div>
-   <div style={{display:"grid",gap:12,padding:"18px 0",borderTop:"1px solid #e2e8f0"}}>
-    <strong>Envio automático — Newsletter</strong>
-    <label style={{display:"grid",gap:6}}>Origem da inscrição<select value={source} onChange={e=>{setSource(e.target.value);if(e.target.value==="home"){setLanding("");setInterest("");}}}><option value="landing">Landing de material gratuito</option><option value="home">Newsletter da página principal</option></select></label>
-    <label className={css.checkbox}><input type="checkbox" checked={automatic} onChange={e=>setAutomatic(e.target.checked)}/> Ativar para novos leads inscritos</label>
-    {automatic&&<label className={css.checkbox}><input type="checkbox" checked={existing} onChange={e=>setExisting(e.target.checked)}/> Incluir leads existentes que ainda não receberam</label>}
-    <p style={{fontSize:12,color:"#607184"}}>{source==="home"?"Este modelo atenderá somente inscritos pelo formulário da página inicial.":"Selecione uma landing específica para a automação."}</p>
    </div>
    <label className={css.checkbox}><input type="checkbox" checked={active} onChange={e=>setActive(e.target.checked)}/> Modelo disponível para seleção</label>
    <div className={css.buttons}><button type="submit">Salvar modelo</button><Link href="/torre/modelos-email" className={css.backButton}>Voltar</Link></div>
