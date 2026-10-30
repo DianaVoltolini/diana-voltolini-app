@@ -15,7 +15,9 @@ export async function saveEmailTemplate(f:FormData){
  const db=getSupabaseAdmin();
  const auto_enabled=f.get("auto_enabled")==="yes",auto_include_existing=f.get("auto_include_existing")==="yes";
  if(auto_enabled&&!landing_id)redirect("/torre/modelos-email/editor?erro=landing");
- const payload={auto_enabled,auto_include_existing:auto_enabled&&auto_include_existing,name,description:description||null,subject,body,kind,interest:interest||null,landing_id:landing_id||null,cta_label,cta_url,active:f.get("active")==="yes",updated_at:new Date().toISOString()};
+ const existingTemplate=id?await db.from("marketing_email_templates").select("auto_enabled,auto_activated_at").eq("id",id).maybeSingle():{data:null};
+ const auto_activated_at=auto_enabled?(existingTemplate.data?.auto_enabled?existingTemplate.data.auto_activated_at??new Date().toISOString():new Date().toISOString()):null;
+ const payload={auto_activated_at,auto_enabled,auto_include_existing:auto_enabled&&auto_include_existing,name,description:description||null,subject,body,kind,interest:interest||null,landing_id:landing_id||null,cta_label,cta_url,active:f.get("active")==="yes",updated_at:new Date().toISOString()};
  const {error}=id?await db.from("marketing_email_templates").update(payload).eq("id",id):await db.from("marketing_email_templates").insert(payload);
  if(error)redirect("/torre/modelos-email/editor?erro=salvar");
  revalidatePath("/torre/modelos-email");redirect("/torre/modelos-email?salvo=1");
