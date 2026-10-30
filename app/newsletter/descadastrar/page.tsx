@@ -6,8 +6,12 @@ async function unsubscribe(form:FormData){
  const token=String(form.get("token")??"");
  if(!/^[0-9a-f-]{36}$/i.test(token))redirect("/newsletter/descadastrar?erro=1");
  const db=getSupabaseAdmin();
- const {data,error}=await db.from("marketing_email_deliveries").select("email").eq("unsubscribe_token",token).maybeSingle();
- if(error||!data)redirect("/newsletter/descadastrar?erro=1");
+ const {data:automatic,error}=await db.from("marketing_email_deliveries").select("email").eq("unsubscribe_token",token).maybeSingle();
+ if(error)redirect("/newsletter/descadastrar?erro=1");
+ const {data:manual,error:manualError}=automatic?{data:null,error:null}:await db.from("marketing_manual_send_recipients").select("email").eq("unsubscribe_token",token).maybeSingle();
+ if(manualError)redirect("/newsletter/descadastrar?erro=1");
+ const data=automatic??manual;
+ if(!data)redirect("/newsletter/descadastrar?erro=1");
  const {error:saveError}=await db.from("marketing_email_unsubscribes").upsert({email:data.email},{onConflict:"email"});
  if(saveError)redirect("/newsletter/descadastrar?erro=1");
  const {error:leadError}=await db.from("marketing_leads").update({newsletter_opt_in:false}).ilike("email",data.email);
