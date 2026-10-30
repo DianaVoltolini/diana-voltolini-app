@@ -10,7 +10,7 @@ export default async function NewsletterResults({searchParams}:{searchParams:Pro
  await requireAdmin();
  const params=await searchParams;
  const db=getSupabaseAdmin();
- const {data:models,error:modelError}=await db.from("marketing_email_templates").select("id,name,subject,landing_id,interest,auto_enabled").order("created_at",{ascending:false}).limit(200);
+ const {data:models,error:modelError}=await db.from("marketing_email_templates").select("id,name,subject,landing_id,interest,auto_enabled").eq("active",true).order("created_at",{ascending:false}).limit(200);
  const chosen=(models??[]).find(m=>m.id===params.modelo)??models?.[0]??null;
  const [{data:deliveries,error:deliveryError},{data:unsubscribes,error:unsubError},{data:landings}]=await Promise.all([
    chosen?db.from("marketing_email_deliveries").select("email,lead_name,status,created_at,accepted_at,error_message").eq("template_id",chosen.id).order("created_at",{ascending:false}).limit(1000):Promise.resolve({data:[],error:null}),
