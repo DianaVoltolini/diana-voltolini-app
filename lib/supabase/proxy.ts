@@ -116,7 +116,9 @@ export async function updateSession(
     pathname === "/redefinir-senha" ||
     pathname.startsWith(
       "/auth/",
-    );
+    ) ||
+    pathname === "/api/marketing/welcome/run" ||
+    pathname === "/newsletter/descadastrar";
 
   if (
     !userId &&
