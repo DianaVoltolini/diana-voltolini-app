@@ -1,7 +1,8 @@
 -- 2026-10-30 - Automação simples de newsletter
 ALTER TABLE public.marketing_email_templates
  ADD COLUMN IF NOT EXISTS auto_enabled boolean NOT NULL DEFAULT false,
- ADD COLUMN IF NOT EXISTS auto_include_existing boolean NOT NULL DEFAULT false;
+ ADD COLUMN IF NOT EXISTS auto_include_existing boolean NOT NULL DEFAULT false,
+ ADD COLUMN IF NOT EXISTS auto_activated_at timestamptz;
 CREATE TABLE IF NOT EXISTS public.marketing_email_deliveries (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  template_id uuid NOT NULL REFERENCES public.marketing_email_templates(id),
