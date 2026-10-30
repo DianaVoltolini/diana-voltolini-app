@@ -15,7 +15,7 @@ export async function runWelcomeAutomation(){
  try{
  for(const model of models??[]){
   if(sent+failed>=10)break;
-  let query=db.from("marketing_leads").select("id,name,email,created_at").eq("newsletter_opt_in",true).eq("landing_id",model.landing_id).order("created_at",{ascending:true}).limit(250);
+  let query=db.from("marketing_leads").select("id,name,email,created_at").eq("newsletter_opt_in",true).eq("landing_id",model.landing_id).order("created_at",{ascending:true}).limit(1000);
   if(model.interest)query=query.eq("interest",model.interest);
   if(!model.auto_include_existing&&model.auto_activated_at)query=query.gte("created_at",model.auto_activated_at);
   const {data:leads,error:leadError}=await query;
