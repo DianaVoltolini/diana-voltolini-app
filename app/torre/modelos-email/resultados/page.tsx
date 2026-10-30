@@ -10,7 +10,7 @@ export default async function NewsletterResults({searchParams}:{searchParams:Pro
  await requireAdmin();
  const params=await searchParams;
  const db=getSupabaseAdmin();
- const {data:models,error:modelError}=await db.from("marketing_email_templates").select("id,name,subject,landing_id,interest,auto_enabled").order("created_at",{ascending:false}).limit(200);
+ const {data:models,error:modelError}=await db.from("marketing_email_templates").select("id,name,subject,landing_id,interest,kind,auto_enabled").eq("active",true).order("created_at",{ascending:false}).limit(200);
  const chosen=(models??[]).find(m=>m.id===params.modelo)??models?.[0]??null;
  const [{data:deliveries,error:deliveryError},{data:unsubscribes,error:unsubError},{data:landings}]=await Promise.all([
    chosen?db.from("marketing_email_deliveries").select("email,lead_name,status,created_at,accepted_at,error_message").eq("template_id",chosen.id).order("created_at",{ascending:false}).limit(1000):Promise.resolve({data:[],error:null}),
@@ -18,8 +18,8 @@ export default async function NewsletterResults({searchParams}:{searchParams:Pro
    db.from("marketing_landings").select("id,title").limit(200)
  ]);
  const [{count:totalLeads},{count:optedIn}]=await Promise.all([
-   chosen?.landing_id?db.from("marketing_leads").select("*",{count:"exact",head:true}).eq("landing_id",chosen.landing_id):Promise.resolve({count:null}),
-   chosen?.landing_id?db.from("marketing_leads").select("*",{count:"exact",head:true}).eq("landing_id",chosen.landing_id).eq("newsletter_opt_in",true):Promise.resolve({count:null})
+   chosen?.kind==="welcome"?db.from("marketing_newsletter_subscribers").select("*",{count:"exact",head:true}):chosen?.landing_id?db.from("marketing_leads").select("*",{count:"exact",head:true}).eq("landing_id",chosen.landing_id):Promise.resolve({count:null}),
+   chosen?.kind==="welcome"?db.from("marketing_newsletter_subscribers").select("*",{count:"exact",head:true}).eq("newsletter_opt_in",true):chosen?.landing_id?db.from("marketing_leads").select("*",{count:"exact",head:true}).eq("landing_id",chosen.landing_id).eq("newsletter_opt_in",true):Promise.resolve({count:null})
  ]);
  const filtered=(deliveries??[]);
  const counts={accepted:filtered.filter(d=>d.status==="accepted").length,failed:filtered.filter(d=>d.status==="failed").length,pending:filtered.filter(d=>d.status==="pending").length,sending:filtered.filter(d=>d.status==="sending").length};
@@ -32,7 +32,7 @@ export default async function NewsletterResults({searchParams}:{searchParams:Pro
  <p><Link href="/torre/modelos-email" style={{color:"#86650c",fontWeight:700}}>← Voltar aos modelos de e-mail</Link></p>
  {modelError||deliveryError||unsubError?<p role="alert" style={{color:"#b42318"}}>Não foi possível consultar todos os resultados. Verifique as tabelas do Supabase.</p>:null}
  <form method="get" style={{...card,display:"grid",gap:9,maxWidth:580}}><label htmlFor="modelo" style={{fontWeight:700}}>Campanha</label><select id="modelo" name="modelo" defaultValue={chosen?.id??""} style={{padding:12,border:"1px solid #cad4e0",borderRadius:7}}>{(models??[]).map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select><button type="submit" style={{justifySelf:"start",padding:"10px 16px",border:0,borderRadius:7,background:"#c9a227",fontWeight:750}}>Consultar</button></form>
- {chosen?<><p style={{color:"#607184",fontSize:13}}>Landing: <strong>{chosenLanding}</strong> · Envio automático: <strong>{chosen.auto_enabled?"Ativo":"Desativado"}</strong></p>
+ {chosen?<><p style={{color:"#607184",fontSize:13}}>Origem: <strong>{chosen.kind==="welcome"?"Newsletter da página principal":chosenLanding}</strong> · Envio automático: <strong>{chosen.auto_enabled?"Ativo":"Desativado"}</strong></p>
  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:12}}>
  {([["Leads da landing",totalLeads],["Inscritos atualmente",optedIn],["Aceitos pelo SMTP",counts.accepted],["Falhas",counts.failed],["Pendentes",counts.pending+counts.sending],["Descadastros entre destinatários",unsubCampaign]] as const).map(([label,value])=><div key={label} style={card}><div style={{fontSize:13,color:"#607184"}}>{label}</div><strong style={{fontSize:30,color:"#102033"}}>{value??"—"}</strong></div>)}
  </div>

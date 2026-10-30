@@ -12,6 +12,8 @@ async function unsubscribe(form:FormData){
  if(saveError)redirect("/newsletter/descadastrar?erro=1");
  const {error:leadError}=await db.from("marketing_leads").update({newsletter_opt_in:false}).ilike("email",data.email);
  if(leadError){console.error("Falha ao sincronizar consentimento da newsletter",leadError);redirect("/newsletter/descadastrar?erro=1");}
+ const {error:subscriberError}=await db.from("marketing_newsletter_subscribers").update({newsletter_opt_in:false}).ilike("email",data.email);
+ if(subscriberError){console.error("Falha ao sincronizar o cadastro da newsletter",subscriberError);redirect("/newsletter/descadastrar?erro=1");}
  redirect("/newsletter/descadastrar?sucesso=1");
 }
 export default async function UnsubscribePage({searchParams}:{searchParams:Promise<{token?:string;sucesso?:string;erro?:string}>}){
