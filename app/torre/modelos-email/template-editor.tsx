@@ -28,16 +28,16 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
  const [automatic,setAutomatic]=useState(selected?.auto_enabled??false);
  const [existing,setExisting]=useState(selected?.auto_include_existing??false);
  const [source,setSource]=useState(selected?.kind==="welcome"?"home":"landing");
- const [sendType,setSendType]=useState<"automatic"|"manual">(selected?.auto_enabled?"automatic":"manual");
+ const [sendType,setSendType]=useState<"automatic"|"manual">(selected?.auto_enabled||selected?.kind==="welcome"?"automatic":"manual");
  const bodyRef=useRef<HTMLTextAreaElement>(null);
  useEffect(()=>{const el=bodyRef.current;if(el){el.style.height="auto";el.style.height=Math.max(320,el.scrollHeight)+"px"}},[body]);
  return <form action={saveEmailTemplate} className={css.grid}>
   <input type="hidden" name="id" value={selected?.id??""}/>
-  <input type="hidden" name="kind" value={sendType==="automatic"&&source==="home"?"welcome":"manual"}/>
+  <input type="hidden" name="kind" value={source==="home"?"welcome":"manual"}/>
   <input type="hidden" name="active" value={active?"yes":"no"}/>
   <input type="hidden" name="auto_enabled" value={sendType==="automatic"&&automatic?"yes":"no"}/>
-  <input type="hidden" name="landing_id" value={sendType==="automatic"&&source==="landing"?landing:""}/>
-  <input type="hidden" name="interest" value={sendType==="automatic"&&source==="landing"?interest:""}/>
+  <input type="hidden" name="landing_id" value={source==="landing"?landing:""}/>
+  <input type="hidden" name="interest" value={source==="landing"?interest:""}/>
   <input type="hidden" name="auto_include_existing" value={existing?"yes":"no"}/>
   <section className={css.headFields}>
    <div className={css.sectionIntro}><span>01 · IDENTIFICAÇÃO</span><h2>Dados da campanha</h2><p>Identificação e público de referência para este modelo.</p></div>
@@ -56,11 +56,11 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
      {automatic&&<label className={css.checkbox}><input type="checkbox" checked={existing} onChange={e=>setExisting(e.target.checked)}/> Incluir inscritos anteriores que ainda não receberam este modelo</label>}
      <p style={{fontSize:12,color:"#607184"}}>O cron verifica novos inscritos e respeita o consentimento e os descadastros. A ativação poderá iniciar envios reais.</p>
     </>}
-    {sendType==="manual"&&<p style={{fontSize:13,color:"#607184"}}>O modelo ficará disponível na Torre para você selecionar os destinatários e confirmar o envio. Nenhuma mensagem será disparada automaticamente.</p>}
+    {sendType==="manual"&&<p style={{fontSize:13,color:"#607184"}}>O modelo poderá ser selecionado no fluxo de envio manual. O disparo manual continua sujeito à liberação do envio real na Torre; salvar o modelo não envia mensagens.</p>}
    </div>
   </section>
   <section className={css.fields}>
-   <div className={css.sectionIntro}><span>02 · MENSAGEM</span><h2>Conteúdo do e-mail</h2><p>Escreva a mensagem e defina o botão de acesso.</p></div>
+   <div className={css.sectionIntro}><span>03 · MENSAGEM</span><h2>Conteúdo do e-mail</h2><p>Escreva a mensagem e defina o botão de acesso.</p></div>
    <label>Assunto<input name="subject" required maxLength={180} value={subject} onChange={e=>setSubject(e.target.value)} placeholder="Assunto exibido no e-mail"/></label>
    <label>Texto<textarea ref={bodyRef} name="body" required maxLength={14000} rows={13} value={body} onChange={e=>setBody(e.target.value)} placeholder="Escreva a mensagem"/></label>
    <div className={css.cta}>
@@ -74,7 +74,7 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
    <div className={css.buttons}><button type="submit">Salvar modelo</button><Link href="/torre/modelos-email" className={css.backButton}>Voltar</Link></div>
   </section>
   <aside className={css.previewPanel}>
-   <div className={css.previewHeader}><span className={css.previewTitle}>03 · VISUALIZAÇÃO AUTOMÁTICA</span><p>O resultado aparece ao lado enquanto você escreve.</p></div>
+   <div className={css.previewHeader}><span className={css.previewTitle}>04 · VISUALIZAÇÃO</span><p>O resultado aparece ao lado enquanto você escreve.</p></div>
    <div className={css.mail}>
     <header><img src="/brand/logo-light.png" alt="Diana Voltolini"/></header>
     <div className={css.mailBody}>
