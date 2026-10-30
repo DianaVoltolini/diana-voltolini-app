@@ -73,7 +73,7 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
      <div className={css.message}>{(body||"Sua mensagem aparecerá aqui.").replaceAll("{{nome}}","Diana")}</div>
      {cta.trim()&&<div className={css.ctaCenter}><a href={url} target="_blank" rel="noopener noreferrer" className={css.mailButton}>{cta}</a></div>}
     </div>
-    <footer><strong>Diana Voltolini</strong><p>Especialista em Faturamento e Inteligência Fiscal</p><p>Você está recebendo este e-mail por ter autorizado nossas comunicações. Se não desejar continuar recebendo a Newsletter Fiscal, poderá cancelar sua inscrição pelo link de descadastro.</p><span>Cancelar inscrição (link disponível na próxima etapa)</span></footer>
+    <footer><strong>Diana Voltolini</strong><p>Especialista em Faturamento e Inteligência Fiscal</p><p>Você está recebendo este e-mail por ter autorizado nossas comunicações. Se não desejar continuar recebendo a Newsletter Fiscal, poderá cancelar sua inscrição pelo link de descadastro.</p><span>Cancelar inscrição — o link individual será incluído no e-mail enviado ao assinante.</span></footer>
    </div>
   </aside>
  </form>;

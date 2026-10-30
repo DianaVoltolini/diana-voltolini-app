@@ -38,3 +38,9 @@ export async function sendMarketingTest(to:string,subject:string,body:string){
   return sent.messageId;
  }finally{transport.close()}
 }
+
+export function renderNewsletterEmail(subject:string,body:string,unsubscribeUrl:string){
+ const base=renderMarketingEmail(subject,body);
+ const footer='Você está recebendo esta mensagem porque autorizou a Newsletter Fiscal.<br><a href="'+escapeHtml(unsubscribeUrl)+'" style="color:#86650c;text-decoration:underline">Cancelar inscrição</a>';
+ return base.replace("Mensagem de teste do painel administrativo. Nenhuma campanha foi enviada.",footer);
+}

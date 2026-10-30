@@ -1,7 +1,7 @@
 // lib/marketing/automatic-send.ts
 import nodemailer from "nodemailer";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
-import {renderMarketingEmail} from "@/lib/marketing/email-test";
+import {renderNewsletterEmail} from "@/lib/marketing/email-test";
 const normal=(email:string)=>email.trim().toLowerCase();
 const valid=(email:string)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 export async function runWelcomeAutomation(){
@@ -38,7 +38,7 @@ export async function runWelcomeAutomation(){
    const subject=model.subject.replaceAll("{{nome}}",name);
    const body=model.body.replaceAll("{{nome}}",name).replace(/\[BOTAO:[^\]]+\]/g,"").trim();
    const formatted=body+(model.cta_url&&model.cta_label?"\n\n[BOTAO: "+model.cta_label+" | "+model.cta_url+"]":"");
-   const html=renderMarketingEmail(subject,formatted).replace("Mensagem de teste do painel administrativo. Nenhuma campanha foi enviada.",'Você recebe esta mensagem porque autorizou a Newsletter Fiscal.<br><a href="'+unsubUrl+'">Cancelar inscrição</a>').replace("Faturamento e Inteligência Fiscal<br>","Especialista em Faturamento e Inteligência Fiscal<br>");
+   const html=renderNewsletterEmail(subject,formatted,unsubUrl);
    try{
     const delivery=await transport.sendMail({from:{name:process.env.SMTP_FROM_NAME||"Diana Voltolini",address:from},to:email,subject,html,text:subject+"\n\n"+body+"\n\nCancelar inscrição: "+unsubUrl,headers:{"List-Unsubscribe":"<"+unsubUrl+">"}});
     if(!delivery.accepted.some(a=>(typeof a==="string"?a:a.address).toLowerCase()===email))throw new Error("SMTP não aceitou o destinatário");
