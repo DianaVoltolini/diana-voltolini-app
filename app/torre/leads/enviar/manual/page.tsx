@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {randomUUID} from "node:crypto";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 import ManualComposer from "./manual-composer";
@@ -14,9 +15,9 @@ export default async function ManualEmailPage(){
  const interests=Array.from(new Set((interestRows??[]).map(x=>x.interest).filter((v):v is string=>typeof v==="string"&&v.length>0))).sort((a,b)=>a.localeCompare(b,"pt-BR"));
  return <main className={styles.page}><section className={styles.content}><div className="container">
   <header className={styles.pageHeader} style={{display:"flex",alignItems:"end",justifyContent:"space-between",gap:24,flexWrap:"wrap"}}>
-   <div><p className={styles.eyebrow}>MARKETING · LEADS</p><h1>Envio manual</h1><p>Escolha um modelo, confira os filtros e faça o teste antes de liberar a campanha.</p></div>
+   <div><p className={styles.eyebrow}>MARKETING · LEADS</p><h1>Envio manual</h1><p>Selecione o modelo, defina o público, confira e confirme o envio.</p></div>
    <Link href="/torre/leads" className={styles.openLink} style={{background:"#fff",border:"1px solid #d7e0e9",color:"#102033"}}>Voltar aos Leads</Link>
   </header>
-  {error?<p role="alert">Não foi possível carregar os modelos de e-mail.</p>:<ManualComposer models={models??[]} interests={interests} landings={landings??[]}/>}
+  {error?<p role="alert">Não foi possível carregar os modelos de e-mail.</p>:<ManualComposer models={models??[]} interests={interests} landings={landings??[]} sendId={randomUUID()}/>}
  </div></section></main>;
 }
