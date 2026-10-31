@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function RenewalRequest({ issuanceEnabled = false }: { issuanceEnabled?: boolean }) {
+export default function RenewalRequest({ issuanceEnabled = false, financialEnabled = false }: { issuanceEnabled?: boolean; financialEnabled?: boolean }) {
   const router = useRouter();
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -40,7 +40,26 @@ export default function RenewalRequest({ issuanceEnabled = false }: { issuanceEn
           router.refresh();
           return;
         }
-        setMessage("Pedido preparado. O Pix ou boleto ainda não foi emitido.");
+        if (financialEnabled) {
+          const completeResponse = await fetch("/api/fiscal/renewal/complete-payment", {
+            method:"POST",credentials:"same-origin",cache:"no-store",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({invoiceId:data.invoiceId}),
+          });
+          const completion:unknown=await completeResponse.json();
+          const finished=completion&&typeof completion==="object"
+            ?completion as Record<string,unknown>:{};
+          if(!completeResponse.ok||finished.state!=="receivable_linked"){
+            setMessage("O pedido foi registrado, mas a cobrança exige conferência. Não tente emitir novamente.");
+            router.refresh();
+            return;
+          }
+          setMessage(finished.paymentLinkAvailable===true
+            ?"Cobrança disponível. Abra o link de pagamento exibido no painel."
+            :"Cobrança localizada, aguardando disponibilização do link de pagamento.");
+        } else {
+          setMessage("Pedido preparado. O Pix ou boleto ainda não foi emitido.");
+        }
       } else {
         setMessage("Solicitação registrada. A cobrança ainda não foi emitida.");
       }
