@@ -11,22 +11,25 @@ const uuid=(v:string)=>/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]
 const normalize=(v:string)=>v.trim().toLowerCase();
 async function getAudience(interest:string,landing:string):Promise<Lead[]>{
  const db=getSupabaseAdmin();
- let query=db.from("marketing_leads").select("id,name,email").eq("newsletter_opt_in",true).order("created_at",{ascending:false}).limit(1000);
- if(interest)query=query.eq("interest",interest);
- if(landing)query=query.eq("landing_id",landing);
- const {data,error}=await query;
- if(error)throw error;
- const seen=new Set<string>(),deduped:Lead[]=[];
- for(const row of data??[]){
+ let leadQuery=db.from("marketing_leads").select("id,name,email").eq("newsletter_opt_in",true).order("created_at",{ascending:false}).limit(1000);
+ if(interest)leadQuery=leadQuery.eq("interest",interest);
+ if(landing)leadQuery=leadQuery.eq("landing_id",landing);
+ const [leadsResult,newsletterResult,blockedResult]=await Promise.all([
+  leadQuery,
+  !interest&&!landing?db.from("marketing_newsletter_subscribers").select("id,name,email").eq("newsletter_opt_in",true).order("created_at",{ascending:false}).limit(1000):Promise.resolve({data:[] as Lead[],error:null}),
+  db.from("marketing_email_unsubscribes").select("email").limit(3000)
+ ]);
+ if(leadsResult.error)throw leadsResult.error;
+ if(newsletterResult.error)throw newsletterResult.error;
+ if(blockedResult.error)throw blockedResult.error;
+ const blocked=new Set((blockedResult.data??[]).map(x=>normalize(x.email)));
+ const seen=new Set<string>(),result:Lead[]=[];
+ for(const row of [...(leadsResult.data??[]),...(newsletterResult.data??[])]){
   const email=normalize(row.email??"");
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||seen.has(email))continue;
-  seen.add(email);deduped.push({...row,email});
+  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||seen.has(email)||blocked.has(email))continue;
+  seen.add(email);result.push({...row,email});
  }
- if(!deduped.length)return [];
- const {data:blocked,error:blockedError}=await db.from("marketing_email_unsubscribes").select("email").limit(1000);
- if(blockedError)throw blockedError;
- const deny=new Set((blocked??[]).map(x=>normalize(x.email)));
- return deduped.filter(x=>!deny.has(x.email));
+ return result;
 }
 export async function manualSendAction(_previous:ManualState,form:FormData):Promise<ManualState>{
  await requireAdmin();
