@@ -31,10 +31,14 @@ export default async function SubscriptionPage({searchParams}:{searchParams:Prom
  const {data:pendingPayment}=nextInvoice?.order_id
   ?await db.from("payments").select("payment_url,status").eq("order_id",nextInvoice.order_id).eq("provider","bling").in("status",["pending","processing"]).order("created_at",{ascending:false}).limit(1).maybeSingle()
   :{data:null};
- const todaySaoPaulo=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
- const renewalStarts=access.paidUntil?new Date(new Date(access.paidUntil).getTime()-10*24*60*60*1000):null;
- const renewalStartDate=renewalStarts?new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo",day:"2-digit",month:"2-digit",year:"numeric"}).format(renewalStarts):null;
- const isRenewalPeriod=renewalStarts?todaySaoPaulo>=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(renewalStarts):false;
+ // A janela de renovação usa datas civis de São Paulo, nunca horas.
+ const dateInSaoPaulo=(value:Date)=>{const p=new Intl.DateTimeFormat("en-GB",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(value);const m=Object.fromEntries(p.map(x=>[x.type,x.value]));return `${m.year}-${m.month}-${m.day}`;};
+ const dateMinusDays=(iso:string,days:number)=>{const d=new Date(iso+"T12:00:00Z");d.setUTCDate(d.getUTCDate()-days);return d.toISOString().slice(0,10);};
+ const displayCivilDate=(iso:string)=>iso.split("-").reverse().join("/");
+ const todaySaoPaulo=dateInSaoPaulo(new Date());
+ const renewalStartIso=access.paidUntil?dateMinusDays(dateInSaoPaulo(new Date(access.paidUntil)),10):null;
+ const renewalStartDate=renewalStartIso?displayCivilDate(renewalStartIso):null;
+ const isRenewalPeriod=renewalStartIso!==null&&todaySaoPaulo>=renewalStartIso;
  const formatDate=(value:string)=>new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo"}).format(new Date(value.length===10?value+"T12:00:00Z":value));
  const nextDate=nextInvoice?.due_date?formatDate(nextInvoice.due_date):access.paidUntil?formatDate(access.paidUntil):null;
  return <ProductPage title="Fiscal na Prática" description="Análises fiscais, materiais e orientações para aplicar na rotina de faturamento.">
