@@ -6,7 +6,7 @@ import {renderNewsletterEmail} from "@/lib/marketing/email-test";
 import nodemailer from "nodemailer";
 type Lead={id:string;name:string|null;email:string};
 export type ManualState={stage:"initial"|"review"|"done"|"error";message:string;eligible:number;sent:number;failed:number;sendId:string};
-export const initialManualState:ManualState={stage:"initial",message:"",eligible:0,sent:0,failed:0,sendId:""};
+const initialManualState:ManualState={stage:"initial",message:"",eligible:0,sent:0,failed:0,sendId:""};
 const uuid=(v:string)=>/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(v);
 const normalize=(v:string)=>v.trim().toLowerCase();
 async function getAudience(interest:string,landing:string):Promise<Lead[]>{
