@@ -56,9 +56,9 @@ BEGIN
   v_reference := pg_catalog.date_trunc('month',v_due::timestamp)::date;
 
   SELECT * INTO v_invoice
-  FROM public.fiscal_subscription_invoices
-  WHERE subscription_id = p_subscription_id
-    AND reference_month = v_reference
+  FROM public.fiscal_subscription_invoices i
+  WHERE i.subscription_id = p_subscription_id
+    AND i.reference_month = v_reference
   FOR UPDATE;
 
   IF FOUND THEN
