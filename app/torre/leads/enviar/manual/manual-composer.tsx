@@ -2,7 +2,8 @@
 // app/torre/leads/enviar/manual/manual-composer.tsx
 import {useActionState,useMemo,useState} from "react";
 import Link from "next/link";
-import {manualSendAction,initialManualState} from "./manual-actions";
+import {manualSendAction,type ManualState} from "./manual-actions";
+const initialManualState:ManualState={stage:"initial",message:"",eligible:0,sent:0,failed:0,sendId:""};
 import styles from "./manual.module.css";
 type Template={id:string;name:string;subject:string;body:string;interest:string|null;landing_id:string|null;cta_url:string|null;cta_label:string|null};
 type Landing={id:string;title:string};
