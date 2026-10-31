@@ -59,7 +59,7 @@ export default async function SubscriptionPage({searchParams}:{searchParams:Prom
  <strong style={{fontSize:21,color:"#102033"}}>{nextDate??"A confirmar"}</strong>
  <p style={{fontSize:12,color:"#748497",margin:"5px 0 0"}}>{nextInvoice?"Cobrança pendente · "+new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(nextInvoice.amount_cents/100):access.cancellationRequested?"Não serão geradas novas renovações":"Previsão conforme o período pago; cobrança ainda não gerada."}</p>
  {!access.cancellationRequested&&nextInvoice&&pendingPayment?.payment_url&&pendingPayment.payment_url.startsWith("https://")&&<p style={{margin:"12px 0 0"}}><a href={pendingPayment.payment_url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",background:"#c9a227",color:"#102033",padding:"10px 15px",borderRadius:8,fontWeight:750,textDecoration:"none"}}>Acessar cobrança existente</a></p>}
- {!access.cancellationRequested&&!nextInvoice&&isRenewalPeriod&&renewalRequestEnabled&&<RenewalRequest/>}
+ {!access.cancellationRequested&&!nextInvoice&&isRenewalPeriod&&renewalRequestEnabled&&<RenewalRequest issuanceEnabled={process.env.FISCAL_RENEWAL_PANEL_ISSUANCE_ENABLED==="1"}/>}
  {!access.cancellationRequested&&!nextInvoice&&renewalStartDate&&<p style={{fontSize:12,color:"#65758a",margin:"12px 0 0"}}>{isRenewalPeriod?"A renovação ainda não está disponível para pagamento. Nenhuma cobrança foi gerada.":"A renovação poderá ser solicitada a partir de "+renewalStartDate+". Nenhuma cobrança foi gerada."}</p>}
  {!access.cancellationRequested&&access.paidUntil&&access.subscriptionId&&<div className={styles.cancelArea}><CancelSubscriptionConfirm paidUntil={access.paidUntil} subscriptionId={access.subscriptionId}/></div>}
  </div></details>
