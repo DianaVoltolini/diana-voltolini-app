@@ -31,6 +31,12 @@ BEGIN
     RETURN NEW;
   END IF;
 
+  -- Somente pedidos criados explicitamente para renovação podem
+  -- prorrogar uma assinatura; pedidos de primeira compra não entram.
+  IF NEW.metadata->>'fiscal_renewal' IS DISTINCT FROM 'true' THEN
+    RETURN NEW;
+  END IF;
+
   -- Apenas pedidos já vinculados à mensalidade de renovação.
   SELECT * INTO v_invoice
   FROM public.fiscal_subscription_invoices i
@@ -81,6 +87,9 @@ BEGIN
   END IF;
 
   v_now := pg_catalog.now();
+  -- Pagamento antecipado ou pontual preserva a data contratada.
+  -- Se o acesso já expirou, inicia o novo mês na confirmação do pagamento,
+  -- evitando conceder um período retroativo sem acesso.
   v_base := pg_catalog.greatest(v_subscription.paid_until, v_now);
 
   UPDATE public.fiscal_subscription_invoices
