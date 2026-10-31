@@ -19,7 +19,7 @@ DECLARE
 BEGIN
   IF NEW.status IS DISTINCT FROM 'paid'
      OR NEW.user_id IS NULL
-     OR (TG_OP = 'UPDATE' AND OLD.status = 'paid') THEN
+     OR OLD.status = 'paid' THEN
     RETURN NEW;
   END IF;
 
@@ -96,7 +96,7 @@ FROM PUBLIC, anon, authenticated;
 DROP TRIGGER IF EXISTS activate_fiscal_paid_renewal_order ON public.orders;
 
 CREATE TRIGGER activate_fiscal_paid_renewal_order
-AFTER INSERT OR UPDATE OF status ON public.orders
+AFTER UPDATE OF status ON public.orders
 FOR EACH ROW
 WHEN (NEW.status = 'paid' AND NEW.user_id IS NOT NULL)
 EXECUTE FUNCTION public.activate_fiscal_paid_renewal();
