@@ -63,6 +63,23 @@ BEGIN
 
   IF FOUND THEN
     IF v_invoice.status = 'pending' AND v_invoice.order_id IS NOT NULL THEN
+      -- Não reutilizar reserva se o pedido tiver sido pago, cancelado,
+      -- vinculado a outro cliente/produto ou houver cobrança já registrada.
+      -- Nesses casos somente conciliação manual pode prosseguir.
+      SELECT o.* INTO v_original FROM public.orders o
+      JOIN public.products p ON p.id = o.product_id
+      WHERE o.id = v_invoice.order_id
+        AND o.user_id = p_user_id
+        AND p.code = 'ASSINATURA-FISCAL-001'
+        AND o.status = 'pending'
+        AND o.payment_provider = 'bling'
+        AND o.amount_cents = v_invoice.amount_cents
+        AND o.metadata->>'fiscal_renewal' = 'true'
+        AND o.metadata->>'fiscal_subscription_id' = p_subscription_id::text
+        AND o.metadata->>'reference_month' = v_invoice.reference_month::text;
+      IF NOT FOUND THEN
+        RAISE EXCEPTION 'Pedido de mensalidade existente exige conferência';
+      END IF;
       RETURN QUERY SELECT v_invoice.id,v_invoice.order_id,v_invoice.reference_month,v_invoice.due_date;
       RETURN;
     END IF;
