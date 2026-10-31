@@ -62,10 +62,21 @@ BEGIN
     OR v_order.payment_provider IS DISTINCT FROM 'bling'
     OR v_order.provider_order_id IS NOT NULL
     OR v_order.amount_cents IS DISTINCT FROM v_invoice.amount_cents
+    OR v_order.metadata->>'fiscal_subscription_id' IS DISTINCT FROM v_subscription.id::text
+    OR v_order.metadata->>'reference_month' IS DISTINCT FROM v_invoice.reference_month::text
+    OR v_order.product_id IS DISTINCT FROM (
+      SELECT p.id FROM public.products p WHERE p.code = 'ASSINATURA-FISCAL-001'
+    )
     OR v_order.metadata->>'fiscal_renewal' IS DISTINCT FROM 'true'
     OR v_order.metadata->>'checkout_state' IS DISTINCT FROM 'reserved' THEN
     -- Se já houver registro externo, não criar outro; exige conciliação.
     RAISE EXCEPTION 'Pedido exige conferência antes de emitir cobrança';
+  END IF;
+
+  -- Um payment já persistido significa possível cobrança externa:
+  -- a emissão exige conciliação, mesmo sem provider_order_id no pedido.
+  IF EXISTS (SELECT 1 FROM public.payments pay WHERE pay.order_id = v_order.id) THEN
+    RAISE EXCEPTION 'Pagamento já registrado; conciliar antes de nova emissão';
   END IF;
 
   -- Sem duplicar tentativas; claims existentes são SEMPRE apenas consultivos.
