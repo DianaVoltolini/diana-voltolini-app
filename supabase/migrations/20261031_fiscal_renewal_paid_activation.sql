@@ -58,11 +58,21 @@ BEGIN
   WHERE s.id = v_invoice.subscription_id
   FOR UPDATE;
 
+  -- Pagamento que chega após cancelamento: registrar o pedido como pago,
+  -- mas não reativar o acesso de forma automática. A invoice permanece
+  -- pendente para conciliação humana (consulta em sql/fiscal_renewal_paid_review.sql).
+  -- Não lançar EXCEPTION aqui: isso reverteria o status pago do pedido.
+  IF FOUND AND (
+     v_subscription.renewal_enabled IS DISTINCT FROM true
+     OR v_subscription.cancellation_requested_at IS NOT NULL
+     OR v_subscription.status = 'canceled'
+  ) THEN
+    RETURN NEW;
+  END IF;
+
   IF NOT FOUND
      OR v_subscription.user_id IS DISTINCT FROM NEW.user_id
      OR v_subscription.status NOT IN ('active','past_due')
-     OR v_subscription.renewal_enabled IS DISTINCT FROM true
-     OR v_subscription.cancellation_requested_at IS NOT NULL
      OR v_subscription.paid_until IS NULL
      OR NEW.amount_cents <> v_invoice.amount_cents THEN
     RAISE EXCEPTION
