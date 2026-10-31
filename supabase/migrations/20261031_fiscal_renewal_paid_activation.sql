@@ -90,7 +90,19 @@ BEGIN
   -- Pagamento antecipado ou pontual preserva a data contratada.
   -- Se o acesso já expirou, inicia o novo mês na confirmação do pagamento,
   -- evitando conceder um período retroativo sem acesso.
-  v_base := pg_catalog.greatest(v_subscription.paid_until, v_now);
+  -- Regra por DIA civil em São Paulo, sem comparar horas/minutos.
+  -- Se pagou até o dia do vencimento, acrescentar mês à vigência original.
+  -- Se pagou em data posterior, começar novo mês na DATA do pagamento.
+  -- Usar meio-dia local para armazenar data civil no campo timestamptz
+  -- sem transição acidental de dia por conversões de fuso.
+  IF (v_now AT TIME ZONE 'America/Sao_Paulo')::date
+      <= (v_subscription.paid_until AT TIME ZONE 'America/Sao_Paulo')::date THEN
+    v_base := ((v_subscription.paid_until AT TIME ZONE 'America/Sao_Paulo')::date
+      + TIME '12:00') AT TIME ZONE 'America/Sao_Paulo';
+  ELSE
+    v_base := ((v_now AT TIME ZONE 'America/Sao_Paulo')::date
+      + TIME '12:00') AT TIME ZONE 'America/Sao_Paulo';
+  END IF;
 
   UPDATE public.fiscal_subscription_invoices
   SET status = 'paid',
