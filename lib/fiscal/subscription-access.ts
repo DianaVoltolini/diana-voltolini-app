@@ -15,7 +15,7 @@ export async function getFiscalAccess(userId:string):Promise<Access>{
  const now=new Date(),today=dateBR(now);
  for(const sub of subscriptions??[]){
   const cancellationRequested=Boolean(sub.cancellation_requested_at)||sub.renewal_enabled===false||sub.status==="canceled";
-  if(sub.paid_until && new Date(sub.paid_until)>now)
+  if(sub.paid_until && dateBR(new Date(sub.paid_until))>=today)
    return {allowed:true,grace:false,paidUntil:sub.paid_until,cancellationRequested,subscriptionId:sub.id};
   if(cancellationRequested||sub.status==="canceled"||!sub.paid_until)continue;
   const {data:invoices,error:invoiceError}=await db.from("fiscal_subscription_invoices")
