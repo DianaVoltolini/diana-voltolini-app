@@ -28,7 +28,7 @@ export async function runWelcomeAutomation(){
    const {data:unsub,error:unsubscribeError}=await db.from("marketing_email_unsubscribes").select("email").eq("email",email).maybeSingle();
    if(unsubscribeError)throw unsubscribeError;
    if(unsub)continue;
-   const {data:entry,error:createError}=await db.from("marketing_email_deliveries").upsert({template_id:model.id,email,lead_id:lead.id,lead_name:lead.name??null},{onConflict:"template_id,email",ignoreDuplicates:true}).select("id,unsubscribe_token,status").maybeSingle();
+   const {data:entry,error:createError}=await db.from("marketing_email_deliveries").upsert({template_id:model.id,email,lead_id:model.kind==="welcome"?null:lead.id,lead_name:lead.name??null},{onConflict:"template_id,email",ignoreDuplicates:true}).select("id,unsubscribe_token,status").maybeSingle();
    if(createError)throw createError;
    if(!entry||entry.status!=="pending")continue;
    const {data:claim,error:claimError}=await db.from("marketing_email_deliveries").update({status:"sending",claimed_at:new Date().toISOString(),attempt_count:1}).eq("id",entry.id).eq("status","pending").select("id").maybeSingle();
