@@ -12,6 +12,9 @@ DECLARE
  v_existing_invoice uuid;
 BEGIN
  IF NEW.status <> 'paid' OR NEW.user_id IS NULL THEN RETURN NEW; END IF;
+ -- Pedidos de renovação nunca podem criar uma SEGUNDA assinatura,
+ -- inclusive após cancelamento da renovação automática.
+ IF NEW.metadata->>'fiscal_renewal' = 'true' THEN RETURN NEW; END IF;
  SELECT id INTO v_product_id FROM public.products
  WHERE code='ASSINATURA-FISCAL-001';
  IF v_product_id IS NULL OR NEW.product_id<>v_product_id THEN RETURN NEW; END IF;
