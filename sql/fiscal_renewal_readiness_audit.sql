@@ -67,12 +67,11 @@ WHERE n.nspname='public'
 ORDER BY table_name,index_name;
 
 -- 5. Permissões e RLS da tabela de claims, caso ela exista
-SELECT tablename,rowsecurity AS rls_enabled,forcerowsecurity AS rls_forced
-FROM pg_catalog.pg_tables pt
-JOIN pg_catalog.pg_class pc ON pc.relname=pt.tablename
+SELECT pc.relname AS tablename, pc.relrowsecurity AS rls_enabled,
+       pc.relforcerowsecurity AS rls_forced
+FROM pg_catalog.pg_class pc
 JOIN pg_catalog.pg_namespace pn ON pn.oid=pc.relnamespace
-WHERE pt.schemaname='public' AND pn.nspname='public'
-  AND tablename='fiscal_bling_issuance_claims';
+WHERE pn.nspname='public' AND pc.relname='fiscal_bling_issuance_claims';
 
 -- ATENÇÃO: a execução bem-sucedida deste diagnóstico NÃO libera
 -- integração Bling. Próximo passo: testes transacionais em ambiente isolado,
