@@ -24,10 +24,17 @@ export default async function SubscriptionPage({searchParams}:{searchParams:Prom
  const active=access.allowed;
  const selected=(await searchParams).entrega??"todos";
  const {data:nextInvoices}=access.subscriptionId?await db.from("fiscal_subscription_invoices")
-  .select("due_date,status,amount_cents")
+  .select("due_date,status,amount_cents,order_id")
   .eq("subscription_id",access.subscriptionId).eq("status","pending")
   .order("due_date",{ascending:true}).limit(1):{data:null};
  const nextInvoice=nextInvoices?.[0]??null;
+ const {data:pendingPayment}=nextInvoice?.order_id
+  ?await db.from("payments").select("payment_url,status").eq("order_id",nextInvoice.order_id).eq("provider","bling").in("status",["pending","processing"]).order("created_at",{ascending:false}).limit(1).maybeSingle()
+  :{data:null};
+ const todaySaoPaulo=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+ const renewalStarts=access.paidUntil?new Date(new Date(access.paidUntil).getTime()-10*24*60*60*1000):null;
+ const renewalStartDate=renewalStarts?new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo",day:"2-digit",month:"2-digit",year:"numeric"}).format(renewalStarts):null;
+ const isRenewalPeriod=renewalStarts?todaySaoPaulo>=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(renewalStarts):false;
  const formatDate=(value:string)=>new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo"}).format(new Date(value.length===10?value+"T12:00:00Z":value));
  const nextDate=nextInvoice?.due_date?formatDate(nextInvoice.due_date):access.paidUntil?formatDate(access.paidUntil):null;
  return <ProductPage title="Fiscal na Prática" description="Análises fiscais, materiais e orientações para aplicar na rotina de faturamento.">
@@ -44,6 +51,8 @@ export default async function SubscriptionPage({searchParams}:{searchParams:Prom
  <p style={{margin:"0 0 6px",fontSize:12,color:"#65758a",fontWeight:750}}>{access.cancellationRequested?"Fim do período pago":nextInvoice?"Próxima cobrança":"Próxima renovação prevista"}</p>
  <strong style={{fontSize:21,color:"#102033"}}>{nextDate??"A confirmar"}</strong>
  <p style={{fontSize:12,color:"#748497",margin:"5px 0 0"}}>{nextInvoice?"Cobrança pendente · "+new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(nextInvoice.amount_cents/100):access.cancellationRequested?"Não serão geradas novas renovações":"Previsão conforme o período pago; cobrança ainda não gerada."}</p>
+ {!access.cancellationRequested&&nextInvoice&&pendingPayment?.payment_url&&/^https:\\/\\//.test(pendingPayment.payment_url)&&<p style={{margin:"12px 0 0"}}><a href={pendingPayment.payment_url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",background:"#c9a227",color:"#102033",padding:"10px 15px",borderRadius:8,fontWeight:750,textDecoration:"none"}}>Acessar cobrança existente</a></p>}
+ {!access.cancellationRequested&&!nextInvoice&&renewalStartDate&&<p style={{fontSize:12,color:"#65758a",margin:"12px 0 0"}}>{isRenewalPeriod?"A renovação ainda não está disponível para pagamento. Nenhuma cobrança foi gerada.":"A renovação poderá ser solicitada a partir de "+renewalStartDate+". Nenhuma cobrança foi gerada."}</p>}
  {!access.cancellationRequested&&access.paidUntil&&access.subscriptionId&&<div className={styles.cancelArea}><CancelSubscriptionConfirm paidUntil={access.paidUntil} subscriptionId={access.subscriptionId}/></div>}
  </div></details>
  </div>
