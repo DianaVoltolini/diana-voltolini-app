@@ -45,14 +45,16 @@ WHERE table_schema='public'
 ORDER BY table_name,column_name;
 
 -- 4. Unicidade, FKs e CHECKs existentes. Conferir nomes e definições.
+-- to_regclass evita interromper a auditoria quando uma migration ainda não foi aplicada.
 SELECT c.conrelid::regclass::text AS table_name,c.conname AS name,
        c.contype AS type,pg_catalog.pg_get_constraintdef(c.oid) AS definition
 FROM pg_catalog.pg_constraint c
 WHERE c.connamespace='public'::regnamespace
   AND c.conrelid IN (
-    'public.orders'::regclass,'public.payments'::regclass,
-    'public.fiscal_subscriptions'::regclass,
-    'public.fiscal_subscription_invoices'::regclass)
+    pg_catalog.to_regclass('public.orders'),
+    pg_catalog.to_regclass('public.payments'),
+    pg_catalog.to_regclass('public.fiscal_subscriptions'),
+    pg_catalog.to_regclass('public.fiscal_subscription_invoices'))
 ORDER BY table_name,name;
 
 SELECT t.relname AS table_name,i.relname AS index_name,
