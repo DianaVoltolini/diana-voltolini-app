@@ -6,17 +6,16 @@ import {manualSendAction,type ManualState} from "./manual-actions";
 const initialManualState:ManualState={stage:"initial",message:"",eligible:0,sent:0,failed:0,sendId:""};
 import styles from "./manual.module.css";
 type Template={id:string;name:string;subject:string;body:string;interest:string|null;landing_id:string|null;cta_url:string|null;cta_label:string|null};
-type Landing={id:string;title:string};
-export default function ManualComposer({models,interests,landings,sendId}:{models:Template[];interests:string[];landings:Landing[];sendId:string}){
+export default function ManualComposer({models,interests,sendId}:{models:Template[];interests:string[];sendId:string}){
  const [id,setId]=useState(models[0]?.id??"");
  const model=models.find(x=>x.id===id);
  const [interest,setInterest]=useState("");
- const [landing,setLanding]=useState("");
+ const landing="";
  const [description,setDescription]=useState("");
  const [confirmed,setConfirmed]=useState(false);
  const [state,action,pending]=useActionState(manualSendAction,initialManualState);
  const [currentKey,setCurrentKey]=useState("");
- const key=[id,interest,landing,description].join("|");
+ const key=[id,interest,description].join("|");
  const ready=state.stage==="review"&&key===currentKey&&state.eligible>0;
  const subject=model?.subject??"";
  const cta=model?.cta_url&&model?.cta_label?{url:model.cta_url,label:model.cta_label}:null;
@@ -28,26 +27,22 @@ export default function ManualComposer({models,interests,landings,sendId}:{model
   <input type="hidden" name="landing_id" value={landing}/>
   <input type="hidden" name="send_id" value={sendId}/>
   <section className={styles.card}>
-   <div className={styles.section}><h2>Nova campanha de e-mail</h2><p>Selecione um modelo, descreva a campanha e escolha os destinatários.</p></div>
-   <label>Descrição da campanha<input name="description" required maxLength={300} value={description} onChange={e=>{setDescription(e.target.value);setConfirmed(false)}} placeholder="Ex.: Novidades fiscais de novembro" style={{padding:12,border:"1px solid #d4dee8",borderRadius:8,fontSize:14}}/></label>
-   <label>Selecionar modelo<select value={id} onChange={e=>{setId(e.target.value);setConfirmed(false)}}>{models.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
-   {model&&<Link href={"/torre/modelos-email/editor?editar="+encodeURIComponent(model.id)} className={styles.textLink}>Editar conteúdo do modelo</Link>}
-  </section>
-  {model?<><section className={styles.card}>
-   <div className={styles.section}><h2>Definir o público</h2><p>Somente contatos que autorizaram a newsletter e não cancelaram a inscrição.</p></div>
+   <div className={styles.section}><h2>Enviar e-mail</h2><p>Escolha a campanha, o modelo e o interesse dos destinatários.</p></div>
    <div className={styles.duo}>
-    <label>Interesse<select value={interest} onChange={e=>{setInterest(e.target.value);setConfirmed(false)}}><option value="">Todos os interesses</option>{interests.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
-    <label>Landing de origem<select value={landing} onChange={e=>{setLanding(e.target.value);setConfirmed(false)}}><option value="">Todas as landings</option>{landings.map(x=><option key={x.id} value={x.id}>{x.title}</option>)}</select></label>
+    <label>Nome da campanha<input name="description" required maxLength={300} value={description} onChange={e=>{setDescription(e.target.value);setConfirmed(false)}} placeholder="Ex.: Novidades fiscais de novembro" style={{padding:12,border:"1px solid #d4dee8",borderRadius:8,fontSize:14}}/></label>
+    <label>Modelo de e-mail<select value={id} onChange={e=>{setId(e.target.value);setConfirmed(false)}}>{models.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
    </div>
-   <button type="submit" name="mode" value="review" disabled={pending||!description.trim()} onClick={()=>{setCurrentKey(key);setConfirmed(false)}} style={{justifySelf:"start",background:"#fff",border:"1px solid #c9a227",color:"#102033",padding:"11px 17px",borderRadius:7,fontWeight:750,cursor:"pointer"}}>{pending?"Consultando…":"Conferir destinatários"}</button>
-   {ready&&<div className={styles.notice}><strong>{state.eligible} destinatário(s) elegível(is)</strong><p>Envio real, sem prefixo [TESTE]. Limite desta versão: 20 destinatários por campanha. Cada endereço recebe uma única mensagem nesta campanha.</p></div>}
-   {state.stage==="review"&&state.eligible===0&&<p role="status">Nenhum contato elegível para os filtros selecionados.</p>}
+   <label>Interesse dos destinatários<select value={interest} onChange={e=>{setInterest(e.target.value);setConfirmed(false)}}><option value="">Todos os interesses</option>{interests.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
+   {model&&<Link href={"/torre/modelos-email/editor?editar="+encodeURIComponent(model.id)} className={styles.textLink}>Editar o modelo selecionado</Link>}
+   <p style={{fontSize:13,color:"#607184",margin:0}}>Somente inscritos que autorizaram comunicações e não cancelaram a newsletter. Máximo de 20 destinatários nesta versão.</p>
+   {state.stage!=="done"&&!ready&&<button type="submit" name="mode" value="review" disabled={pending||!description.trim()} onClick={()=>{setCurrentKey(key);setConfirmed(false)}} style={{justifySelf:"start",background:"#c9a227",border:0,color:"#102033",padding:"12px 20px",borderRadius:7,fontWeight:800,cursor:"pointer"}}>{pending?"Consultando…":"Enviar e-mails"}</button>}
+   {ready&&<div className={styles.notice}><strong>{state.eligible} destinatário(s) elegível(is)</strong><p>Confirme o envio real da campanha. Cada endereço receberá no máximo uma mensagem nesta campanha.</p>
+    <label style={{display:"flex",alignItems:"center",gap:10,fontWeight:500}}><input type="checkbox" name="confirm" value="yes" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>Confirmo o envio aos {state.eligible} destinatários.</label>
+    <button type="submit" name="mode" value="send" disabled={!confirmed||pending||state.eligible>20} style={{background:"#c9a227",border:0,color:"#102033",padding:"12px 20px",borderRadius:7,fontWeight:800,cursor:"pointer"}}>{pending?"Enviando…":"Confirmar e enviar"}</button>
+   </div>}
+   {state.stage==="review"&&state.eligible===0&&<p role="status">Nenhum destinatário elegível para este interesse.</p>}
   </section>
-  {ready&&state.stage!=="done"&&<section className={styles.card}>
-   <div className={styles.section}><h2>Confirmar envio</h2><p>Assunto: {subject}</p></div>
-   <label style={{display:"flex",alignItems:"start",gap:10}}><input type="checkbox" name="confirm" value="yes" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>Confirmo que desejo enviar esta campanha aos {state.eligible} destinatários elegíveis.</label>
-   <button type="submit" name="mode" value="send" disabled={!confirmed||pending||state.eligible>20} style={{justifySelf:"start",background:"#c9a227",border:0,color:"#102033",padding:"13px 18px",borderRadius:7,fontWeight:800,cursor:"pointer"}}>{pending?"Enviando…":"Enviar e-mails agora"}</button>
-  </section>}
+  {model?<>
   <section className={styles.card}>
    <div className={styles.section}><h2>Prévia do modelo</h2></div>
    <div className={styles.email}>
