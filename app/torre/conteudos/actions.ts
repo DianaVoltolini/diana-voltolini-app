@@ -21,6 +21,9 @@ export async function saveFiscalArticle(data: FormData) {
   const db=getSupabaseAdmin();
   const {data:validCategory,error:categoryError}=await db.from("fiscal_categories").select("id").eq("name",category).maybeSingle();
   if(categoryError||!validCategory)redirect("/torre/conteudos?erro=categoria");
+  const {data:slugOwner,error:slugError}=await db.from("fiscal_articles").select("id").eq("slug",slug).maybeSingle();
+  if(slugError){console.error("[fiscal_articles] Falha ao consultar slug",{code:slugError.code,message:slugError.message});redirect("/torre/conteudos?erro=salvar");}
+  if(slugOwner&&slugOwner.id!==id)redirect("/torre/conteudos?erro=duplicado");
   const payload={ title,slug,summary,body,category,visibility,status,source_links,seo_title,seo_description,delivery_type,
     updated_at:new Date().toISOString() };
   const handleSaveError=(error:{code?:string;message?:string;details?:string;hint?:string})=>{
@@ -40,7 +43,7 @@ export async function saveFiscalArticle(data: FormData) {
     if(error) handleSaveError(error);
   } else {
     const {error}=await db.from("fiscal_articles").insert({...payload,published_at:status==="published"?new Date().toISOString():null});
-    if(error) redirect("/torre/conteudos?erro=salvar");
+    if(error) handleSaveError(error);
   }
   revalidatePath("/torre/conteudos");
   redirect("/torre/conteudos?salvo=1");
