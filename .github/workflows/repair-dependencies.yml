@@ -1,0 +1,42 @@
+name: Repair and validate dependency lockfile
+
+on:
+  push:
+    branches:
+      - fix/sync-package-lock-20261101
+    paths:
+      - .github/workflows/repair-dependencies.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out proposed branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Regenerate package-lock.json
+        run: npm install --package-lock-only --no-audit --no-fund
+      - name: Check reproducible install
+        run: npm ci --no-audit --no-fund
+      - name: Validate production build
+        run: npm run build
+      - name: Commit updated lockfile to proposal branch
+        run: |
+          git add package-lock.json
+          if git diff --cached --quiet; then
+            echo 'Lockfile already synchronized'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore: synchronize npm lockfile with package manifest'
+          git push origin HEAD:fix/sync-package-lock-20261101
