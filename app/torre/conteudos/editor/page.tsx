@@ -19,6 +19,7 @@ export default async function EditorialPage({searchParams}:{searchParams:Promise
  if(params.editar&&(error||!selected))notFound();
  const {data:categoryRows,error:categoriesError}=await db.from("fiscal_categories").select("name").order("name",{ascending:true});
  const categoryNames=(categoryRows??[]).map(c=>c.name);
+ const {data:slugRows}=await db.from("fiscal_articles").select("id,title,slug").order("title",{ascending:true}).limit(1000);
  const choices=selected?.category&&!categoryNames.includes(selected.category)?[selected.category,...categoryNames]:categoryNames;
  const field:CSSProperties={display:"block",width:"100%",padding:"12px",border:"1px solid #cbd5e1",borderRadius:7,marginTop:7,background:"#fff",color:"#0d1b2a"};
  return <main className={styles.page}><section className={styles.content}><div className={layout.fullWidth}>
@@ -36,7 +37,7 @@ export default async function EditorialPage({searchParams}:{searchParams:Promise
  <label>Status<select name="status" style={field} defaultValue={selected?.status??"draft"}><option value="draft">Rascunho</option><option value="published">Aprovado para publicação</option></select></label>
  </div>
  <p className={layout.accessHint}>Blog: acesso gratuito · Radar, Oficina, Biblioteca e Checklists: exclusivos para assinantes.</p>
- <ContentAndSeoFields title={selected?.title??""} summary={selected?.summary??""} slug={selected?.slug??""} seoTitle={selected?.seo_title??""} seoDescription={selected?.seo_description??""}/>
+ <ContentAndSeoFields existingArticles={slugRows??[]} currentArticleId={selected?.id??null} title={selected?.title??""} summary={selected?.summary??""} slug={selected?.slug??""} seoTitle={selected?.seo_title??""} seoDescription={selected?.seo_description??""}/>
  <ArticleBodyEditor initial={selected?.body??""} sources={selected?.source_links??""}/>
  <button className={styles.openLink} style={{cursor:"pointer",justifySelf:"start"}} type="submit">Salvar conteúdo</button>
  </form>
