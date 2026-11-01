@@ -23,13 +23,21 @@ export async function saveFiscalArticle(data: FormData) {
   if(categoryError||!validCategory)redirect("/torre/conteudos?erro=categoria");
   const payload={ title,slug,summary,body,category,visibility,status,source_links,seo_title,seo_description,delivery_type,
     updated_at:new Date().toISOString() };
+  const handleSaveError=(error:{code?:string;message?:string;details?:string;hint?:string})=>{
+    console.error("[fiscal_articles] Falha ao salvar conteúdo",{code:error.code,message:error.message,details:error.details,hint:error.hint,editing:Boolean(id)});
+    if(error.code==="23505") redirect("/torre/conteudos?erro=duplicado");
+    if(error.code==="23503") redirect("/torre/conteudos?erro=referencia");
+    if(error.code==="23514") redirect("/torre/conteudos?erro=restricao");
+    if(error.code==="42703"||error.code==="PGRST204") redirect("/torre/conteudos?erro=estrutura");
+    redirect("/torre/conteudos?erro=salvar");
+  };
   if (id) {
     // Registrar a data de primeira publicação ao mudar de rascunho para publicado.
     const {data:existing,error:readError}=await db.from("fiscal_articles").select("status,published_at").eq("id",id).maybeSingle();
     if(readError||!existing)redirect("/torre/conteudos?erro=salvar");
     const published_at=status==="published" ? (existing.published_at??new Date().toISOString()) : existing.published_at;
     const {error}=await db.from("fiscal_articles").update({...payload,published_at}).eq("id",id);
-    if(error) redirect("/torre/conteudos?erro=salvar");
+    if(error) handleSaveError(error);
   } else {
     const {error}=await db.from("fiscal_articles").insert({...payload,published_at:status==="published"?new Date().toISOString():null});
     if(error) redirect("/torre/conteudos?erro=salvar");
