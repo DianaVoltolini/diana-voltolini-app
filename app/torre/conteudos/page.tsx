@@ -19,7 +19,15 @@ export default async function ConteudosPage({searchParams}:{searchParams:Promise
   </header>
   {params.excluido&&<p style={{color:"#167143",fontWeight:750}}>Conteúdo excluído definitivamente do Supabase.</p>}
   {params.salvo&&<p style={{color:"#167143",fontWeight:750}}>Conteúdo salvo com sucesso.</p>}
-  {params.erro&&<p className={styles.errorMessage}>Não foi possível concluir a operação. Confira os dados ou tente novamente.</p>}
+  {params.erro&&<p className={styles.errorMessage} role="alert">{
+   params.erro==="duplicado"?"Já existe um conteúdo com este endereço (slug). Abra o conteúdo existente ou escolha outro slug.":
+   params.erro==="categoria"?"A categoria selecionada não está cadastrada. Verifique o cadastro de categorias.":
+   params.erro==="restricao"?"O banco recusou um dos dados informados. Revise o tipo de entrega e os campos do conteúdo.":
+   params.erro==="estrutura"?"O cadastro do banco está desatualizado. Consulte os registros do servidor antes de tentar novamente.":
+   params.erro==="referencia"?"O conteúdo faz referência a um registro que não está disponível.":
+   params.erro==="dados"?"Revise título, resumo, endereço (slug), categoria, tipo de entrega e texto do conteúdo.":
+   "Não foi possível salvar o conteúdo. O motivo técnico foi registrado no servidor para verificação."
+  }</p>}
   {error?<p className={styles.errorMessage}>Não foi possível carregar os conteúdos.</p>:<section className={styles.diagnosticsSection}><h2>Conteúdos cadastrados</h2><FiscalArticleTable articles={data??[]}/></section>}
  </div></section></main>;
 }
