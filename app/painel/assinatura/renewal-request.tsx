@@ -48,7 +48,7 @@ export default function RenewalRequest({ issuanceEnabled = false, financialEnabl
           const completeResponse = await fetch("/api/fiscal/renewal/complete-payment", {
             method:"POST",credentials:"same-origin",cache:"no-store",
             headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({invoiceId:data.invoiceId}),
+            body:JSON.stringify({invoiceId}),
           });
           const completion:unknown=await completeResponse.json();
           const finished=completion&&typeof completion==="object"
