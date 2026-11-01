@@ -44,6 +44,26 @@ export async function POST(request: NextRequest) {
       order.metadata?.fiscal_renewal!==true||
       typeof order.provider_order_id!=="string")
     return respond({error:"Pedido ainda não está pronto para cobrança."},409);
+  // Se a mesma cobrança já foi vinculada, não repetir busca nem lançamento
+  // financeiro. O painel consulta o pagamento existente pelo pedido.
+  const {data: existingPayments,error: existingPaymentError}=await db.from("payments")
+    .select("id,payment_url,status,provider_payment_id")
+    .eq("order_id",order.id).eq("provider","bling").limit(2);
+  if(existingPaymentError)
+    return respond({error:"Falha ao consultar cobrança existente."},503);
+  if(existingPayments?.length===1){
+    const payment=existingPayments[0];
+    if(!["pending","processing"].includes(payment.status)||
+        !payment.provider_payment_id)
+      return respond({state:"manual_review",error:"Pagamento existente exige conferência."},409);
+    const url=payment.payment_url;
+    return respond({state:"receivable_linked",
+      paymentLinkAvailable:typeof url==="string"&&url.startsWith("https://"),
+      message:"Cobrança já vinculada. Consulte o link no painel."});
+  }
+  if(existingPayments && existingPayments.length>1)
+    return respond({state:"manual_review",error:"Mais de uma cobrança vinculada ao pedido."},409);
+
   const secret=process.env.FISCAL_RENEWAL_LOOKUP_SECRET?.trim()??"";
   const base=process.env.FISCAL_RENEWAL_INTERNAL_SITE_URL?.trim()??"";
   let url:URL;
