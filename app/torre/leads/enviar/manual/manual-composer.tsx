@@ -17,6 +17,7 @@ export default function ManualComposer({models,interests,sendId}:{models:Templat
  const [currentKey,setCurrentKey]=useState("");
  const key=[id,interest,description].join("|");
  const ready=state.stage==="review"&&key===currentKey&&state.eligible>0;
+ const overLimit=ready&&state.eligible>20;
  const subject=model?.subject??"";
  const cta=model?.cta_url&&model?.cta_label?{url:model.cta_url,label:model.cta_label}:null;
  const body=useMemo(()=>(model?.body??"").replace(/\[BOTAO:[^\]]+\]/g,"").replaceAll("{{nome}}","Diana"),[model]);
@@ -36,9 +37,10 @@ export default function ManualComposer({models,interests,sendId}:{models:Templat
    {model&&<Link href={"/torre/modelos-email/editor?editar="+encodeURIComponent(model.id)} className={styles.textLink}>Editar o modelo selecionado</Link>}
    <p style={{fontSize:13,color:"#607184",margin:0}}>Somente inscritos que autorizaram comunicações e não cancelaram a newsletter. Máximo de 20 destinatários nesta versão.</p>
    {state.stage!=="done"&&!ready&&<button type="submit" name="mode" value="review" disabled={pending||!description.trim()} onClick={()=>{setCurrentKey(key);setConfirmed(false)}} style={{justifySelf:"start",background:"#c9a227",border:0,color:"#102033",padding:"12px 20px",borderRadius:7,fontWeight:800,cursor:"pointer"}}>{pending?"Consultando…":"Enviar e-mails"}</button>}
-   {ready&&<div className={styles.notice}><strong>{state.eligible} destinatário(s) elegível(is)</strong><p>Confirme o envio real da campanha. Cada endereço receberá no máximo uma mensagem nesta campanha.</p>
-    <label style={{display:"flex",alignItems:"center",gap:10,fontWeight:500}}><input type="checkbox" name="confirm" value="yes" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>Confirmo o envio aos {state.eligible} destinatários.</label>
-    <button type="submit" name="mode" value="send" disabled={!confirmed||pending||state.eligible>20} style={{background:"#c9a227",border:0,color:"#102033",padding:"12px 20px",borderRadius:7,fontWeight:800,cursor:"pointer"}}>{pending?"Enviando…":"Confirmar e enviar"}</button>
+   {ready&&<div className={styles.notice}><strong>{state.eligible} destinatário(s) elegível(is)</strong>
+    {overLimit?<p role="alert" style={{color:"#9f2525",fontWeight:700}}>Envio não realizado: foram encontrados {state.eligible} destinatários, mas o limite desta versão é de 20 por campanha. Selecione um interesse para reduzir o público e clique novamente em Enviar e-mails. Nenhuma mensagem foi enviada.</p>:<p>Confirme o envio real da campanha. Cada endereço receberá no máximo uma mensagem nesta campanha.</p>}
+    {!overLimit&&<label style={{display:"flex",alignItems:"center",gap:10,fontWeight:500}}><input type="checkbox" name="confirm" value="yes" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>Confirmo o envio aos {state.eligible} destinatários.</label>}
+    {!overLimit&&<button type="submit" name="mode" value="send" disabled={!confirmed||pending} style={{background:"#c9a227",border:0,color:"#102033",padding:"12px 20px",borderRadius:7,fontWeight:800,cursor:"pointer"}}>{pending?"Enviando…":"Confirmar e enviar"}</button>}
    </div>}
    {state.stage==="review"&&state.eligible===0&&<p role="status">Nenhum destinatário elegível para este interesse.</p>}
   </section>
