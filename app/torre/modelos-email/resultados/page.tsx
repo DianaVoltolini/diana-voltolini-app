@@ -3,10 +3,11 @@ import Link from "next/link";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 import styles from "../../painel.module.css";
+import ManualCampaignResults from "./manual-results";
 export const dynamic="force-dynamic";
 const when=(v:string|null)=>v?new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo",dateStyle:"short",timeStyle:"short"}).format(new Date(v)):"—";
 const labels:Record<string,string>={accepted:"Aceito pelo SMTP",failed:"Falhou",sending:"Em processamento",pending:"Pendente",skipped:"Ignorado"};
-export default async function NewsletterResults({searchParams}:{searchParams:Promise<{modelo?:string}>}){
+export default async function NewsletterResults({searchParams}:{searchParams:Promise<{modelo?:string;envio?:string}>}){
  await requireAdmin();
  const params=await searchParams;
  const db=getSupabaseAdmin();
@@ -32,7 +33,7 @@ export default async function NewsletterResults({searchParams}:{searchParams:Pro
  <p><Link href="/torre/modelos-email" style={{color:"#86650c",fontWeight:700}}>← Voltar aos modelos de e-mail</Link></p>
  {modelError||deliveryError||unsubError?<p role="alert" style={{color:"#b42318"}}>Não foi possível consultar todos os resultados. Verifique as tabelas do Supabase.</p>:null}
  <form method="get" style={{...card,display:"grid",gap:9,maxWidth:580}}><label htmlFor="modelo" style={{fontWeight:700}}>Campanha</label><select id="modelo" name="modelo" defaultValue={chosen?.id??""} style={{padding:12,border:"1px solid #cad4e0",borderRadius:7}}>{(models??[]).map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select><button type="submit" style={{justifySelf:"start",padding:"10px 16px",border:0,borderRadius:7,background:"#c9a227",fontWeight:750}}>Consultar</button></form>
- {chosen?<><p style={{color:"#607184",fontSize:13}}>Origem: <strong>{chosen.kind==="welcome"?"Newsletter da página principal":chosenLanding}</strong> · Envio automático: <strong>{chosen.auto_enabled?"Ativo":"Desativado"}</strong></p>
+ {chosen?<><ManualCampaignResults templateId={chosen.id} requestedId={params.envio}/><h2 style={{fontSize:22,marginTop:30}}>Envios automáticos</h2><p style={{fontSize:13,color:"#607184"}}>Os resultados abaixo pertencem apenas aos envios automáticos. Campanhas manuais são mostradas acima.</p><p style={{color:"#607184",fontSize:13}}>Origem: <strong>{chosen.kind==="welcome"?"Newsletter da página principal":chosenLanding}</strong> · Envio automático: <strong>{chosen.auto_enabled?"Ativo":"Desativado"}</strong></p>
  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:12}}>
  {([["Leads da landing",totalLeads],["Inscritos atualmente",optedIn],["Aceitos pelo SMTP",counts.accepted],["Falhas",counts.failed],["Pendentes",counts.pending+counts.sending],["Descadastros entre destinatários",unsubCampaign]] as const).map(([label,value])=><div key={label} style={card}><div style={{fontSize:13,color:"#607184"}}>{label}</div><strong style={{fontSize:30,color:"#102033"}}>{value??"—"}</strong></div>)}
  </div>
