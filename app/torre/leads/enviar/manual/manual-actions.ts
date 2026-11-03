@@ -3,7 +3,7 @@
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 type Lead={id:string;name:string|null;email:string};
-export type ManualState={stage:"initial"|"review"|"done"|"error";message:string;eligible:number;sent:number;failed:number;sendId:string};
+export type ManualState={stage:"initial"|"review"|"queued"|"done"|"error";message:string;eligible:number;sent:number;failed:number;sendId:string};
 const initialManualState:ManualState={stage:"initial",message:"",eligible:0,sent:0,failed:0,sendId:""};
 const uuid=(v:string)=>/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(v);
 const normalize=(v:string)=>v.trim().toLowerCase();
@@ -57,6 +57,6 @@ export async function manualSendAction(_previous:ManualState,form:FormData):Prom
     console.error("[marketing queue] Falha ao criar campanha",{code:queueError.code,message:queueError.message});
     return {...initialManualState,stage:"error",message:"Não foi possível registrar a fila. Confira o histórico antes de tentar novamente."};
   }
-  return {stage:"done",message:"Campanha adicionada à fila. O processamento ocorrerá pela rotina agendada. Consulte Resultados das campanhas.",eligible:leads.length,sent:0,failed:0,sendId};
+  return {stage:"queued",message:"Campanha adicionada à fila. O processamento ocorrerá pela rotina agendada. Consulte Resultados das campanhas.",eligible:leads.length,sent:0,failed:0,sendId};
  }catch(error){console.error("Erro ao processar envio manual",error);return {...initialManualState,stage:"error",message:"Falha ao consultar ou processar a campanha. Consulte os registros antes de tentar novamente."};}
 }
