@@ -35,7 +35,7 @@ export default function ManualComposer({models,interests,sendId}:{models:Templat
    <label>Interesse dos destinatários<select value={interest} onChange={e=>{setInterest(e.target.value);setConfirmed(false)}}><option value="">Todos os interesses</option>{interests.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
    {model&&<Link href={"/torre/modelos-email/editor?editar="+encodeURIComponent(model.id)} className={styles.textLink}>Editar o modelo selecionado</Link>}
    <p style={{fontSize:13,color:"#607184",margin:0}}>Somente inscritos que autorizaram comunicações e não cancelaram a newsletter. Os e-mails são enviados individualmente para cada destinatário elegível.</p>
-   {state.stage!=="done"&&!ready&&<button type="submit" name="mode" value="review" disabled={pending||!description.trim()} onClick={()=>{setCurrentKey(key);setConfirmed(false)}} style={{justifySelf:"start",background:"#c9a227",border:0,color:"#102033",padding:"12px 20px",borderRadius:7,fontWeight:800,cursor:"pointer"}}>{pending?"Consultando…":"Enviar e-mails"}</button>}
+   {state.stage!=="done"&&state.stage!=="queued"&&!ready&&<button type="submit" name="mode" value="review" disabled={pending||!description.trim()} onClick={()=>{setCurrentKey(key);setConfirmed(false)}} style={{justifySelf:"start",background:"#c9a227",border:0,color:"#102033",padding:"12px 20px",borderRadius:7,fontWeight:800,cursor:"pointer"}}>{pending?"Consultando…":"Enviar e-mails"}</button>}
    {ready&&<div className={styles.notice}><strong>{state.eligible} destinatário(s) elegível(is)</strong><p>Confirme o envio real da campanha. Cada endereço receberá no máximo uma mensagem nesta campanha.</p>
     <label style={{display:"flex",alignItems:"center",gap:10,fontWeight:500}}><input type="checkbox" name="confirm" value="yes" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>Confirmo o envio aos {state.eligible} destinatários.</label>
     <button type="submit" name="mode" value="send" disabled={!confirmed||pending} style={{background:"#c9a227",border:0,color:"#102033",padding:"12px 20px",borderRadius:7,fontWeight:800,cursor:"pointer"}}>{pending?"Enviando…":"Confirmar e enviar"}</button>
@@ -51,7 +51,7 @@ export default function ManualComposer({models,interests,sendId}:{models:Templat
     <div className={styles.footer}><strong>Diana Voltolini</strong><p>Especialista em Faturamento e Inteligência Fiscal</p><p>O envio real inclui o link individual de descadastro.</p></div>
    </div>
   </section></>:<section className={styles.card}>Nenhum modelo disponível. <Link href="/torre/modelos-email/editor">Criar modelo</Link></section>}
-  {state.message&&<div className={styles.notice} role="status">{state.message}{state.stage==="done"&&<p><strong>SMTP aceitou: {state.sent}</strong> · Falhas: {state.failed} · Total selecionado: {state.eligible}</p>}</div>}
+  {state.message&&<div className={styles.notice} role="status">{state.message}{state.stage==="queued"&&<p><strong>{state.eligible} destinatários registrados na fila.</strong> <Link href={"/torre/modelos-email/resultados?modelo="+encodeURIComponent(id)}>Consultar resultados</Link>. Nenhum e-mail foi disparado nesta etapa.</p>}{state.stage==="done"&&<p><strong>SMTP aceitou: {state.sent}</strong> · Falhas: {state.failed} · Total selecionado: {state.eligible}</p>}</div>}
  </form>
  </div>;
 }

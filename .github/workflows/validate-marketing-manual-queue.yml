@@ -1,0 +1,31 @@
+name: Validate marketing manual queue
+
+on:
+  push:
+    branches:
+      - feat/marketing-manual-queue-worker
+  pull_request:
+    paths:
+      - "app/torre/leads/enviar/manual/**"
+      - "app/api/marketing/manual-queue/**"
+      - "lib/marketing/manual-queue.ts"
+      - "supabase/migrations/20261103_marketing_manual_queue.sql"
+      - "package.json"
+      - "package-lock.json"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Validate Next.js production build
+        run: npm run build

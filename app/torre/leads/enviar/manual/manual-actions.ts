@@ -2,10 +2,8 @@
 // app/torre/leads/enviar/manual/manual-actions.ts
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
-import {renderNewsletterEmail} from "@/lib/marketing/email-test";
-import nodemailer from "nodemailer";
 type Lead={id:string;name:string|null;email:string};
-export type ManualState={stage:"initial"|"review"|"done"|"error";message:string;eligible:number;sent:number;failed:number;sendId:string};
+export type ManualState={stage:"initial"|"review"|"queued"|"done"|"error";message:string;eligible:number;sent:number;failed:number;sendId:string};
 const initialManualState:ManualState={stage:"initial",message:"",eligible:0,sent:0,failed:0,sendId:""};
 const uuid=(v:string)=>/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(v);
 const normalize=(v:string)=>v.trim().toLowerCase();
@@ -49,37 +47,16 @@ export async function manualSendAction(_previous:ManualState,form:FormData):Prom
   if(mode!=="send"||form.get("confirm")!=="yes"||!uuid(sendId))return {...initialManualState,stage:"error",message:"Confirmação inválida. Revise a campanha novamente."};
   if(!leads.length)return {...initialManualState,stage:"error",message:"Não há destinatários elegíveis."};
 
-  const host=process.env.SMTP_HOST,user=process.env.SMTP_USER,pass=process.env.SMTP_PASS,from=process.env.SMTP_FROM_EMAIL;
-  if(!host||!user||!pass||!from)return {...initialManualState,stage:"error",message:"SMTP não configurado."};
-  // Um ID por confirmação: reenvios da mesma requisição não criam outra campanha.
-  const {error:saveError}=await db.from("marketing_manual_sends").insert({id:sendId,template_id:templateId,description,interest:interest||null,landing_id:landing||null,recipient_count:leads.length,status:"processing"});
-  if(saveError)return {...initialManualState,stage:"error",message:"Esta campanha já foi processada ou não pôde ser registrada. Confira o histórico antes de repetir."};
-  const transport=nodemailer.createTransport({host,port:Number(process.env.SMTP_PORT||587),secure:["true","1"].includes(process.env.SMTP_SECURE??""),auth:{user,pass},connectionTimeout:12000,greetingTimeout:12000,socketTimeout:20000});
-  let sent=0,failed=0;
-  try{
-   for(const lead of leads){
-    const {data:unsubscribeCheck,error:unsubscribeError}=await db.from("marketing_email_unsubscribes").select("email").eq("email",lead.email).maybeSingle();
-    if(unsubscribeError){failed++;continue;}
-    if(unsubscribeCheck)continue;
-    const {data:row,error:rowError}=await db.from("marketing_manual_send_recipients").insert({send_id:sendId,email:lead.email,lead_name:lead.name??null,status:"sending"}).select("id,unsubscribe_token").single();
-    if(rowError||!row){failed++;continue;}
-    const unsubUrl="https://app.dianavoltolini.com.br/newsletter/descadastrar?token="+row.unsubscribe_token;
-    const firstName=(lead.name??"").trim().split(/\s+/)[0]||"";
-    const subject=model.subject.replaceAll("{{nome}}",firstName);
-    const plain=model.body.replaceAll("{{nome}}",firstName).replace(/\[BOTAO:[^\]]+\]/g,"").trim();
-    const rich=plain+(model.cta_label&&model.cta_url?"\n\n[BOTAO: "+model.cta_label+" | "+model.cta_url+"]":"");
-    try{
-     const response=await transport.sendMail({from:{name:process.env.SMTP_FROM_NAME||"Diana Voltolini",address:from},to:lead.email,subject,html:renderNewsletterEmail(subject,rich,unsubUrl),text:subject+"\n\n"+plain+"\n\nCancelar inscrição: "+unsubUrl,headers:{"List-Unsubscribe":"<"+unsubUrl+">"}});
-     if(!response.accepted.some(x=>(typeof x==="string"?x:x.address).toLowerCase()===lead.email))throw Error("Destinatário não aceito pelo SMTP");
-     await db.from("marketing_manual_send_recipients").update({status:"accepted",accepted_at:new Date().toISOString()}).eq("id",row.id);
-     sent++;
-    }catch(error){
-     failed++;
-     await db.from("marketing_manual_send_recipients").update({status:"failed",error_message:error instanceof Error?error.message.slice(0,350):"Falha no SMTP"}).eq("id",row.id);
-    }
-   }
-  }finally{transport.close()}
-  await db.from("marketing_manual_sends").update({status:failed?"partial":"completed"}).eq("id",sendId);
-  return {stage:"done",message:"Campanha processada. Mensagens aceitas pelo SMTP não significam necessariamente entregues.",eligible:leads.length,sent,failed,sendId};
+  // A confirmacao apenas registra a fila: nao envia SMTP na requisição do navegador.
+  const {data:queued,error:queueError}=await db.rpc("enqueue_marketing_manual_campaign",{
+    p_send_id:sendId,p_template_id:templateId,p_description:description,
+    p_interest:interest||null,p_landing_id:landing||null,
+    p_recipients:leads.map(lead=>({email:lead.email,name:lead.name??""}))
+  });
+  if(queueError){
+    console.error("[marketing queue] Falha ao criar campanha",{code:queueError.code,message:queueError.message});
+    return {...initialManualState,stage:"error",message:"Não foi possível registrar a fila. Confira o histórico antes de tentar novamente."};
+  }
+  return {stage:"queued",message:"Campanha adicionada à fila. O processamento ocorrerá pela rotina agendada. Consulte Resultados das campanhas.",eligible:leads.length,sent:0,failed:0,sendId};
  }catch(error){console.error("Erro ao processar envio manual",error);return {...initialManualState,stage:"error",message:"Falha ao consultar ou processar a campanha. Consulte os registros antes de tentar novamente."};}
 }
