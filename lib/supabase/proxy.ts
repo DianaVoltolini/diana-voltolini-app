@@ -118,6 +118,7 @@ export async function updateSession(
       "/auth/",
     ) ||
     pathname === "/api/marketing/welcome/run" ||
+    pathname === "/api/marketing/manual-queue/run" ||
     pathname === "/newsletter/descadastrar";
 
   if (
