@@ -32,13 +32,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          code="$(curl --silent --show-error --location --max-time 120 \
+          code="$(curl --silent --show-error --max-time 120 \
             -o response.json -w '%{http_code}' \
             --header "Authorization: Bearer ${QUEUE_SECRET}" \
             --header 'Accept: application/json' \
             'https://app.dianavoltolini.com.br/api/marketing/manual-queue/run')"
           if [ "$code" != "200" ]; then
-            echo "::error::Falha ao acionar fila (HTTP $code). Verifique as configurações da Hostinger."
+            echo "::error::Falha ao acionar fila (HTTP $code). Verifique a autenticação e o deploy da Hostinger."
             exit 1
           fi
-          node -e "const f=require('fs'); const d=JSON.parse(f.readFileSync('response.json','utf8')); if (typeof d.enabled!=='boolean') process.exit(1); console.log(JSON.stringify({enabled:d.enabled,processed:d.processed,accepted:d.accepted,failed:d.failed,skipped:d.skipped}));"
+          node -e "const f=require('fs'); let d; try{d=JSON.parse(f.readFileSync('response.json','utf8'))}catch{console.error('A rota não retornou JSON. Verifique proxy/deploy.');process.exit(1)} if(typeof d.enabled!=='boolean'){console.error('Resposta inesperada da fila');process.exit(1)} console.log(JSON.stringify({enabled:d.enabled,processed:d.processed,accepted:d.accepted,failed:d.failed,skipped:d.skipped}));"
