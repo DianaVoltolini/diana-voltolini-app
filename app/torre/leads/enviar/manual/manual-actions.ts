@@ -26,7 +26,7 @@ async function getAudience(interest:string,landing:string):Promise<Lead[]>{
  const seen=new Set<string>(),result:Lead[]=[];
  for(const row of [...(leadsResult.data??[]),...(newsletterResult.data??[])]){
   const email=normalize(row.email??"");
-  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||seen.has(email)||blocked.has(email))continue;
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||seen.has(email)||blocked.has(email))continue;
   seen.add(email);result.push({...row,email});
  }
  return result;
