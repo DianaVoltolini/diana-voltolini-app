@@ -48,7 +48,7 @@ export async function manualSendAction(_previous:ManualState,form:FormData):Prom
   if(mode==="review")return {...initialManualState,stage:"review",eligible:leads.length,message:leads.length?"Confira o público e confirme o disparo.":"Nenhum contato elegível encontrado."};
   if(mode!=="send"||form.get("confirm")!=="yes"||!uuid(sendId))return {...initialManualState,stage:"error",message:"Confirmação inválida. Revise a campanha novamente."};
   if(!leads.length)return {...initialManualState,stage:"error",message:"Não há destinatários elegíveis."};
-  if(leads.length>20)return {...initialManualState,stage:"error",message:"Esta versão envia até 20 destinatários por campanha. Refine os filtros antes de confirmar."};
+
   const host=process.env.SMTP_HOST,user=process.env.SMTP_USER,pass=process.env.SMTP_PASS,from=process.env.SMTP_FROM_EMAIL;
   if(!host||!user||!pass||!from)return {...initialManualState,stage:"error",message:"SMTP não configurado."};
   // Um ID por confirmação: reenvios da mesma requisição não criam outra campanha.
