@@ -15,10 +15,11 @@ export default async function EditorialPage({searchParams}:{searchParams:Promise
  await requireAdmin();
  const params=await searchParams;
  const db=getSupabaseAdmin();
- const {data:selected,error}=params.editar?await db.from("fiscal_articles").select("id,title,slug,summary,body,category,visibility,status,source_links,seo_title,seo_description,delivery_type,cta_title,cta_description,cta_button_label,cta_url").eq("id",params.editar).maybeSingle():{data:null,error:null};
+ const {data:selected,error}=params.editar?await db.from("fiscal_articles").select("id,title,slug,summary,body,category,visibility,status,source_links,seo_title,seo_description,delivery_type,cta_title,cta_description,cta_button_label,cta_url,cta_id").eq("id",params.editar).maybeSingle():{data:null,error:null};
  if(params.editar&&(error||!selected))notFound();
  const {data:categoryRows,error:categoriesError}=await db.from("fiscal_categories").select("name").order("name",{ascending:true});
  const categoryNames=(categoryRows??[]).map(c=>c.name);
+ const {data:ctas,error:ctaError}=await db.from("fiscal_ctas").select("id,name,active").order("name",{ascending:true}).limit(500);
  const {data:slugRows}=await db.from("fiscal_articles").select("id,title,slug").order("title",{ascending:true}).limit(1000);
  const choices=selected?.category&&!categoryNames.includes(selected.category)?[selected.category,...categoryNames]:categoryNames;
  const field:CSSProperties={display:"block",width:"100%",padding:"12px",border:"1px solid #cbd5e1",borderRadius:7,marginTop:7,background:"#fff",color:"#0d1b2a"};
@@ -39,11 +40,13 @@ export default async function EditorialPage({searchParams}:{searchParams:Promise
  <p className={layout.accessHint}>Blog: acesso gratuito · Radar, Oficina, Biblioteca e Checklists: exclusivos para assinantes.</p>
  <ContentAndSeoFields existingArticles={slugRows??[]} currentArticleId={selected?.id??null} title={selected?.title??""} summary={selected?.summary??""} slug={selected?.slug??""} seoTitle={selected?.seo_title??""} seoDescription={selected?.seo_description??""}/>
  <ArticleBodyEditor initial={selected?.body??""} sources={selected?.source_links??""}/>
- <section style={{border:"1px solid #dce4ec",borderRadius:12,padding:22,background:"#fff",display:"grid",gap:14}}>
-  <div><h2 style={{margin:"0 0 6px",fontSize:20}}>CTA deste conteúdo (opcional)</h2><p style={{margin:0,fontSize:13,color:"#607184"}}>Preencha para substituir o convite padrão da assinatura por uma oferta relacionada a este conteúdo. Deixe tudo vazio para manter o CTA padrão.</p></div>
-  <label>Título do CTA<input name="cta_title" style={field} maxLength={180} defaultValue={selected?.cta_title??""} placeholder="Ex.: Seu faturamento está preparado para IBS e CBS?"/></label>
-  <label>Descrição<textarea name="cta_description" style={field} rows={3} maxLength={600} defaultValue={selected?.cta_description??""} placeholder="Explique em poucas linhas o benefício para o leitor."/></label>
-  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))",gap:16}}><label>Texto do botão<input name="cta_button_label" style={field} maxLength={80} defaultValue={selected?.cta_button_label??""} placeholder="Quero meu diagnóstico"/></label><label>Link do botão<input name="cta_url" style={field} maxLength={500} defaultValue={selected?.cta_url??""} placeholder="https://dianavoltolini.com.br/diagnostico-ibs-cbs"/></label></div>
+ <section style={{border:"1px solid #dce4ec",borderRadius:12,padding:22,background:"#fff",display:"grid",gap:12}}>
+  <div><h2 style={{margin:"0 0 6px",fontSize:20}}>CTA do conteúdo (opcional)</h2><p style={{margin:0,fontSize:13,color:"#607184"}}>Escolha um CTA cadastrado para este conteúdo. Sem seleção, será exibido o convite padrão para a assinatura Fiscal na Prática.</p></div>
+  {ctaError?<p role="alert" style={{color:"#b42318"}}>Não foi possível carregar os CTAs. Verifique a estrutura no Supabase.</p>:<label>Selecionar CTA<select name="cta_id" style={field} defaultValue={selected?.cta_id??""}>
+   <option value="">CTA padrão da assinatura</option>
+   {(ctas??[]).filter(c=>c.active||c.id===selected?.cta_id).map(c=><option key={c.id} value={c.id}>{c.name}{c.active?"":" (inativo)"}</option>)}
+  </select></label>}
+  <p style={{margin:0,fontSize:13}}><Link href="/torre/ctas" style={{color:"#87650d",fontWeight:750}}>Cadastrar ou editar CTAs</Link></p>
  </section>
  <button className={styles.openLink} style={{cursor:"pointer",justifySelf:"start"}} type="submit">Salvar conteúdo</button>
  </form>
