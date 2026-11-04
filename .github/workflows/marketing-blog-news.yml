@@ -1,0 +1,38 @@
+name: Avisar novos conteúdos gratuitos do Blog
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: marketing-blog-news
+  cancel-in-progress: false
+jobs:
+  queue-news:
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.MARKETING_BLOG_CRON_ENABLED == '1' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Verificar segredo
+        env:
+          CRON_SECRET: ${{ secrets.MARKETING_CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::Configure MARKETING_CRON_SECRET nos Secrets."
+            exit 1
+          fi
+      - name: Enfileirar avisos autenticados
+        env:
+          CRON_SECRET: ${{ secrets.MARKETING_CRON_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          http="$(curl --silent --show-error --max-time 120 -o response.json -w '%{http_code}' \
+            -H "Authorization: Bearer ${CRON_SECRET}" -H 'Accept: application/json' \
+            'https://app.dianavoltolini.com.br/api/marketing/blog-news/run')"
+          if [ "$http" != "200" ]; then
+            echo "::error::Falha na rotina de novos conteúdos (HTTP $http)."
+            exit 1
+          fi
+          node -e "const f=require('fs');let d;try{d=JSON.parse(f.readFileSync('response.json','utf8'))}catch{process.exit(1)}if(typeof d.enabled!=='boolean'||typeof d.queued!=='number'){process.exit(1)}console.log(JSON.stringify(d));"
