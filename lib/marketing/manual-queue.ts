@@ -42,9 +42,9 @@ export async function processManualCampaignQueue(){
    try{
     const email=normalize(item.email);
     const [{data:unsub,error:unsubError},{data:landingLeads,error:leadsError},{data:newsletterLeads,error:newsletterError}]=await Promise.all([
-     db.from("marketing_email_unsubscribes").select("email").eq("email",email).maybeSingle(),
-     db.from("marketing_leads").select("id").eq("email",email).eq("newsletter_opt_in",true).limit(1),
-     db.from("marketing_newsletter_subscribers").select("id").eq("email",email).eq("newsletter_opt_in",true).limit(1)
+     db.from("marketing_email_unsubscribes").select("email").ilike("email",email).maybeSingle(),
+     db.from("marketing_leads").select("id").ilike("email",email).eq("newsletter_opt_in",true).limit(1),
+     db.from("marketing_newsletter_subscribers").select("id").ilike("email",email).eq("newsletter_opt_in",true).limit(1)
     ]);
     if(unsubError||leadsError||newsletterError)throw Error("Falha ao verificar consentimento");
     if(unsub||(!landingLeads?.length&&!newsletterLeads?.length)){

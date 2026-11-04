@@ -44,6 +44,6 @@ export default async function ExclusiveArticle({params}:{params:Promise<{slug:st
     {sources.map((url,i)=><li key={i}><a href={url} target="_blank" rel="noopener noreferrer">{labelSource(url)}<small>{url.length>85?url.slice(0,82)+"…":url}</small></a></li>)}
    </ul></section>}
   </article>
-  <section className={styles.footer}><h2>Continue explorando sua biblioteca fiscal</h2><p>Acesse os demais artigos, roteiros e materiais disponíveis para seu perfil. As publicações exclusivas permanecem disponíveis conforme a vigência da assinatura.</p><Link href="/painel/assinatura">Voltar aos conteúdos →</Link></section>
+  <section className={styles.footer}><h2>Continue explorando sua biblioteca fiscal</h2><p>Acesse os demais conteúdos, roteiros e materiais disponíveis para seu perfil. As publicações exclusivas permanecem disponíveis conforme a vigência da assinatura.</p><Link href="/painel/assinatura">Voltar aos conteúdos →</Link></section>
  </div></main>;
 }
