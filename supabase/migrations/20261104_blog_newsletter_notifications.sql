@@ -57,42 +57,7 @@ BEGIN
    SELECT lower(btrim(email)) AS email,name FROM public.marketing_newsletter_subscribers
    WHERE newsletter_opt_in=true
  ) x
- WHERE x.email ~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+ AND NOT EXISTS (
-  SELECT 1 FROM public.marketing_email_unsubscribes u WHERE lower(btrim(u.email))=x.email
- )
- ORDER BY x.email, x.name NULLS LAST;
- SELECT count(*) INTO v_count FROM _blog_notice_audience;
- IF v_count > 5000 THEN RAISE EXCEPTION 'Publico maior que o limite de seguranca'; END IF;
- IF v_count=0 THEN
-  INSERT INTO public.marketing_blog_notifications(article_id,status,recipient_count)
-  VALUES (p_article_id,'no_audience',0);
-  RETURN 0;
- END IF;
- INSERT INTO public.marketing_manual_sends
- (id,template_id,description,recipient_count,status,subject_snapshot,body_snapshot,cta_url_snapshot,cta_label_snapshot)
- VALUES (
-   p_send_id,v_template_id,'Blog gratuito — '||left(v_article.title,200),v_count,'processing',
-   'Novo conteúdo no Blog Fiscal: '||v_article.title,
-   'Olá, {{nome}}!'||E'\n\n'||
-   'Publiquei um novo conteúdo gratuito no Blog Fiscal:'||E'\n\n'||
-   v_article.title||E'\n\n'||
-   coalesce(v_article.summary,'')||E'\n\n'||
-   'Espero que seja útil na sua rotina de faturamento.'||E'\n\n'||
-   'Diana Voltolini',
-   'https://dianavoltolini.com.br/blog/'||v_article.slug,
-   'Ler conteúdo gratuito'
- );
- INSERT INTO public.marketing_manual_send_recipients(send_id,email,lead_name,status)
- SELECT p_send_id,email,nullif(btrim(name),''),'pending' FROM _blog_notice_audience;
- INSERT INTO public.marketing_blog_notifications(article_id,send_id,status,recipient_count)
- VALUES (p_article_id,p_send_id,'enqueued',v_count);
- RETURN v_count;
-END;
-$$;
-REVOKE ALL ON FUNCTION public.enqueue_marketing_blog_notification(uuid,uuid) FROM PUBLIC,anon,authenticated;
-GRANT EXECUTE ON FUNCTION public.enqueue_marketing_blog_notification(uuid,uuid) TO service_role;
-
- AND NOT EXISTS (
+ WHERE x.email ~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$'
   SELECT 1 FROM public.marketing_email_unsubscribes u WHERE lower(btrim(u.email))=x.email
  )
  ORDER BY x.email, x.name NULLS LAST;
