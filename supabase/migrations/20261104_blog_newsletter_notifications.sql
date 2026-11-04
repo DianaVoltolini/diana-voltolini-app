@@ -57,8 +57,7 @@ BEGIN
    SELECT lower(btrim(email)) AS email,name FROM public.marketing_newsletter_subscribers
    WHERE newsletter_opt_in=true
  ) x
- WHERE x.email ~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+
- AND NOT EXISTS (
+ WHERE x.email ~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+ AND NOT EXISTS (
   SELECT 1 FROM public.marketing_email_unsubscribes u WHERE lower(btrim(u.email))=x.email
  )
  ORDER BY x.email, x.name NULLS LAST;
