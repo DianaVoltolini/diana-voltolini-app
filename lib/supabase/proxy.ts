@@ -119,6 +119,7 @@ export async function updateSession(
     ) ||
     pathname === "/api/marketing/welcome/run" ||
     pathname === "/api/marketing/manual-queue/run" ||
+    pathname === "/api/marketing/blog-news/run" ||
     pathname === "/newsletter/descadastrar";
 
   if (
