@@ -43,3 +43,33 @@ export async function deleteEmailDraft(f:FormData){
  revalidatePath("/torre/leads/enviar");
  redirect("/torre/leads/enviar?excluido=1");
 }
+
+/** Exclui somente modelos sem histórico, campanhas ou automatização ativa. */
+export async function deleteEmailTemplate(f:FormData){
+ await requireAdmin();
+ const id=value(f,"id",50);
+ const back="/torre/modelos-email";
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))
+  redirect(back+"?erro=excluir");
+ // Referência fixa dos avisos de Blog: usada pela função SQL de enfileiramento.
+ if(id.toLowerCase()==="b10b0000-0000-4000-8000-000000000001")
+  redirect(back+"?erro=protegido");
+ const db=getSupabaseAdmin();
+ const {data:model,error:modelError}=await db.from("marketing_email_templates")
+  .select("id,auto_enabled").eq("id",id).maybeSingle();
+ if(modelError||!model)redirect(back+"?erro=excluir");
+ if(model.auto_enabled)redirect(back+"?erro=automatico");
+ // Uma campanha/entrega histórica jamais deve desaparecer com seu modelo.
+ const results=await Promise.all([
+  db.from("marketing_manual_sends").select("id").eq("template_id",id).limit(1),
+  db.from("marketing_email_deliveries").select("id").eq("template_id",id).limit(1),
+  db.from("marketing_email_campaigns").select("id").eq("template_id",id).limit(1)
+ ]);
+ if(results.some(r=>r.error))redirect(back+"?erro=excluir");
+ if(results.some(r=>(r.data??[]).length>0))redirect(back+"?erro=vinculado");
+ const {data:deleted,error:deleteError}=await db.from("marketing_email_templates")
+  .delete().eq("id",id).select("id").maybeSingle();
+ if(deleteError||!deleted)redirect(back+"?erro=excluir");
+ revalidatePath(back);
+ redirect(back+"?excluido=1");
+}
