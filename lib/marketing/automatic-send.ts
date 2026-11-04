@@ -31,9 +31,11 @@ export async function runWelcomeAutomation(){
    const {data:entry,error:createError}=await db.from("marketing_email_deliveries").upsert({template_id:model.id,email,lead_id:model.kind==="welcome"?null:lead.id,lead_name:lead.name??null},{onConflict:"template_id,email",ignoreDuplicates:true}).select("id,unsubscribe_token,status").maybeSingle();
    if(createError)throw createError;
    if(!entry||entry.status!=="pending")continue;
-   const {data:claim,error:claimError}=await db.from("marketing_email_deliveries").update({status:"sending",claimed_at:new Date().toISOString(),attempt_count:1}).eq("id",entry.id).eq("status","pending").select("id").maybeSingle();
+   // Compartilha o mesmo limite móvel de 800 tentativas/24h com a fila manual.
+   // Em limite atingido, mantém pending para uma execução futura.
+   const {data:claimed,error:claimError}=await db.rpc("claim_marketing_automatic_delivery",{p_delivery_id:entry.id,p_max_24h:800});
    if(claimError)throw claimError;
-   if(!claim)continue;
+   if(!claimed)continue;
    const unsubUrl="https://app.dianavoltolini.com.br/newsletter/descadastrar?token="+encodeURIComponent(entry.unsubscribe_token);
    const name=(lead.name??"").trim().split(/\s+/)[0]||"";
    const subject=model.subject.replaceAll("{{nome}}",name);
