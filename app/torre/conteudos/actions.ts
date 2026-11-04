@@ -15,6 +15,10 @@ export async function saveFiscalArticle(data: FormData) {
   const delivery_type=read("delivery_type",30);
   const visibility=delivery_type==="geral"?"public":"subscriber";
   const seo_title=read("seo_title",180)||null, seo_description=read("seo_description",320)||null;
+  const cta_title=read("cta_title",180),cta_description=read("cta_description",600),cta_button_label=read("cta_button_label",80),cta_url=read("cta_url",500);
+  const hasCta=Boolean(cta_title||cta_description||cta_button_label||cta_url);
+  const isSafeCtaUrl=(value:string)=>{try{const url=new URL(value,"https://dianavoltolini.com.br");return url.protocol==="https:"&&(url.hostname==="dianavoltolini.com.br"||url.hostname==="app.dianavoltolini.com.br")&&(value.startsWith("/")&&!value.startsWith("//")||value.startsWith("https://"));}catch{return false;}};
+  if(hasCta&&(!cta_title||!cta_description||!cta_button_label||!cta_url||!isSafeCtaUrl(cta_url)))redirect("/torre/conteudos?erro=cta");
   if (!title || !summary || !body || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || !category || !["draft","published"].includes(status) || !["geral","radar","oficina","biblioteca","checklist"].includes(delivery_type)) {
     redirect("/torre/conteudos?erro=dados");
   }
@@ -25,6 +29,7 @@ export async function saveFiscalArticle(data: FormData) {
   if(slugError){console.error("[fiscal_articles] Falha ao consultar slug",{code:slugError.code,message:slugError.message});redirect("/torre/conteudos?erro=salvar");}
   if(slugOwner&&slugOwner.id!==id)redirect("/torre/conteudos?erro=duplicado");
   const payload={ title,slug,summary,body,category,visibility,status,source_links,seo_title,seo_description,delivery_type,
+    cta_title:hasCta?cta_title:null,cta_description:hasCta?cta_description:null,cta_button_label:hasCta?cta_button_label:null,cta_url:hasCta?cta_url:null,
     updated_at:new Date().toISOString() };
   const handleSaveError=(error:{code?:string;message?:string;details?:string;hint?:string})=>{
     console.error("[fiscal_articles] Falha ao salvar conteúdo",{code:error.code,message:error.message,details:error.details,hint:error.hint,editing:Boolean(id)});
