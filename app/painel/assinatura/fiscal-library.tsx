@@ -29,7 +29,7 @@ export default function FiscalLibrary({articles,initialDelivery="todos"}:Props){
     <span className={styles.date}>Publicado em {date(featured.published_at)}</span></div>
     <Link className={styles.featureLink} href={`/painel/assinatura/${featured.slug}`}>Ler análise <span aria-hidden="true">→</span></Link>
    </section>}
-   <section className={styles.heading}><div><p className={styles.kicker}>BIBLIOTECA FISCAL</p><h2>Explore os conteúdos</h2><p>Pesquise por assunto, categoria ou tipo de entrega.</p></div><span className={styles.count}>{articles.length} {articles.length===1?"publicação":"publicações"}</span></section>
+   <section className={styles.heading}><div><p className={styles.kicker}>BIBLIOTECA FISCAL</p><h2>Explore os conteúdos</h2><p>Pesquise por assunto, categoria ou tipo de entrega.</p></div><span className={styles.count}>{shown.length} {shown.length===1?"conteúdo encontrado":"conteúdos encontrados"}</span></section>
    <div className={styles.controls}>
      <label className={styles.searchLabel} htmlFor="fiscal-search">Pesquisar publicações
       <input id="fiscal-search" type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Pesquise por assunto, imposto ou palavra-chave..." />
