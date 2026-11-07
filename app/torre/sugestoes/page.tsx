@@ -11,7 +11,7 @@ export default async function SuggestionsAdmin({searchParams}:{searchParams:Prom
  await requireAdmin();
  const params=await searchParams;
  const {data,error}=await getSupabaseAdmin().from("fiscal_content_suggestions")
-  .select("id,title,description,author_name,status,published_url,created_at,fiscal_content_votes(count)")
+  .select("id,title,description,author_name,author_email,newsletter_opt_in,status,published_url,created_at,fiscal_content_votes(count)")
   .order("created_at",{ascending:false}).limit(300);
  return <main className={styles.page}><section className={styles.content}>
   <header className={styles.pageHeader}><div><p className={styles.eyebrow}>MARKETING · PARTICIPAÇÃO DO LEITOR</p><h1>Sugestões de conteúdo</h1><p>Analise as ideias enviadas pelo site, aprove os temas e vincule os conteúdos publicados.</p></div></header>
@@ -26,7 +26,7 @@ export default async function SuggestionsAdmin({searchParams}:{searchParams:Prom
       <strong style={{fontSize:18}}>{item.title}</strong><span>{statusText[item.status]??item.status} · {Array.isArray(item.fiscal_content_votes)?item.fiscal_content_votes[0]?.count??0:0} votos</span>
      </div>
      <p style={{whiteSpace:"pre-wrap",lineHeight:1.65,margin:"12px 0"}}>{item.description}</p>
-     <p style={{fontSize:12,color:"#64748b"}}>{item.author_name?("Enviado por "+item.author_name+" · "):""}{new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo"}).format(new Date(item.created_at))}</p>
+     <p style={{fontSize:12,color:"#64748b"}}>{item.author_name?("Enviado por "+item.author_name+" · "):""}{item.author_email?(item.author_email+" · "):""}{item.newsletter_opt_in?"Newsletter autorizada · ":""}{new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo"}).format(new Date(item.created_at))}</p>
      <form action={updateSuggestion} style={{display:"flex",alignItems:"end",flexWrap:"wrap",gap:12,marginTop:16}}>
       <input type="hidden" name="id" value={item.id}/>
       <label style={{display:"grid",gap:5}}>Situação<select name="status" defaultValue={item.status} style={{padding:10,border:"1px solid #cbd5e1",borderRadius:8}}>

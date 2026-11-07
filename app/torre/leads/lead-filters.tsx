@@ -27,7 +27,7 @@ export default function LeadFilters({query,subscribed,interest,interests,origin}
    <input aria-label="Pesquisar por nome ou e-mail" placeholder="Digite nome ou e-mail" value={search} onChange={e=>setSearch(e.target.value)} style={inputStyle}/>
   </label>
   <label style={{display:"grid",gap:7,fontWeight:700,fontSize:13}}>Origem
-   <select value={selectedOrigin} onChange={e=>setSelectedOrigin(e.target.value)} style={inputStyle}><option value="">Todas as origens</option><option value="landing">Landing Pages</option><option value="newsletter">Newsletter da página principal</option></select>
+   <select value={selectedOrigin} onChange={e=>setSelectedOrigin(e.target.value)} style={inputStyle}><option value="">Todas as origens</option><option value="landing">Landing Pages</option><option value="newsletter">Newsletter da página principal</option><option value="sugestoes">Sugestões de conteúdo</option></select>
   </label>
   <label style={{display:"grid",gap:7,fontWeight:700,fontSize:13}}>Inscrito na newsletter
    <select aria-label="Filtrar inscrição" value={inscrito} onChange={e=>setInscrito(e.target.value)} style={inputStyle}><option value="">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select>
