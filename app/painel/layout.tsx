@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { logout } from "./actions";
 
 import { redirect } from "next/navigation";
@@ -85,7 +86,7 @@ export default async function PainelLayout({
   return <div className={styles.shell}>
     <header className={styles.topbar}>
       <a className={styles.brand} href="https://dianavoltolini.com.br" aria-label="Diana Voltolini — voltar ao site"><Image src="/brand/logo-light.png" alt="Diana Voltolini" width={1535} height={538} priority /></a>
-      <details className={styles.mobileTopMenu}><summary aria-label="Abrir menu de navegação"><span aria-hidden="true">☰</span></summary><nav aria-label="Menu do cliente"><a href="/painel">Visão Geral</a><a href="/painel/meus-dados">Meus Dados</a><a href="/painel/minhas-compras">Minhas Compras</a>{(hasDiagnostics||hasEbook||hasSubscription||hasFiscalHistory)&&<div className={styles.mobilePurchaseLinks}>{hasDiagnostics&&<a href="/painel/diagnosticos">Diagnósticos</a>}{hasEbook&&<a href="/painel/ebooks">E-books</a>}{(hasSubscription||hasFiscalHistory)&&<a href="/painel/assinatura">Fiscal na Prática</a>}</div>}<a href="/painel/outros-produtos">Outros Produtos</a><form action={logout}><button type="submit">Sair da conta</button></form></nav></details>
+      <details className={styles.mobileTopMenu}><summary aria-label="Abrir menu de navegação"><span aria-hidden="true">☰</span></summary><nav aria-label="Menu do cliente"><a href="/painel">Visão Geral</a><a href="/painel/meus-dados">Meus Dados</a><a href="/painel/minhas-compras">Minhas Compras</a>{(hasDiagnostics||hasEbook||hasSubscription||hasFiscalHistory)&&<div className={styles.mobilePurchaseLinks}>{hasDiagnostics&&<Link href="/painel/diagnosticos">Diagnósticos</Link>}{hasEbook&&<a href="/painel/ebooks">E-books</a>}{(hasSubscription||hasFiscalHistory)&&<Link href="/painel/assinatura">Fiscal na Prática</Link>}</div>}<a href="/painel/outros-produtos">Outros Produtos</a><form action={logout}><button type="submit">Sair da conta</button></form></nav></details>
       <div className={styles.headerActions}>
         <a className={styles.siteLink} href="https://dianavoltolini.com.br" target="_blank" rel="noopener noreferrer">Visitar site ↗</a>
         <form action={logout}><button className={styles.logout} type="submit">Sair</button></form>

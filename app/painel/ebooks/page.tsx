@@ -44,8 +44,8 @@ export default async function EbooksPage() {
   if(!hasPaidOrder) return <ProductPage title="IBS e CBS na Prática" description="E-book digital para compreender a Reforma Tributária e aplicar o conhecimento ao faturamento.">
     <ProductOffer eyebrow="GUIA PRÁTICO · REFORMA TRIBUTÁRIA" headline="Entenda IBS e CBS na prática" lead="Compras, vendas, créditos e notas fiscais explicados de forma simples e objetiva, com exemplos e roteiro para organizar sua preparação." price="R$ 29,90 · pagamento único" checkout="https://dianavoltolini.com.br/checkout/ibs-cbs-na-pratica" cta="Quero garantir meu e-book" features={["E-book digital com 21 páginas","Compras, vendas e créditos","NF-e, CST e cClassTrib","Split payment e transição","Checklist e glossário para consulta","Exemplos práticos para rotinas fiscais"]}>
     <section style={{background:"#fff",border:"1px solid #e0e7ed",borderRadius:14,padding:30}}>
-      <p style={{color:"#96730e",fontWeight:850,fontSize:12}}>BÔNUS ESPECIAL</p><h2>Roda de conversa ao vivo</h2>
-      <p style={{lineHeight:1.8,color:"#506477"}}>Os 30 primeiros compradores com pagamento confirmado também têm direito a uma conversa educativa de 60 minutos sobre a Reforma Tributária, marcada para 12/11/2026 às 19h30 (Brasília), pelo Google Meet. A disponibilidade de vagas precisa ser confirmada no momento da contratação. Não inclui consultoria ou análise individual de XMLs.</p>
+      <p style={{color:"#96730e",fontWeight:850,fontSize:12}}>BÔNUS ESPECIAL</p><h2>Aula on-line · 21 de janeiro de 2027</h2>
+      <p style={{lineHeight:1.8,color:"#506477"}}>Ao adquirir o e-book, sua inscrição na aula on-line de 21/01/2027, das 19h30 às 21h (horário de Brasília), fica assegurada após a confirmação do pagamento. O encontro educativo de 1h30 é opcional e aborda os principais pontos de atenção do IBS e da CBS na rotina fiscal. Não inclui consultoria ou análise individual de XMLs.</p>
     </section>
     </ProductOffer>
   </ProductPage>;

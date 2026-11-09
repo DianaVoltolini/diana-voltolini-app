@@ -1,6 +1,6 @@
 "use client";
 // app/torre/leads/enviar/manual/manual-composer.tsx
-import {useActionState,useMemo,useState} from "react";
+import {useActionState,useState} from "react";
 import Link from "next/link";
 import {manualSendAction,type ManualState} from "./manual-actions";
 const initialManualState:ManualState={stage:"initial",message:"",eligible:0,sent:0,failed:0,sendId:""};
@@ -19,7 +19,7 @@ export default function ManualComposer({models,interests,sendId}:{models:Templat
  const ready=state.stage==="review"&&key===currentKey&&state.eligible>0;
  const subject=model?.subject??"";
  const cta=model?.cta_url&&model?.cta_label?{url:model.cta_url,label:model.cta_label}:null;
- const body=useMemo(()=>(model?.body??"").replace(/\[BOTAO:[^\]]+\]/g,"").replaceAll("{{nome}}","Diana"),[model]);
+ const body=(model?.body??"").replace(/\[BOTAO:[^\]]+\]/g,"").replaceAll("{{nome}}","Diana");
  return <div className={styles.stack}>
  <form action={action} className={styles.stack}>
   <input type="hidden" name="template_id" value={id}/>
