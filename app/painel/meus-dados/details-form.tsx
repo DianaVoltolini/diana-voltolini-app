@@ -16,8 +16,6 @@ export default function DetailsForm({details}:{details:Info}){
  useEffect(()=>{
   const zip=values.zip_code.replace(/\D/g,"");
   if(!editing||zip.length!==8||zip===saved.zip_code.replace(/\D/g,"")){
-   setCepLoading(false);
-   setCepMessage("");
    return;
   }
   const controller=new AbortController();
@@ -67,7 +65,7 @@ export default function DetailsForm({details}:{details:Info}){
    {!editing&&<button type="button" onClick={()=>setEditing(true)} style={{background:"#c9a227",color:"#0d1b2a",border:0,borderRadius:7,padding:"10px 20px",fontWeight:750,cursor:"pointer"}}>Editar</button>}
   </div>
   <div className={styles.fields}>
-   {fields.map(([key,label])=><label key={key} className={`${styles.field} ${styles[key]}`}>{label}<input name={key} value={formatField(key,values[key])} onChange={e=>{const value=(key==="phone"||key==="zip_code")?e.currentTarget.value.replace(/\D/g,""):e.currentTarget.value;setValues(previous=>({...previous,[key]:value}));}} readOnly={!editing} maxLength={180} style={{padding:"12px 13px",border:"1px solid #d7e0e9",borderRadius:7,background:editing?"#fff":"#f5f7fa",color:"#0d1b2a",fontSize:14}}/></label>)}
+   {fields.map(([key,label])=><label key={key} className={`${styles.field} ${styles[key]}`}>{label}<input name={key} value={formatField(key,values[key])} onChange={e=>{const value=(key==="phone"||key==="zip_code")?e.currentTarget.value.replace(/\D/g,""):e.currentTarget.value;setValues(previous=>({...previous,[key]:value}));if(key==="zip_code"){setCepLoading(false);setCepMessage("");}}} readOnly={!editing} maxLength={180} style={{padding:"12px 13px",border:"1px solid #d7e0e9",borderRadius:7,background:editing?"#fff":"#f5f7fa",color:"#0d1b2a",fontSize:14}}/></label>)}
   </div>
   {editing&&(cepLoading||cepMessage)&&<p role="status" style={{fontSize:12,color:cepMessage.includes("não")||cepMessage.includes("Não")?"#ad3939":"#57687a",margin:0}}>{cepLoading?"Consultando CEP...":cepMessage}</p>}
   {state.message&&<p role="status" style={{color:state.ok?"#22663e":"#a33434",fontSize:13}}>{state.message}</p>}
