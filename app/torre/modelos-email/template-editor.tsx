@@ -47,23 +47,58 @@ export default function TemplateEditor({selected,interests,landings,defaultAudie
    <div className={css.sectionIntro}><span>01 · IDENTIFICAÇÃO</span><h2>{transactional?"Dados do e-mail":"Dados da campanha"}</h2><p>{transactional?"Modelo transacional vinculado aos eventos de cobrança ou pagamento.":"Identificação e público de referência para este modelo."}</p></div>
    <label>{transactional?"Nome do modelo":"Nome da Campanha"}<input name="name" required maxLength={120} value={name} onChange={e=>setName(e.target.value)} readOnly={transactional} placeholder="Ex.: Boas-vindas ao Conhecimento Fiscal"/></label>
    <label>Descrição<textarea name="description" maxLength={500} rows={2} value={description} onChange={e=>setDescription(e.target.value)} readOnly={transactional} placeholder="Finalidade desta campanha"/></label>
-   {!transactional&&<label>Público do modelo<select value={audience} onChange={e=>{setAudience(e.target.value);setAutomatic(false);setSendType("manual");}}><option value="leads">Inscritos e leads</option><option value="buyers">Clientes que compraram</option></select></label>}
-   {transactional?<div style={{display:"grid",gap:12,borderTop:"1px solid #e2e8f0",paddingTop:20}}><div className={css.sectionIntro}><span>02 · CONFIGURAÇÃO DO ENVIO</span><h2>Automático — evento de compra</h2><p>Este modelo é enviado somente pelo evento correspondente: cobrança gerada ou pagamento confirmado. Não utiliza listas de leads nem campanhas manuais.</p></div><p style={{fontSize:13,color:"#607184"}}>A edição do texto não dispara e-mails e não modifica o checkout ou os pagamentos.</p></div>:<div style={{display:"grid",gap:13,borderTop:"1px solid #e2e8f0",paddingTop:20}}>
-    <div className={css.sectionIntro}><span>02 · CONFIGURAÇÃO DO ENVIO</span><h2>Quando enviar esta mensagem?</h2><p>Defina o envio manual ou automático e a origem dos destinatários.</p></div>
-    <label>Tipo de envio<select disabled={audience==="buyers"} value={audience==="buyers"?"manual":sendType} onChange={e=>{const v=e.target.value as "manual"|"automatic";setSendType(v);if(v==="manual")setAutomatic(false);else setAutomatic(true);}}><option value="manual">Manual — escolher destinatários na Torre</option><option value="automatic">Automático — após cadastro no site</option></select></label>
-    {audience!=="buyers"&&sendType==="automatic"&&<>
-     <label>Origem do cadastro<select value={source} onChange={e=>{setSource(e.target.value);setLanding("");setInterest("");}}><option value="landing">Landing de material gratuito</option><option value="home">Newsletter da página principal</option></select></label>
-     {source==="landing"&&<div className={css.duo}>
-      <label>Landing de origem<select value={landing} onChange={e=>setLanding(e.target.value)} required><option value="">Selecione uma landing</option>{landings.map(l=><option key={l.id} value={l.id}>{l.title}</option>)}</select></label>
-      <label>Interesse<select value={interest} onChange={e=>setInterest(e.target.value)}><option value="">Todos os interesses</option>{interests.map(i=><option key={i} value={i}>{i}</option>)}</select></label>
-     </div>}
-     <label className={css.checkbox}><input type="checkbox" checked={automatic} onChange={e=>setAutomatic(e.target.checked)}/> Ativar o envio automático</label>
-     {automatic&&<label className={css.checkbox}><input type="checkbox" checked={existing} onChange={e=>setExisting(e.target.checked)}/> Incluir inscritos anteriores que ainda não receberam este modelo</label>}
-     <p style={{fontSize:12,color:"#607184"}}>O cron verifica novos inscritos e respeita o consentimento e os descadastros. A ativação poderá iniciar envios reais.</p>
-    </>}
-    {audience==="buyers"&&<p style={{fontSize:13,color:"#607184"}}>Este modelo poderá ser usado em campanhas para clientes com compras identificadas e autorização de marketing. Envie campanhas pela página Clientes.</p>}
-    {audience!=="buyers"&&sendType==="manual"&&<p style={{fontSize:13,color:"#607184"}}>O modelo poderá ser selecionado no fluxo de envio manual. O disparo manual continua sujeito à liberação do envio real na Torre; salvar o modelo não envia mensagens.</p>}
-   </div>}
+   {transactional?
+    <div className={css.transactionalConfig}>
+     <div className={css.sectionIntro}><span>02 · CONFIGURAÇÃO DO ENVIO</span><h2>Automático — evento de compra</h2><p>Este modelo é enviado somente pelo evento correspondente: cobrança gerada ou pagamento confirmado. Não utiliza listas de leads nem campanhas manuais.</p></div>
+     <p style={{fontSize:13,color:"#607184"}}>A edição do texto não dispara e-mails e não modifica o checkout ou os pagamentos.</p>
+    </div>:
+    <>
+     <div className={css.configIntro}><div className={css.sectionIntro}><span>02 · CONFIGURAÇÃO DO ENVIO</span><h2>Quando enviar esta mensagem?</h2><p>Defina o tipo de envio e o público que receberá esta comunicação.</p></div></div>
+     <div className={css.deliveryFields}>
+      <label>Tipo de envio
+       <select value={audience==="buyers"?"manual":sendType} disabled={audience==="buyers"} onChange={e=>{const v=e.target.value as "manual"|"automatic";setSendType(v);setAutomatic(v==="automatic");}}>
+        <option value="manual">Manual — escolher destinatários na Torre</option>
+        <option value="automatic">Automático — após cadastro no site</option>
+       </select>
+      </label>
+      <label>Público do modelo
+       <select value={audience} onChange={e=>{setAudience(e.target.value);setAutomatic(false);setSendType("manual");}}>
+        <option value="leads">Inscritos e leads</option>
+        <option value="buyers">Clientes que compraram</option>
+       </select>
+      </label>
+     </div>
+     <div className={css.deliveryOptions}>
+      {audience!=="buyers"&&sendType==="automatic"&&<>
+       <label>Origem do cadastro
+        <select value={source} onChange={e=>{setSource(e.target.value);setLanding("");setInterest("");}}>
+         <option value="landing">Landing de material gratuito</option>
+         <option value="home">Newsletter da página principal</option>
+        </select>
+       </label>
+       {source==="landing"&&<div className={css.duo}>
+        <label>Landing de origem
+         <select value={landing} onChange={e=>setLanding(e.target.value)} required>
+          <option value="">Selecione uma landing</option>
+          {landings.map(l=><option key={l.id} value={l.id}>{l.title}</option>)}
+         </select>
+        </label>
+        <label>Interesse
+         <select value={interest} onChange={e=>setInterest(e.target.value)}>
+          <option value="">Todos os interesses</option>
+          {interests.map(i=><option key={i} value={i}>{i}</option>)}
+         </select>
+        </label>
+       </div>}
+       <label className={css.checkbox}><input type="checkbox" checked={automatic} onChange={e=>setAutomatic(e.target.checked)}/> Ativar o envio automático</label>
+       {automatic&&<label className={css.checkbox}><input type="checkbox" checked={existing} onChange={e=>setExisting(e.target.checked)}/> Incluir inscritos anteriores que ainda não receberam este modelo</label>}
+       <p style={{fontSize:12,color:"#607184"}}>O cron verifica novos inscritos e respeita o consentimento e os descadastros. A ativação poderá iniciar envios reais.</p>
+      </>}
+      {audience==="buyers"&&<p style={{fontSize:13,color:"#607184"}}>Este modelo poderá ser usado em campanhas para clientes com compras identificadas e autorização de marketing. Envie campanhas pela página Clientes.</p>}
+      {audience!=="buyers"&&sendType==="manual"&&<p style={{fontSize:13,color:"#607184"}}>O modelo poderá ser selecionado no fluxo de envio manual. O disparo manual continua sujeito à liberação do envio real na Torre; salvar o modelo não envia mensagens.</p>}
+     </div>
+    </>
+   }
   </section>
   <section className={css.fields}>
    <div className={css.sectionIntro}><span>03 · MENSAGEM</span><h2>Conteúdo do e-mail</h2><p>Escreva a mensagem e defina o botão de acesso.</p></div>
@@ -88,7 +123,7 @@ export default function TemplateEditor({selected,interests,landings,defaultAudie
      <div className={css.message}>{(body||"Sua mensagem aparecerá aqui.").replaceAll("{{nome}}","Cliente Teste").replaceAll("{{produto}}","Produto de Teste").replaceAll("{{valor}}","R$ 29,90").replaceAll("{{forma_pagamento}}","PIX").replaceAll("{{situacao_encontro}}","Sua inscrição no encontro está confirmada.")}</div>
      {transactional?<div className={css.ctaCenter}><span className={css.mailButton}>{selected?.id==="eb0c0000-0000-4000-8000-000000000001"||selected?.id==="eb0c0000-0000-4000-8000-000000000011"?"Ver cobrança":"Acessar minha compra"}</span></div>:cta.trim()&&<div className={css.ctaCenter}><a href={url} target="_blank" rel="noopener noreferrer" className={css.mailButton}>{cta}</a></div>}
     </div>
-    <footer><strong>Diana Voltolini</strong><p>Especialista em Faturamento e Inteligência Fiscal</p><p>{transactional?"Esta é uma comunicação referente à sua compra.":"Você está recebendo este e-mail por ter autorizado nossas comunicações. Se não desejar continuar recebendo a Newsletter Fiscal, poderá cancelar sua inscrição pelo link de descadastro."}</p>{!transactional&&<span>Cancelar inscrição — o link individual será incluído no e-mail enviado ao assinante.</span>}</footer>
+    <footer><strong>Diana Voltolini</strong><p>Especialista em Faturamento e Inteligência Fiscal</p><p>{transactional?"Esta é uma comunicação referente à sua compra.":audience==="buyers"?"Você recebe esta campanha porque autorizou comunicações comerciais. Se não desejar receber novas campanhas, poderá cancelar sua inscrição.":"Você está recebendo este e-mail por ter autorizado nossas comunicações. Se não desejar continuar recebendo a Newsletter Fiscal, poderá cancelar sua inscrição pelo link de descadastro."}</p>{!transactional&&<span>{audience==="buyers"?"O link individual de descadastro será incluído na campanha enviada ao cliente.":"Cancelar inscrição — o link individual será incluído no e-mail enviado ao assinante."}</span>}</footer>
    </div>
   </aside>
  </form>;

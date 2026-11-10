@@ -39,3 +39,14 @@
 
 .backButton{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:12px 19px;border:1px solid #cfdbe6;border-radius:7px;background:#fff;color:#102033!important;font-weight:700;text-decoration:none!important}
 .backButton:hover{background:#f6f8fb}
+
+/* Organização do envio e público, alinhados em duas colunas. */
+.transactionalConfig,.configIntro,.deliveryFields,.deliveryOptions{grid-column:1/-1;min-width:0}
+.transactionalConfig{display:grid;gap:12px;border-top:1px solid #e2e8f0;padding-top:20px}
+.configIntro{padding-top:18px;border-top:1px solid #e2e8f0}
+.deliveryFields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 24px}
+.deliveryFields label,.deliveryOptions label{display:grid;gap:8px;font-size:13px;font-weight:700;color:#263a4e;min-width:0}
+.deliveryOptions{display:grid;gap:13px}
+.deliveryOptions p{margin:0}
+.deliveryOptions .checkbox{display:flex;align-items:center;gap:10px}
+@media(max-width:680px){.deliveryFields{grid-template-columns:1fr}}
