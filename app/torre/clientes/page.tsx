@@ -1,4 +1,5 @@
 import type {Metadata} from "next";
+import Link from "next/link";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 import ClientDirectory from "./directory";
@@ -45,7 +46,7 @@ export default async function ClientesPage(){
  customers.set(key,item);
  }
  return <main className={styles.page}><section className={styles.content}><div className="container">
- <header className={styles.pageHeader}><div><p className={styles.eyebrow}>ADMINISTRAÇÃO</p><h1>Clientes</h1><p>Consulte cadastros, contatos e produtos adquiridos, com pesquisa e filtros.</p></div></header>
- {errors?<p className={styles.errorMessage}>Não foi possível consultar os clientes.</p>:<section className={styles.diagnosticsSection}><h2>Clientes cadastrados e compradores</h2><p style={{color:"#647381",fontSize:13}}>Consolidação por e-mail dos perfis e pedidos disponíveis. Endereço será exibido quando houver cadastro estruturado disponível; não é inferido.</p><ClientDirectory rows={[...customers.values()]}/></section>}
+ <header className={styles.pageHeader}><div><p className={styles.eyebrow}>ADMINISTRAÇÃO</p><h1>Clientes</h1><p>Consulte cadastros, contatos e produtos adquiridos, com pesquisa e filtros.</p></div><Link className={styles.openLink} href="/torre/clientes/campanhas">Criar campanha de e-mail</Link></header>
+ {errors?<p className={styles.errorMessage}>Não foi possível consultar os clientes.</p>:<section className={styles.diagnosticsSection}><h2>Clientes cadastrados e compradores</h2><p style={{color:"#647381",fontSize:13}}>Consolidação por e-mail dos perfis e pedidos disponíveis. Endereço será exibido quando houver cadastro estruturado disponível; não é inferido.</p><ClientDirectory rows={[...customers.values()]} products={(products.data??[]).map(p=>({id:p.id,name:p.name}))}/></section>}
  </div></section></main>;
 }
