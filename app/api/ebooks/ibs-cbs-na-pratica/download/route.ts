@@ -1,5 +1,6 @@
 // app/api/ebooks/ibs-cbs-na-pratica/download/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { ebookAccessActive, ebookAccessUntil } from "@/lib/ebooks/access";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
@@ -20,7 +21,7 @@ function denied(status: number) {
   );
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const client = await createClient();
   const { data: claims, error: authError } = await client.auth.getClaims();
   const userId = typeof claims?.claims?.sub === "string" ? claims.claims.sub : null;
@@ -34,13 +35,16 @@ export async function GET() {
     if (!product) return denied(403);
 
     const { data: orders, error: orderError } = await admin
-      .from("orders").select("id")
+      .from("orders").select("paid_at,created_at")
       .eq("user_id", userId)
       .eq("product_id", product.id)
       .eq("status", "paid")
       .limit(1);
     if (orderError) throw orderError;
     if (!orders?.length) return denied(403);
+    const expiresAt = ebookAccessUntil(orders);
+    if (!ebookAccessActive(expiresAt)) return NextResponse.json({error:"O período de acesso ao seu e-book foi encerrado."},{status:403,headers:{"Cache-Control":"no-store"}});
+    const isDownload = request.nextUrl.searchParams.get("mode") !== "view";
 
     // Prefere sempre a versão publicada na Torre, inclusive para compradores antigos.
     // Enquanto não houver publicação, mantém a entrega existente sem interrupção.
@@ -51,7 +55,7 @@ export async function GET() {
     if (configured?.storage_bucket && configured.storage_path && configured.version > 0) {
       const safeName=(configured.material_name || "ebook-ibs-cbs").replace(/[^a-zA-Z0-9À-ÿ _.-]/g,"").trim().slice(0,100) + ".pdf";
       const {data:updated,error:updatedError}=await admin.storage.from(configured.storage_bucket)
-        .createSignedUrl(configured.storage_path,60,{download:safeName});
+        .createSignedUrl(configured.storage_path,60,{download:isDownload ? safeName : undefined});
       if(updatedError || !updated?.signedUrl) {
         console.error("Arquivo atualizado indisponível:",updatedError);
         return NextResponse.json({error:"A versão atual do material está temporariamente indisponível."},
@@ -65,7 +69,7 @@ export async function GET() {
     for (const bucket of BUCKETS) {
       const { data, error: storageError } = await admin.storage.from(bucket)
         .createSignedUrl(OBJECT_PATH, 60, {
-          download: "Ebook_IBS_CBS_na_Pratica_Diana_Voltolini.pdf",
+          download: isDownload ? "Ebook_IBS_CBS_na_Pratica_Diana_Voltolini.pdf" : undefined,
         });
       if (!storageError && data?.signedUrl) {
         return NextResponse.redirect(data.signedUrl, {
