@@ -25,6 +25,9 @@ export async function publishProductDelivery(form: FormData) {
  const {data:other}=await db.from("product_deliveries").select("product_id").eq("page_path",pagePath).neq("product_id",productId).maybeSingle();
  if(other)redirect("/torre/produtos-entregas?erro=pagina");
 
+ const {data:previous,error:previousError}=await db.from("product_deliveries")
+   .select("storage_bucket,storage_path").eq("product_id",productId).maybeSingle();
+ if(previousError)redirect("/torre/produtos-entregas?erro=salvar");
  // Upload has a unique immutable storage key: no already-published file is overwritten.
  const storagePath=product.code.toLowerCase()+"/"+crypto.randomUUID()+".pdf";
  const {error:uploadError}=await db.storage.from("product-deliveries").upload(storagePath,await file.arrayBuffer(),{contentType:"application/pdf",upsert:false});
@@ -35,6 +38,12 @@ export async function publishProductDelivery(form: FormData) {
    p_storage_bucket:"product-deliveries",p_storage_path:storagePath
  });
  if(publishError){console.error("Falha na publicação de material:",publishError);redirect("/torre/produtos-entregas?erro=salvar");}
+ // Somente o arquivo atual permanece no Storage. O histórico de publicação permanece no banco.
+ if(previous?.storage_bucket && previous.storage_path &&
+    (previous.storage_bucket!=="product-deliveries" || previous.storage_path!==storagePath)) {
+   const {error:cleanupError}=await db.storage.from(previous.storage_bucket).remove([previous.storage_path]);
+   if(cleanupError)console.error("Não foi possível remover a versão substituída:",cleanupError);
+ }
  revalidatePath("/torre/produtos-entregas");
  revalidatePath("/painel/ebooks");
  revalidatePath("/painel");
