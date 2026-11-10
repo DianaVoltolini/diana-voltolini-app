@@ -32,7 +32,7 @@ export async function sendTransactionalTest(form:FormData){
  if(!allowed(id)||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)||form.get("confirm")!=="yes")
   redirect(back+"?erro=teste");
  const {data,error}=await getSupabaseAdmin().from("marketing_email_templates")
- .select("subject,body").eq("id",id).eq("kind","transactional").maybeSingle();
+ .select("subject,body,event_key").eq("id",id).eq("kind","transactional").maybeSingle();
  if(error||!data)redirect(back+"?erro=teste");
  const variables:Record<string,string>={
   "{{nome}}":"Cliente Teste","{{valor}}":"R$ 29,90","{{forma_pagamento}}":"PIX",
@@ -47,12 +47,32 @@ export async function sendTransactionalTest(form:FormData){
  if(!user||!pass||!host)redirect(back+"?erro=smtp");
  const mail=nodemailer.createTransport({host,port,secure:(process.env.SMTP_SECURE||String(port===465))==="true",auth:{user,pass}});
  const from=process.env.SMTP_FROM_EMAIL||user;
- const display=(process.env.SMTP_FROM_NAME||"Diana Voltolini").replace(/["\r\n]/g,"");
+ const display=(process.env.SMTP_FROM_NAME||"Diana Voltolini").replace(/["\\r\\n]/g,"");
  const escape=(s:string)=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]||c));
+ const isCharge=data.event_key==="ebook_charge_generated"||data.event_key==="default_charge_generated";
+ // A prévia é visual e isolada: botão demonstrativo sem link para cobrança real.
+ const buttonLabel=isCharge?"Ver cobrança":"Acessar minha compra";
+ const logoUrl="https://app.dianavoltolini.com.br/brand/logo-light.png";
+ const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"></head>
+ <body style="margin:0;padding:20px;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;color:#405266">
+ <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #dce4ec;border-radius:9px;overflow:hidden">
+ <div style="text-align:center;border-top:4px solid #c9a227;padding:20px;background:#fff">
+ <img src="${logoUrl}" alt="Diana Voltolini" width="175" style="max-width:80%;height:auto;border:0;display:inline-block" />
+ </div>
+ <div style="padding:28px 30px"><h1 style="font:700 24px/1.35 Georgia,serif;color:#102033;margin:0 0 20px">${escape(subject)}</h1>
+ <div style="white-space:pre-line;line-height:1.75;font-size:14px">${escape(body)}</div>
+ <p style="text-align:center;margin:28px 0"><span style="display:inline-block;background:#c9a227;padding:13px 19px;border-radius:6px;font-size:14px;font-weight:bold;color:#102033">${escape(buttonLabel)} (demonstração)</span></p>
+ <p style="font-size:12px;color:#647381">Esta é uma prévia de teste. Nenhuma compra, cobrança ou confirmação de pagamento foi realizada.</p>
+ </div>
+ <div style="padding:22px 26px;border-top:1px solid #e1e7ed;text-align:center;background:#f7f9fb;color:#607184;font-size:11px;line-height:1.6">
+ <strong style="color:#102033">Diana Voltolini</strong>
+ <p style="margin:8px 0">Especialista em Faturamento e Inteligência Fiscal</p>
+ <p style="margin:8px 0">Esta é uma comunicação referente à sua compra.</p>
+ </div></div></body></html>`;
  try {
   await mail.sendMail({from:'"'+display+'" <'+from+'>',to,subject,
-   text:body+"\n\nPrévia de teste; nenhum pagamento ou disparo automático foi realizado.",
-   html:'<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto"><h2>'+escape(subject)+'</h2><div style="white-space:pre-line;line-height:1.65">'+escape(body)+'</div><p>Prévia de teste: nenhum pagamento foi realizado.</p></div>'
+   text:body+"\\n\\n"+buttonLabel+" (demonstração — botão sem link)\\n\\nEsta é uma prévia de teste. Nenhuma compra, cobrança ou confirmação de pagamento foi realizada.\\n\\nDiana Voltolini — Especialista em Faturamento e Inteligência Fiscal.\\nEsta é uma comunicação referente à sua compra.",
+   html
   });
  }catch{redirect(back+"?erro=smtp");}
  redirect("/torre/modelos-email/editor?editar="+encodeURIComponent(id)+"&teste=1");
