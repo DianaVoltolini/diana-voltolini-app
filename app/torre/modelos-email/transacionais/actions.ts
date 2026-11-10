@@ -9,7 +9,7 @@ const IDS=[
  "eb0c0000-0000-4000-8000-000000000001",
  "eb0c0000-0000-4000-8000-000000000002",
 ];
-const back="/torre/modelos-email/transacionais";
+const back="/torre/modelos-email";
 const clean=(form:FormData,key:string,max:number)=>String(form.get(key)??"").trim().slice(0,max);
 function allowed(id:string){return IDS.includes(id);}
 export async function saveTransactionalEmail(form:FormData){
@@ -52,5 +52,5 @@ export async function sendTransactionalTest(form:FormData){
    html:'<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto"><h2>'+escape(subject)+'</h2><div style="white-space:pre-line;line-height:1.65">'+escape(body)+'</div><p>Prévia de teste: nenhum pagamento foi realizado.</p></div>'
   });
  }catch{redirect(back+"?erro=smtp");}
- redirect(back+"?teste=1");
+ redirect("/torre/modelos-email/editor?editar="+encodeURIComponent(id)+"&teste=1");
 }
