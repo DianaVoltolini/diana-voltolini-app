@@ -8,6 +8,7 @@ import ProductOffer from "../product-offer";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { ebookAccessUntil, ebookAccessActive, ebookAccessDateLabel } from "@/lib/ebooks/access";
 
 export const metadata: Metadata = {
   title: "Meus E-books | Diana Voltolini",
@@ -30,15 +31,17 @@ export default async function EbooksPage() {
   if (productError) throw new Error("Não foi possível verificar o e-book.");
 
   let hasPaidOrder = false;
+  let expiresAt: Date | null = null;
   if (product) {
     const { data: orders, error: orderError } = await admin.from("orders")
-      .select("id")
+      .select("paid_at,created_at")
       .eq("user_id", userId)
       .eq("product_id", product.id)
       .eq("status", "paid")
       .limit(1);
     if (orderError) throw new Error("Não foi possível verificar sua compra.");
     hasPaidOrder = Boolean(orders?.length);
+    expiresAt = ebookAccessUntil(orders ?? []);
   }
 
   if(!hasPaidOrder) return <ProductPage title="IBS e CBS na Prática" description="E-book digital para compreender a Reforma Tributária e aplicar o conhecimento ao faturamento.">
@@ -58,11 +61,14 @@ export default async function EbooksPage() {
           {hasPaidOrder ? (
             <>
               <p style={{ fontWeight: 700, color: "#167241" }}>Pagamento confirmado</p>
-              <p>Seu e-book está disponível para download.</p>
-              <a href="/api/ebooks/ibs-cbs-na-pratica/download"
-                style={{ display: "inline-block", marginTop: 12, background: "#c9a227", color: "#0d1b2a", padding: "12px 20px", borderRadius: 5, fontWeight: 700 }}>
-                Baixar e-book (PDF) ↓
-              </a>
+              <p>Seu acesso ao e-book termina em <strong>{expiresAt ? ebookAccessDateLabel(expiresAt) : "data indisponível"}</strong>.</p>
+              <p>Durante os 90 dias após o pagamento, você pode visualizar e baixar a versão mais recente, incluindo eventuais atualizações sem custo adicional.</p>
+              {ebookAccessActive(expiresAt) ? <div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:12}}>
+                <a href="/api/ebooks/ibs-cbs-na-pratica/download?mode=view" target="_blank" rel="noopener noreferrer"
+                  style={{display:"inline-block",background:"#f5f7f9",border:"1px solid #cad4dc",color:"#0d1b2a",padding:"12px 20px",borderRadius:5,fontWeight:700}}>Visualizar PDF</a>
+                <a href="/api/ebooks/ibs-cbs-na-pratica/download"
+                  style={{display:"inline-block",background:"#c9a227",color:"#0d1b2a",padding:"12px 20px",borderRadius:5,fontWeight:700}}>Baixar e-book (PDF) ↓</a>
+              </div> : <p style={{fontWeight:700,color:"#765b2b"}}>O período de acesso ao seu e-book foi encerrado.</p>}
             </>
           ) : (
             <>
