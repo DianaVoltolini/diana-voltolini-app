@@ -42,6 +42,26 @@ export async function GET() {
     if (orderError) throw orderError;
     if (!orders?.length) return denied(403);
 
+    // Prefere sempre a versão publicada na Torre, inclusive para compradores antigos.
+    // Enquanto não houver publicação, mantém a entrega existente sem interrupção.
+    const { data: configured, error: deliveryError } = await admin.from("product_deliveries")
+      .select("material_name,storage_bucket,storage_path,version")
+      .eq("product_id", product.id).maybeSingle();
+    if (deliveryError) throw deliveryError;
+    if (configured?.storage_bucket && configured.storage_path && configured.version > 0) {
+      const safeName=(configured.material_name || "ebook-ibs-cbs").replace(/[^a-zA-Z0-9À-ÿ _.-]/g,"").trim().slice(0,100) + ".pdf";
+      const {data:updated,error:updatedError}=await admin.storage.from(configured.storage_bucket)
+        .createSignedUrl(configured.storage_path,60,{download:safeName});
+      if(updatedError || !updated?.signedUrl) {
+        console.error("Arquivo atualizado indisponível:",updatedError);
+        return NextResponse.json({error:"A versão atual do material está temporariamente indisponível."},
+          {status:503,headers:{"Cache-Control":"no-store"}});
+      }
+      return NextResponse.redirect(updated.signedUrl,{status:303,headers:{
+        "Cache-Control":"no-store, private","Referrer-Policy":"no-referrer"
+      }});
+    }
+
     for (const bucket of BUCKETS) {
       const { data, error: storageError } = await admin.storage.from(bucket)
         .createSignedUrl(OBJECT_PATH, 60, {
