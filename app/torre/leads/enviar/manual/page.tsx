@@ -8,7 +8,7 @@ export const dynamic="force-dynamic";
 export default async function ManualEmailPage(){
  await requireAdmin();const db=getSupabaseAdmin();
  const [{data:models,error},{data:interestRows}]=await Promise.all([
-  db.from("marketing_email_templates").select("id,name,subject,body,interest,landing_id,cta_url,cta_label").eq("active",true).order("name",{ascending:true}).limit(100),
+  db.from("marketing_email_templates").select("id,name,subject,body,interest,landing_id,cta_url,cta_label").eq("active",true).neq("kind","transactional").eq("audience_kind","leads").order("name",{ascending:true}).limit(100),
   db.from("marketing_leads").select("interest").not("interest","is",null).limit(2000)
  ]);
  const interests=Array.from(new Set((interestRows??[]).map(x=>x.interest).filter((v):v is string=>typeof v==="string"&&v.length>0))).sort((a,b)=>a.localeCompare(b,"pt-BR"));

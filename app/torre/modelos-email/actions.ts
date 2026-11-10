@@ -8,6 +8,7 @@ export async function saveEmailTemplate(f:FormData){
  await requireAdmin();
  const id=value(f,"id",50),name=value(f,"name",120),subject=value(f,"subject",180),body=value(f,"body",14000);
  const kind=value(f,"kind",20)==="welcome"?"welcome":"manual";
+ const audience_kind=value(f,"audience_kind",20)==="buyers"?"buyers":"leads";
  const description=value(f,"description",500),interest=value(f,"interest",120),landing_id=value(f,"landing_id",50),cta_label=value(f,"cta_label",80),cta_url=value(f,"cta_url",300);
  const allowed=["https://dianavoltolini.com.br/blog","https://dianavoltolini.com.br/ibs-cbs-na-pratica","https://dianavoltolini.com.br/diagnostico-ibs-cbs","https://dianavoltolini.com.br/fiscal-na-pratica","https://dianavoltolini.com.br/produtos","https://dianavoltolini.com.br"];
  if(!allowed.includes(cta_url)||!cta_label)redirect("/torre/modelos-email/editor?erro=cta");
@@ -17,7 +18,7 @@ export async function saveEmailTemplate(f:FormData){
  if(auto_enabled&&kind!=="welcome"&&!landing_id)redirect("/torre/modelos-email/editor?erro=landing");
  const existingTemplate=id?await db.from("marketing_email_templates").select("auto_enabled,auto_activated_at").eq("id",id).maybeSingle():{data:null};
  const auto_activated_at=auto_enabled?(existingTemplate.data?.auto_enabled?existingTemplate.data.auto_activated_at??new Date().toISOString():new Date().toISOString()):null;
- const payload={auto_activated_at,auto_enabled,auto_include_existing:auto_enabled&&auto_include_existing,name,description:description||null,subject,body,kind,interest:interest||null,landing_id:landing_id||null,cta_label,cta_url,active:f.get("active")==="yes",updated_at:new Date().toISOString()};
+ const payload={audience_kind,auto_activated_at,auto_enabled,auto_include_existing:auto_enabled&&auto_include_existing,name,description:description||null,subject,body,kind,interest:interest||null,landing_id:landing_id||null,cta_label,cta_url,active:f.get("active")==="yes",updated_at:new Date().toISOString()};
  const {error}=id?await db.from("marketing_email_templates").update(payload).eq("id",id):await db.from("marketing_email_templates").insert(payload);
  if(error)redirect("/torre/modelos-email/editor?erro=salvar");
  revalidatePath("/torre/modelos-email");redirect("/torre/modelos-email?salvo=1");

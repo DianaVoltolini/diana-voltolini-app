@@ -8,6 +8,8 @@ import {getSupabaseAdmin} from "@/lib/supabase/admin";
 const IDS=[
  "eb0c0000-0000-4000-8000-000000000001",
  "eb0c0000-0000-4000-8000-000000000002",
+ "eb0c0000-0000-4000-8000-000000000011",
+ "eb0c0000-0000-4000-8000-000000000012",
 ];
 const back="/torre/modelos-email";
 const clean=(form:FormData,key:string,max:number)=>String(form.get(key)??"").trim().slice(0,max);
@@ -35,6 +37,7 @@ export async function sendTransactionalTest(form:FormData){
  const variables:Record<string,string>={
   "{{nome}}":"Cliente Teste","{{valor}}":"R$ 29,90","{{forma_pagamento}}":"PIX",
   "{{situacao_encontro}}":"Sua inscrição no encontro está confirmada.",
+  "{{produto}}":"Produto de Teste",
  };
  const render=(value:string)=>Object.entries(variables).reduce((s,[k,v])=>s.replaceAll(k,v),value);
  const subject="[TESTE] "+render(data.subject);

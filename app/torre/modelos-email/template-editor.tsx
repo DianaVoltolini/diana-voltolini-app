@@ -4,7 +4,7 @@ import Link from "next/link";
 import {saveEmailTemplate} from "./actions";
 import {saveTransactionalEmail} from "./transacionais/actions";
 import css from "./template-editor.module.css";
-type Template={id:string;name:string;subject:string;body:string;kind:string;active:boolean;description:string|null;interest:string|null;landing_id:string|null;cta_label:string|null;cta_url:string|null;auto_enabled?:boolean;auto_include_existing?:boolean};
+type Template={audience_kind?:string|null;id:string;name:string;subject:string;body:string;kind:string;active:boolean;description:string|null;interest:string|null;landing_id:string|null;cta_label:string|null;cta_url:string|null;auto_enabled?:boolean;auto_include_existing?:boolean};
 type Landing={id:string;title:string};
 const links=[
  ["Blog Fiscal","https://dianavoltolini.com.br/blog"],
@@ -16,8 +16,9 @@ const links=[
 ];
 const starter="Olá, {{nome}}!\n\nQue bom ter você por aqui!\n\nMeu objetivo é ajudar profissionais e empresas a compreender as mudanças fiscais e aplicá-las com mais segurança na rotina.\n\nObrigada pelo interesse!\nDiana Voltolini";
 const buttonPattern=/\[BOTAO:\s*([^\]\n|]+?)\s*\|\s*(https:\/\/[^\]\s]+)\]/g;
-export default function TemplateEditor({selected,interests,landings}:{selected:Template|null;interests:string[];landings:Landing[]}){
+export default function TemplateEditor({selected,interests,landings,defaultAudience="leads"}:{selected:Template|null;interests:string[];landings:Landing[];defaultAudience?:string}){
  const transactional=selected?.kind==="transactional";
+ const [audience,setAudience]=useState(selected?.audience_kind??defaultAudience);
  const [name,setName]=useState(selected?.name??"");
  const [description,setDescription]=useState(selected?.description??"");
  const [subject,setSubject]=useState(selected?.subject??"");
@@ -35,6 +36,7 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
  useEffect(()=>{const el=bodyRef.current;if(el){el.style.height="auto";el.style.height=Math.max(320,el.scrollHeight)+"px"}},[body]);
  return <form action={transactional?saveTransactionalEmail:saveEmailTemplate} className={css.grid}>
   <input type="hidden" name="id" value={selected?.id??""}/>
+  <input type="hidden" name="audience_kind" value={audience}/>
   <input type="hidden" name="kind" value={source==="home"?"welcome":"manual"}/>
   <input type="hidden" name="active" value={active?"yes":"no"}/>
   <input type="hidden" name="auto_enabled" value={sendType==="automatic"&&automatic?"yes":"no"}/>
@@ -42,13 +44,14 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
   <input type="hidden" name="interest" value={source==="landing"?interest:""}/>
   <input type="hidden" name="auto_include_existing" value={existing?"yes":"no"}/>
   <section className={css.headFields}>
-   <div className={css.sectionIntro}><span>01 · IDENTIFICAÇÃO</span><h2>{transactional?"Dados do e-mail":"Dados da campanha"}</h2><p>{transactional?"Modelo vinculado automaticamente aos eventos de compra do e-book.":"Identificação e público de referência para este modelo."}</p></div>
+   <div className={css.sectionIntro}><span>01 · IDENTIFICAÇÃO</span><h2>{transactional?"Dados do e-mail":"Dados da campanha"}</h2><p>{transactional?"Modelo transacional vinculado aos eventos de cobrança ou pagamento.":"Identificação e público de referência para este modelo."}</p></div>
    <label>{transactional?"Nome do modelo":"Nome da Campanha"}<input name="name" required maxLength={120} value={name} onChange={e=>setName(e.target.value)} readOnly={transactional} placeholder="Ex.: Boas-vindas ao Conhecimento Fiscal"/></label>
    <label>Descrição<textarea name="description" maxLength={500} rows={2} value={description} onChange={e=>setDescription(e.target.value)} readOnly={transactional} placeholder="Finalidade desta campanha"/></label>
+   {!transactional&&<label>Público do modelo<select value={audience} onChange={e=>{setAudience(e.target.value);setAutomatic(false);setSendType("manual");}}><option value="leads">Inscritos e leads</option><option value="buyers">Clientes que compraram</option></select></label>}
    {transactional?<div style={{display:"grid",gap:12,borderTop:"1px solid #e2e8f0",paddingTop:20}}><div className={css.sectionIntro}><span>02 · CONFIGURAÇÃO DO ENVIO</span><h2>Automático — evento de compra</h2><p>Este modelo é enviado somente pelo evento correspondente: cobrança gerada ou pagamento confirmado. Não utiliza listas de leads nem campanhas manuais.</p></div><p style={{fontSize:13,color:"#607184"}}>A edição do texto não dispara e-mails e não modifica o checkout ou os pagamentos.</p></div>:<div style={{display:"grid",gap:13,borderTop:"1px solid #e2e8f0",paddingTop:20}}>
     <div className={css.sectionIntro}><span>02 · CONFIGURAÇÃO DO ENVIO</span><h2>Quando enviar esta mensagem?</h2><p>Defina o envio manual ou automático e a origem dos destinatários.</p></div>
-    <label>Tipo de envio<select value={sendType} onChange={e=>{const v=e.target.value as "manual"|"automatic";setSendType(v);if(v==="manual")setAutomatic(false);else setAutomatic(true);}}><option value="manual">Manual — escolher destinatários na Torre</option><option value="automatic">Automático — após cadastro no site</option></select></label>
-    {sendType==="automatic"&&<>
+    <label>Tipo de envio<select disabled={audience==="buyers"} value={audience==="buyers"?"manual":sendType} onChange={e=>{const v=e.target.value as "manual"|"automatic";setSendType(v);if(v==="manual")setAutomatic(false);else setAutomatic(true);}}><option value="manual">Manual — escolher destinatários na Torre</option><option value="automatic">Automático — após cadastro no site</option></select></label>
+    {audience!=="buyers"&&sendType==="automatic"&&<>
      <label>Origem do cadastro<select value={source} onChange={e=>{setSource(e.target.value);setLanding("");setInterest("");}}><option value="landing">Landing de material gratuito</option><option value="home">Newsletter da página principal</option></select></label>
      {source==="landing"&&<div className={css.duo}>
       <label>Landing de origem<select value={landing} onChange={e=>setLanding(e.target.value)} required><option value="">Selecione uma landing</option>{landings.map(l=><option key={l.id} value={l.id}>{l.title}</option>)}</select></label>
@@ -58,7 +61,8 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
      {automatic&&<label className={css.checkbox}><input type="checkbox" checked={existing} onChange={e=>setExisting(e.target.checked)}/> Incluir inscritos anteriores que ainda não receberam este modelo</label>}
      <p style={{fontSize:12,color:"#607184"}}>O cron verifica novos inscritos e respeita o consentimento e os descadastros. A ativação poderá iniciar envios reais.</p>
     </>}
-    {sendType==="manual"&&<p style={{fontSize:13,color:"#607184"}}>O modelo poderá ser selecionado no fluxo de envio manual. O disparo manual continua sujeito à liberação do envio real na Torre; salvar o modelo não envia mensagens.</p>}
+    {audience==="buyers"&&<p style={{fontSize:13,color:"#607184"}}>Este modelo poderá ser usado em campanhas para clientes com compras identificadas e autorização de marketing. Envie campanhas pela página Clientes.</p>}
+    {audience!=="buyers"&&sendType==="manual"&&<p style={{fontSize:13,color:"#607184"}}>O modelo poderá ser selecionado no fluxo de envio manual. O disparo manual continua sujeito à liberação do envio real na Torre; salvar o modelo não envia mensagens.</p>}
    </div>}
   </section>
   <section className={css.fields}>
@@ -72,7 +76,7 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
      <label>Texto do botão<input name="cta_label" required maxLength={80} value={cta} onChange={e=>setCta(e.target.value)}/></label>
     </div>
    </div>}
-   {transactional?<p style={{fontSize:13,color:"#607184"}}>O link de pagamento e os links de acesso à Área do Cliente são inseridos automaticamente no envio. Variáveis disponíveis: {"{{nome}}"}, {"{{valor}}"}, {"{{forma_pagamento}}"} e {"{{situacao_encontro}}"}.</p>:<label className={css.checkbox}><input type="checkbox" checked={active} onChange={e=>setActive(e.target.checked)}/> Modelo disponível para seleção</label>}
+   {transactional?<p style={{fontSize:13,color:"#607184"}}>O link de cobrança e o link de acesso são incluídos pelo sistema conforme o produto. Variáveis disponíveis: {"{{produto}}"}, {"{{nome}}"}, {"{{valor}}"}, {"{{forma_pagamento}}"} e {"{{situacao_encontro}}"}.</p>:<label className={css.checkbox}><input type="checkbox" checked={active} onChange={e=>setActive(e.target.checked)}/> Modelo disponível para seleção</label>}
    <div className={css.buttons}><button type="submit">Salvar modelo</button><Link href="/torre/modelos-email" className={css.backButton}>Voltar</Link></div>
   </section>
   <aside className={css.previewPanel}>
@@ -81,10 +85,10 @@ export default function TemplateEditor({selected,interests,landings}:{selected:T
     <header><img src="/brand/logo-light.png" alt="Diana Voltolini"/></header>
     <div className={css.mailBody}>
      <h2>{(subject||"Assunto do e-mail").replaceAll("{{nome}}","Diana")}</h2>
-     <div className={css.message}>{(body||"Sua mensagem aparecerá aqui.").replaceAll("{{nome}}","Cliente Teste").replaceAll("{{valor}}","R$ 29,90").replaceAll("{{forma_pagamento}}","PIX").replaceAll("{{situacao_encontro}}","Sua inscrição no encontro está confirmada.")}</div>
-     {transactional?<div className={css.ctaCenter}><span className={css.mailButton}>{selected?.id==="eb0c0000-0000-4000-8000-000000000001"?"Ver cobrança":"Criar meu acesso e baixar o e-book"}</span></div>:cta.trim()&&<div className={css.ctaCenter}><a href={url} target="_blank" rel="noopener noreferrer" className={css.mailButton}>{cta}</a></div>}
+     <div className={css.message}>{(body||"Sua mensagem aparecerá aqui.").replaceAll("{{nome}}","Cliente Teste").replaceAll("{{produto}}","Produto de Teste").replaceAll("{{valor}}","R$ 29,90").replaceAll("{{forma_pagamento}}","PIX").replaceAll("{{situacao_encontro}}","Sua inscrição no encontro está confirmada.")}</div>
+     {transactional?<div className={css.ctaCenter}><span className={css.mailButton}>{selected?.id==="eb0c0000-0000-4000-8000-000000000001"||selected?.id==="eb0c0000-0000-4000-8000-000000000011"?"Ver cobrança":"Acessar minha compra"}</span></div>:cta.trim()&&<div className={css.ctaCenter}><a href={url} target="_blank" rel="noopener noreferrer" className={css.mailButton}>{cta}</a></div>}
     </div>
-    <footer><strong>Diana Voltolini</strong><p>Especialista em Faturamento e Inteligência Fiscal</p><p>{transactional?"Esta é uma comunicação sobre sua compra do e-book IBS e CBS na Prática.":"Você está recebendo este e-mail por ter autorizado nossas comunicações. Se não desejar continuar recebendo a Newsletter Fiscal, poderá cancelar sua inscrição pelo link de descadastro."}</p>{!transactional&&<span>Cancelar inscrição — o link individual será incluído no e-mail enviado ao assinante.</span>}</footer>
+    <footer><strong>Diana Voltolini</strong><p>Especialista em Faturamento e Inteligência Fiscal</p><p>{transactional?"Esta é uma comunicação referente à sua compra.":"Você está recebendo este e-mail por ter autorizado nossas comunicações. Se não desejar continuar recebendo a Newsletter Fiscal, poderá cancelar sua inscrição pelo link de descadastro."}</p>{!transactional&&<span>Cancelar inscrição — o link individual será incluído no e-mail enviado ao assinante.</span>}</footer>
    </div>
   </aside>
  </form>;
