@@ -24,7 +24,7 @@ const currency=(n:number)=>(n/100).toLocaleString("pt-BR",{style:"currency",curr
 const render=(s:string,values:Record<string,string>)=>s.replace(/{{([a-z_]+)}}/g,(full,k:string)=>values[k]??full);
 
 export async function simulateBuyerEmail(_previous:SimulationState,form:FormData):Promise<SimulationState>{
- const admin=await requireAdmin();
+ await requireAdmin();
  const email=String(form.get("customer_email")??"").trim().toLowerCase().slice(0,254);
  const event=String(form.get("event")??"");
  const scenario=String(form.get("scenario")??"");
