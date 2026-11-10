@@ -53,7 +53,7 @@ export default async function DeliveriesPage({searchParams}:Search){
          </label>
          <button type="submit">Publicar nova versão</button>
        </form>
-       <p className={styles.hint}>A versão anterior fica preservada no histórico. O sininho informa os clientes sobre uma atualização publicada. Nesta primeira etapa, o download automático por material publicado está ligado ao e-book IBS/CBS.</p>
+       <p className={styles.hint}>Somente a versão mais recente fica disponível para download. O histórico registra as publicações realizadas. O sininho informa os clientes sobre uma atualização publicada. Nesta primeira etapa, o download automático por material publicado está ligado ao e-book IBS/CBS.</p>
      </div>
      <div className={styles.panel}><h2>Páginas e entregas</h2>
        <div className={styles.list}>
@@ -62,6 +62,10 @@ export default async function DeliveriesPage({searchParams}:Search){
           <small>{m.page_path}</small>
           <span>{m.version>0?`Versão ${m.version} · ${m.material_name}`:"Aguardando primeiro PDF publicado"}</span>
           {m.published_at&&<small>Última publicação: {new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo",dateStyle:"short",timeStyle:"short"}).format(new Date(m.published_at))}</small>}
+          {byId.get(m.product_id)?.code==="EBOOK-IBSCBS-001" && m.version>0 && <div style={{display:"flex",flexWrap:"wrap",gap:14}}>
+            <a href="/api/torre/ebooks/current?mode=view" target="_blank" rel="noopener noreferrer">Visualizar PDF atual</a>
+            <a href="/api/torre/ebooks/current">Baixar PDF atual</a>
+          </div>}
           <Link href={m.page_path.startsWith("/")?`https://dianavoltolini.com.br${m.page_path}`:"https://dianavoltolini.com.br"} target="_blank">Ver página de vendas</Link>
         </article>)}
         {!mappings?.length&&<p>Nenhuma página cadastrada. Publique o primeiro arquivo para criar o vínculo.</p>}
