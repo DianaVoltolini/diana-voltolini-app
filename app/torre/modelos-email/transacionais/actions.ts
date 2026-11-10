@@ -5,21 +5,42 @@ import nodemailer from "nodemailer";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 
-const IDS=[
- "eb0c0000-0000-4000-8000-000000000001",
- "eb0c0000-0000-4000-8000-000000000002",
-];
 const back="/torre/modelos-email";
 const clean=(form:FormData,key:string,max:number)=>String(form.get(key)??"").trim().slice(0,max);
-function allowed(id:string){return IDS.includes(id);}
+const uuid=(id:string)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+const eventKeys=["charge_generated","payment_confirmed"];
+const fullEventKey=(code:string,event:string)=>"product:"+code+":"+event;
 export async function saveTransactionalEmail(form:FormData){
  await requireAdmin();
- const id=clean(form,"id",50),subject=clean(form,"subject",180),body=clean(form,"body",14000);
- if(!allowed(id)||!subject||!body)redirect(back+"?erro=campos");
- const {data,error}=await getSupabaseAdmin().from("marketing_email_templates")
- .update({subject,body,updated_at:new Date().toISOString()})
- .eq("id",id).eq("kind","transactional").select("id").maybeSingle();
- if(error||!data)redirect(back+"?erro=salvar");
+ const id=clean(form,"id",50),name=clean(form,"name",120),description=clean(form,"description",500);
+ const subject=clean(form,"subject",180),body=clean(form,"body",14000);
+ const productId=clean(form,"product_id",50),event=clean(form,"trigger_event",32);
+ if(!name||!subject||!body)redirect("/torre/modelos-email/editor?erro=campos");
+ const db=getSupabaseAdmin();
+ if(id){
+  if(!uuid(id))redirect(back+"?erro=campos");
+  const {data:existing,error:lookupError}=await db.from("marketing_email_templates")
+   .select("id,kind").eq("id",id).eq("kind","transactional").maybeSingle();
+  if(lookupError||!existing)redirect(back+"?erro=salvar");
+  const {data,error}=await db.from("marketing_email_templates")
+   .update({name,description:description||null,subject,body,updated_at:new Date().toISOString()})
+   .eq("id",id).eq("kind","transactional").select("id").maybeSingle();
+  if(error||!data)redirect(back+"?erro=salvar");
+ }else{
+  if(!uuid(productId)||!eventKeys.includes(event))redirect("/torre/modelos-email/editor?erro=produto");
+  const {data:product,error:productError}=await db.from("products").select("id,code,active").eq("id",productId).maybeSingle();
+  if(productError||!product||!product.active)redirect("/torre/modelos-email/editor?erro=produto");
+  const event_key=fullEventKey(product.code,event);
+  const {data:dupe,error:dupeError}=await db.from("marketing_email_templates").select("id").eq("event_key",event_key).maybeSingle();
+  if(dupeError||dupe)redirect("/torre/modelos-email/editor?erro=duplicado");
+  const {error}=await db.from("marketing_email_templates").insert({
+   name,description:description||null,subject,body,kind:"transactional",event_key,
+   active:true,auto_enabled:false,auto_include_existing:false,
+   cta_label:event==="charge_generated"?"Ver cobrança":"Acessar minha compra",
+   cta_url:"https://app.dianavoltolini.com.br/painel"
+  });
+  if(error)redirect("/torre/modelos-email/editor?erro=salvar");
+ }
  revalidatePath(back);
  redirect(back+"?salvo=1");
 }
@@ -27,7 +48,7 @@ export async function sendTransactionalTest(form:FormData){
  await requireAdmin();
  const id=clean(form,"id",50);
  const to=clean(form,"test_email",254);
- if(!allowed(id)||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)||form.get("confirm")!=="yes")
+ if(!uuid(id)||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)||form.get("confirm")!=="yes")
   redirect(back+"?erro=teste");
  const {data,error}=await getSupabaseAdmin().from("marketing_email_templates")
  .select("subject,body").eq("id",id).eq("kind","transactional").maybeSingle();
