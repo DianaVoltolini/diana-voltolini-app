@@ -53,7 +53,7 @@ export default async function DeliveriesPage({searchParams}:Search){
          </label>
          <button type="submit">Publicar nova versão</button>
        </form>
-       <p className={styles.hint}>A versão anterior fica preservada no histórico. O sininho informa os clientes sobre uma atualização publicada. Nesta primeira etapa, o download automático por material publicado está ligado ao e-book IBS/CBS.</p>
+       <p className={styles.hint}>O histórico registra as versões, mas apenas o PDF mais recente fica disponível para download. O sininho informa os clientes sobre uma atualização publicada. Nesta primeira etapa, o download automático por material publicado está ligado ao e-book IBS/CBS.</p>
      </div>
      <div className={styles.panel}><h2>Páginas e entregas</h2>
        <div className={styles.list}>
@@ -62,7 +62,11 @@ export default async function DeliveriesPage({searchParams}:Search){
           <small>{m.page_path}</small>
           <span>{m.version>0?`Versão ${m.version} · ${m.material_name}`:"Aguardando primeiro PDF publicado"}</span>
           {m.published_at&&<small>Última publicação: {new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo",dateStyle:"short",timeStyle:"short"}).format(new Date(m.published_at))}</small>}
-          <Link href={m.page_path.startsWith("/")?`https://dianavoltolini.com.br${m.page_path}`:"https://dianavoltolini.com.br"} target="_blank">Ver página de vendas</Link>
+          <div className={styles.links}>
+            <Link href={`/torre/produtos-entregas/arquivo?product_id=${encodeURIComponent(m.product_id)}&modo=visualizar`} target="_blank">Visualizar PDF atual</Link>
+            <Link href={`/torre/produtos-entregas/arquivo?product_id=${encodeURIComponent(m.product_id)}&modo=baixar`}>Baixar PDF atual</Link>
+            <Link href={m.page_path.startsWith("/")?`https://dianavoltolini.com.br${m.page_path}`:"https://dianavoltolini.com.br"} target="_blank">Ver página de vendas</Link>
+          </div>
         </article>)}
         {!mappings?.length&&<p>Nenhuma página cadastrada. Publique o primeiro arquivo para criar o vínculo.</p>}
        </div>
