@@ -33,7 +33,7 @@ export default async function DeliveriesPage({searchParams}:Search){
    {(mapError||!mappings)&&<p className={styles.error}>Cadastro de entregas indisponível. Execute a migração SQL antes de publicar.</p>}
    <section className={styles.grid}>
      <div className={styles.panel}><h2>Publicar material</h2>
-       <p>Selecione o produto, confirme a página associada e envie o PDF atualizado. Cada publicação cria uma nova versão e avisa os compradores.</p>
+       <p>Selecione o produto, escolha uma página da lista ou informe um novo caminho e envie o PDF atualizado. Cada publicação cria uma nova versão e avisa os compradores.</p>
        <form action={publishProductDelivery} className={styles.form}>
          <label>Produto
            <select name="product_id" required defaultValue={products?.find(p=>p.code==="EBOOK-IBSCBS-001")?.id??""}>
@@ -42,7 +42,8 @@ export default async function DeliveriesPage({searchParams}:Search){
            </select>
          </label>
          <label>Página da oferta (caminho no site)
-           <input name="page_path" required defaultValue="/ibs-cbs-na-pratica" placeholder="/ibs-cbs-na-pratica" pattern="/[a-z0-9][a-z0-9/-]*"/>
+           <input name="page_path" list="sales-pages" required defaultValue="/ibs-cbs-na-pratica" placeholder="/ibs-cbs-na-pratica" pattern="/[a-z0-9][a-z0-9/-]*"/>
+           <datalist id="sales-pages"><option value="/ibs-cbs-na-pratica"/><option value="/diagnostico-ibs-cbs"/><option value="/assinatura-fiscal"/></datalist>
          </label>
          <label>Nome do material
            <input name="material_name" required defaultValue="E-book IBS e CBS na Prática" maxLength={160}/>
@@ -52,7 +53,7 @@ export default async function DeliveriesPage({searchParams}:Search){
          </label>
          <button type="submit">Publicar nova versão</button>
        </form>
-       <p className={styles.hint}>A versão anterior fica preservada no histórico. O sininho informa os clientes sobre uma atualização publicada.</p>
+       <p className={styles.hint}>A versão anterior fica preservada no histórico. O sininho informa os clientes sobre uma atualização publicada. Nesta primeira etapa, o download automático por material publicado está ligado ao e-book IBS/CBS.</p>
      </div>
      <div className={styles.panel}><h2>Páginas e entregas</h2>
        <div className={styles.list}>
