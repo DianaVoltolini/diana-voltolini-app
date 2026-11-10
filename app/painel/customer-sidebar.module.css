@@ -26,3 +26,5 @@
 
 /* Agrupamento do menu: quatro áreas principais e compras como subitens. */
 .purchaseGroup{margin-top:10px;padding-top:12px;border-top:2px solid #d2a831}.purchaseLinks{margin:3px 0 8px 11px;padding-left:12px;border-left:2px solid #e7d39e;display:grid;gap:2px}.subLink{display:block;text-decoration:none;color:#536377;font-size:12px;font-weight:700;padding:9px 10px;border-radius:8px}.subLink:hover{background:#f7f8fa}.subLink[aria-current="page"]{color:#805d09;background:#fff3d6}.otherGroup{margin-top:13px;padding-top:13px;border-top:2px solid #d2a831}.mobilePurchaseLinks{display:grid;padding-left:15px;border-left:2px solid #e7d39e;margin:2px 10px 7px}.mobileTopMenu nav .mobilePurchaseLinks a{font-size:12px;padding:9px 10px;color:#536377}
+
+.noticeArea{display:flex;align-items:center;margin-left:auto}@media(max-width:900px){.noticeArea{margin-left:auto}.mobileTopMenu{margin-left:0}}
