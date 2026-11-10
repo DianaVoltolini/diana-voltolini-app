@@ -33,9 +33,14 @@ export async function saveTransactionalEmail(form:FormData){
   const event_key=fullEventKey(product.code,event);
   const {data:dupe,error:dupeError}=await db.from("marketing_email_templates").select("id").eq("event_key",event_key).maybeSingle();
   if(dupeError||dupe)redirect("/torre/modelos-email/editor?erro=duplicado");
+  if(product.code==="EBOOK-IBSCBS-001"){
+   const legacyKey=event==="charge_generated"?"ebook_charge_generated":"ebook_payment_confirmed";
+   const {data:legacy,error:legacyError}=await db.from("marketing_email_templates").select("id").eq("event_key",legacyKey).maybeSingle();
+   if(legacyError||legacy)redirect("/torre/modelos-email/editor?erro=duplicado");
+  }
   const {error}=await db.from("marketing_email_templates").insert({
    name,description:description||null,subject,body,kind:"transactional",event_key,
-   active:true,auto_enabled:false,auto_include_existing:false,
+   active:false,auto_enabled:false,auto_include_existing:false,
    cta_label:event==="charge_generated"?"Ver cobrança":"Acessar minha compra",
    cta_url:"https://app.dianavoltolini.com.br/painel"
   });
