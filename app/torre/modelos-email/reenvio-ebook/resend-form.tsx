@@ -84,6 +84,6 @@ export default function EbookResendForm({orders,search}:{orders:OrderOption[],se
      </>}
     </>}
    </form>}
-  <p style={{fontSize:12,color:"#647381"}}Os reenvios ficam registrados no histórico de auditoria. Se o destinatário estiver incorreto, confirme a identidade antes de enviar. Nenhuma nova cobrança será criada.</p>
+  <p style={{fontSize:12,color:"#647381"}}>Os reenvios ficam registrados no histórico de auditoria. Se o destinatário estiver incorreto, confirme a identidade antes de enviar. Nenhuma nova cobrança será criada.</p>
  </div>;
 }
