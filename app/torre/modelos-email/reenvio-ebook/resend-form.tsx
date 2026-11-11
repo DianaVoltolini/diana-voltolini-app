@@ -66,10 +66,10 @@ export default function EbookResendForm({orders,search}:{orders:OrderOption[],se
     {!["pending","paid"].includes(selected.status)?<p role="status">Este pedido não está pendente nem pago. Não é permitido reenviar mensagem financeira.</p>:
     <>
      <button type="submit" name="mode" value="preview" disabled={pending} style={{justifySelf:"start",padding:"12px 18px",border:0,borderRadius:7,background:"#c9a227",color:"#102033",fontWeight:700}}>Conferir mensagem antes do envio</button>
-     {state.message&&state.orderId===selected.id&&<div role="status" style={{border:"1px solid #dae4ee",background:"#f8fafc",padding:16,borderRadius:8}}>
+     {state.message&&(state.status==="error"||state.orderId===selected.id)&&<div role="status" style={{border:"1px solid #dae4ee",background:"#f8fafc",padding:16,borderRadius:8}}>
       <strong>{state.status==="sent"?"Enviado":state.status==="preview"?"Prévia":"Atenção"}</strong>
       <p>{state.message}</p>
-      <p style={{fontSize:13}}>E-mail original: {state.originalEmail}<br/>Destinatário: {state.recipient}</p>
+      {state.orderId&&<p style={{fontSize:13}}>E-mail original: {state.originalEmail}<br/>Destinatário: {state.recipient}</p>}
      </div>}
      {state.status==="preview"&&state.orderId===selected.id&&state.recipient===recipient.trim().toLowerCase()&&state.event===event&&<>
       <section style={{padding:18,border:"1px solid #dce4ec",borderRadius:9,background:"#fff"}}>
