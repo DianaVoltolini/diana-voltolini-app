@@ -36,7 +36,7 @@ export default async function PurchaseEmailDispatchesPage(){
     <h1>Envios automáticos de compras</h1>
     <p>Consulte os registros dos modelos gerais de cobrança e pagamento. Esta tela não envia mensagens nem altera pedidos.</p>
    </div>
-   <Link className={styles.openLink} href="/torre/modelos-email">Voltar aos modelos</Link>
+   <div style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}><Link className={styles.openLink} href="/torre/modelos-email/rotina-pagamentos">Ver execução da rotina Bling</Link><Link className={styles.openLink} href="/torre/modelos-email">Voltar aos modelos</Link></div>
   </header>
   {error?<section className={styles.diagnosticsSection}><p role="alert" style={{color:"#b42318"}}>Não foi possível consultar o histórico de e-mails automáticos. Verifique a tabela purchase_email_dispatches e as permissões do servidor.</p></section>:
    <>
