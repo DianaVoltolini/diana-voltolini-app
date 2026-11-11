@@ -39,6 +39,8 @@ export async function GET(request: NextRequest) {
       .eq("user_id", userId)
       .eq("product_id", product.id)
       .eq("status", "paid")
+      .not("paid_at", "is", null)
+      .order("paid_at", { ascending: false })
       .limit(1);
     if (orderError) throw orderError;
     if (!orders?.length) return denied(403);

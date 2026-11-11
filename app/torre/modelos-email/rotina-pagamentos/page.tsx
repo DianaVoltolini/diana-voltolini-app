@@ -15,7 +15,6 @@ export default async function PaymentCronStatusPage(){
   .select("id,started_at,finished_at,status,checked,opened,partial,paid,cancelled,ignored,errors,interrupted,duration_ms,error_message")
   .order("started_at",{ascending:false}).limit(30);
  const rows=(data??[]) as Run[],last=rows[0];
- const recent=last&&Date.now()-new Date(last.started_at).getTime()<2*60*60*1000;
  return <main className={styles.page}><section className={styles.content}><div className="container">
   <header className={styles.pageHeader}>
    <div><p className={styles.eyebrow}>ADMINISTRAÇÃO · CONCILIAÇÃO</p><h1>Execuções da rotina Bling</h1>
@@ -30,7 +29,7 @@ export default async function PaymentCronStatusPage(){
     <strong>{fmt(last.started_at)}</strong>
     <p style={{margin:"8px 0",fontSize:13}}>Situação: <strong>{last.status==="finished"?"Concluída":last.status==="error"?"Erro":"Em andamento / sem conclusão registrada"}</strong></p>
     <p style={{margin:"8px 0",fontSize:13}}>Pagamentos verificados: {last.checked??"—"} · Cobranças abertas: {last.opened??"—"} · Pagamentos confirmados: {last.paid??"—"} · Erros por pagamento: {last.errors??"—"}</p>
-    <p style={{fontSize:13,color:recent?"#177246":"#9a3412"}}>{recent?"Último registro iniciado há menos de duas horas.":"Último registro iniciado há mais de duas horas. Verifique a frequência configurada para a rotina."}</p>
+    <p style={{fontSize:13,color:"#607184"}}>A frequência da conciliação é definida no agendamento do Supabase. Consulte a data da última execução e os próximos horários programados para avaliar o funcionamento.</p>
     {last.error_message&&<p style={{fontSize:13,color:"#b42318",overflowWrap:"anywhere"}}>{last.error_message}</p>}
    </div>}
    <p style={{fontSize:13,color:"#607184"}}>Este painel não garante, por si só, uma frequência específica do agendador. Execução sem pagamentos pendentes também gera registro com zero verificações. Os e-mails são acompanhados separadamente na tela de envios automáticos.</p>

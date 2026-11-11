@@ -38,6 +38,8 @@ export default async function EbooksPage() {
       .eq("user_id", userId)
       .eq("product_id", product.id)
       .eq("status", "paid")
+      .not("paid_at", "is", null)
+      .order("paid_at", { ascending: false })
       .limit(1);
     if (orderError) throw new Error("Não foi possível verificar sua compra.");
     hasPaidOrder = Boolean(orders?.length);
