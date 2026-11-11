@@ -15,6 +15,16 @@ const url=(value:unknown)=>{if(typeof value!=="string")return null;try{const v=n
 const render=(s:string,values:Record<string,string>)=>s.replace(/{{([a-z_]+)}}/g,(all,k:string)=>values[k]??all);
 
 export async function resendRealEbookEmail(_old:ResendState,form:FormData):Promise<ResendState>{
+ try {
+  return await handleResendRealEbookEmail(form);
+ } catch (error) {
+  // Não expor stack ou credenciais ao navegador; detalhes ficam nos logs.
+  console.error("[ebook-email-resend] Falha ao processar operação:", error);
+  return {status:"error",message:"Não foi possível consultar ou reenviar esta mensagem. A operação não foi concluída. Consulte os logs da Torre antes de tentar novamente."};
+ }
+}
+
+async function handleResendRealEbookEmail(form:FormData):Promise<ResendState>{
  const {userId}=await requireAdmin();
  const orderId=String(form.get("order_id")??"").trim();
  const recipient=String(form.get("recipient_email")??"").trim().toLowerCase().slice(0,254);
