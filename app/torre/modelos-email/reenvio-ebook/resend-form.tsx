@@ -75,7 +75,7 @@ export default function EbookResendForm({orders,search}:{orders:OrderOption[],se
       <section style={{padding:18,border:"1px solid #dce4ec",borderRadius:9,background:"#fff"}}>
        <h3 style={{marginTop:0}}>{state.subject}</h3>
        <p style={{whiteSpace:"pre-wrap",fontSize:14,lineHeight:1.8}}>{state.body}</p>
-       <p style={{fontSize:12,color:"#647381"}}A mensagem real incluirá logotipo, rodapé e link correspondente ao pedido.</p>
+       <p style={{fontSize:12,color:"#647381"}}>A mensagem real incluirá logotipo, rodapé e link correspondente ao pedido.</p>
       </section>
       <label style={{display:"flex",gap:10,alignItems:"start",fontSize:13}}><input type="checkbox" checked={identity} onChange={e=>setIdentity(e.target.checked)} name="confirm_identity" value="yes" required/> Confirmei a identidade do comprador e o endereço de destino.</label>
       <label style={{display:"flex",gap:10,alignItems:"start",fontSize:13}}><input type="checkbox" checked={send} onChange={e=>setSend(e.target.checked)} name="confirm_send" value="yes" required/> Autorizo o reenvio de um e-mail real com links da compra.</label>
