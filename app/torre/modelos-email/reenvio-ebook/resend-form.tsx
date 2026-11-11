@@ -1,7 +1,8 @@
 "use client";
 // app/torre/modelos-email/reenvio-ebook/resend-form.tsx
 import {useActionState,useState} from "react";
-import {resendRealEbookEmail,initial} from "./actions";
+import {resendRealEbookEmail,type ResendState} from "./actions";
+const initial:ResendState={status:"idle",message:""};
 
 export type OrderOption={
  id:string;

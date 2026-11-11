@@ -6,7 +6,7 @@ import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 
 export type ResendState={status:"idle"|"preview"|"sent"|"error";message:string;orderId?:string;customer?:string;originalEmail?:string;recipient?:string;product?:string;event?:string;subject?:string;body?:string;};
-export const initial:ResendState={status:"idle",message:""};
+
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const esc=(s:string)=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]||c));
