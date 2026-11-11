@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./sidebar.module.css";
-const admin=[["/torre","Visão geral"],["/torre/financeiro","Financeiro"],["/torre/vendas","Vendas"],["/torre/clientes","Clientes"]];
+const admin=[["/torre","Visão geral"],["/torre/financeiro","Financeiro"],["/torre/vendas","Vendas"],["/torre/clientes","Clientes"],["/torre/pendencias","Pendências"]];
 const services=[["/torre/diagnosticos","Diagnósticos"],["/torre/assinaturas","Assinatura Recorrente"]];
 export default function TorreSidebar(){
  const path=usePathname();
