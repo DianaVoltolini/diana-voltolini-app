@@ -50,7 +50,7 @@ Estados aceitos: `Pendente`, `Em andamento`, `Bloqueado`, `Reprovado`, `Validado
 
 | Cenário | Status | Data/ambiente | PR/evidência |
 |---|---|---|---|
-| Cadastro, edição, consulta e permissões do produto | Pendente de homologação | — | PR #168 |\n| Cadastro, upload, edição, filtros, download e arquivamento de materiais | Pendente de homologação | — | PR #170 |
+| Cadastro, edição, consulta e permissões do produto | Pendente de homologação | — | PR #168 |\n| Cadastro, upload, edição, filtros, download e arquivamento de materiais | Em teste; erros reportados no redirecionamento e na prévia | 12/11/2026 | PR #170; correção posterior |
 | Oferta normal/promocional, vigência e preço | Pendente | — | — |
 | Prévia, publicação, SEO e edição de página | Pendente | — | — |
 | Checkout, Pix/boleto e proteção contra duplicidade | Pendente | — | — |
@@ -99,3 +99,11 @@ Estados aceitos: `Pendente`, `Em andamento`, `Bloqueado`, `Reprovado`, `Validado
 
 ## Encerramento
 O V2 só substitui o fluxo legado após homologação completa do piloto e migração aceita de cada produto real. Remoções requerem lista nominal, aprovação específica e plano de reversão. Histórico fiscal/financeiro e direitos de compradores não são descartados.
+
+## Correções identificadas na homologação de materiais — 12/11/2026
+- **Constatação real:** upload e cadastro efetuados; navegação após salvar retornou `https://0.0.0.0:3000/...` com `ERR_ADDRESS_INVALID`.
+- **Constatação real:** Visualizar e Baixar acionavam download de PDFs.
+- **Solicitação:** adicionar categoria `Exercícios`.
+- **Correções propostas:** redirecionamento por `Location` relativo; prévia PDF/imagens/texto com `Content-Disposition: inline` mediante autorização; download separado; migração aditiva da categoria.
+- **Resultado:** código preparado, pendente de CI, aplicação da migração e repetição dos testes em ambiente funcional.
+- **Nenhum arquivo legado editado.**
