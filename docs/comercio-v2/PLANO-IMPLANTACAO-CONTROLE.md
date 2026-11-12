@@ -35,7 +35,7 @@ Implantar fluxo comercial novo, independente: **produto → oferta → página �
 | Fase | Entrega | Critério de aceite | Status | PR/evidência |
 |---|---|---|---|---|
 | F0 | Auditoria de tabelas, RLS, rotas, Bling e dependências | Matriz de compatibilidade, rollback e regressão registrados | Pendente | — |
-| F1 | Catálogo V2 isolado | Criar e editar piloto sem alterar produtos antigos | Pendente | — |
+| F1 | Catálogo V2 isolado | Criar e editar piloto sem alterar produtos antigos | Em andamento (homologação pendente) | PR #168 |\n| F1B | Biblioteca de materiais V2 | Upload, edição, filtros, download e arquivamento sem acesso público | Em andamento (homologação pendente) | PR #170 |
 | F2 | Ofertas e precificação versionadas | Preço servidor e snapshot no pedido | Pendente | — |
 | F3 | Editor e publicação de página V2 | Criar/publicar/editar piloto sem PR de conteúdo | Pendente | — |
 | F4 | Checkout V2 isolado | Pix/boleto, idempotência e erros verificados | Pendente | — |
@@ -50,7 +50,7 @@ Estados aceitos: `Pendente`, `Em andamento`, `Bloqueado`, `Reprovado`, `Validado
 
 | Cenário | Status | Data/ambiente | PR/evidência |
 |---|---|---|---|
-| Cadastro, edição, consulta e permissões do produto | Pendente | — | — |
+| Cadastro, edição, consulta e permissões do produto | Pendente de homologação | — | PR #168 |\n| Cadastro, upload, edição, filtros, download e arquivamento de materiais | Pendente de homologação | — | PR #170 |
 | Oferta normal/promocional, vigência e preço | Pendente | — | — |
 | Prévia, publicação, SEO e edição de página | Pendente | — | — |
 | Checkout, Pix/boleto e proteção contra duplicidade | Pendente | — | — |
@@ -82,7 +82,7 @@ Estados aceitos: `Pendente`, `Em andamento`, `Bloqueado`, `Reprovado`, `Validado
 
 | Data | Referência | Decisão | Evidências | Aprovação |
 |---|---|---|---|---|
-| 12/11/2026 | Plano V1 | Construir piloto em paralelo, sem modificar legado | Inspeção inicial do GitHub; banco e produção ainda pendentes | A confirmar |
+| 12/11/2026 | Plano V1 | Construir piloto em paralelo, sem modificar legado | Inspeção inicial do GitHub; banco e produção ainda pendentes | A confirmar |\n| 12/11/2026 | PR #170 | Adicionar biblioteca privada de materiais com arquivamento reversível | Implementação em branch; Supabase, upload, build e segurança ainda pendentes de teste | A validar |
 
 **Atualizar a cada PR:** data, autor, escopo, arquivos, migração, testes e resultados, evidência, pendências, rollback e decisão de aceite.
 
