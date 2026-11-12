@@ -164,7 +164,7 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
           {m.description && <p style={{ whiteSpace: "pre-wrap", color: "#334155", lineHeight: 1.5 }}>{m.description}</p>}
           <p style={small}>{m.original_filename ? `${m.original_filename} · ${formatSize(m.file_size)}` : "Sem arquivo anexado"}</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 14, alignItems: "center", fontSize: 14 }}>
-            {m.storage_path && <><a target="_blank" rel="noopener noreferrer"
+            {!archived && m.storage_path && <><a target="_blank" rel="noopener noreferrer"
               href={`/torre/comercio-v2/materiais/arquivo/${m.id}?modo=visualizar`}>Visualizar</a>
               <a href={`/torre/comercio-v2/materiais/arquivo/${m.id}`}>Baixar</a></>}
             {!archived && <Link href={linkTo({ produto: m.product_id }) + "&edit=" + encodeURIComponent(m.id)}>Editar</Link>}
