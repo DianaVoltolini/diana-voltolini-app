@@ -131,3 +131,17 @@ O V2 só substitui o fluxo legado após homologação completa do piloto e migra
 **Próximo PR funcional planejado:** F2, **Ofertas e Preços V2** isolados (preço, vigência, status, histórico), sem ligação com checkout legado. Iniciar após concluir diagnóstico de prévia e verificações de segurança ou acompanhar como pendência formal, sem confundir com validação completa.
 
 **Regra de preservação:** arquivos já enviados, compradores e fluxos antigos continuam intocados; não realizar limpeza ou migração.
+
+## Revisão de usabilidade — Biblioteca V2 (12/11/2026)
+
+**Motivação:** transformar a tela única de formulário + lista lateral em uma listagem de largura integral, no mesmo padrão visual dos Modelos de E-mail da Torre.
+
+**Mudanças propostas em PR próprio:**
+- A rota `/torre/comercio-v2/materiais` passa a listar materiais em tabela com Data, Material, Produto, Descrição, Tipo, Situação e Ações.
+- Filtros por texto, produto, tipo e situação ficam no topo e têm botão Limpar filtros.
+- Botão `+ Novo conteúdo` abre `/torre/comercio-v2/materiais/novo`; editar usa `?editar=<id>`.
+- Ações de Visualizar, Baixar, Arquivar e Restaurar são preservadas, assim como envio, vínculo por produto, categoria Exercícios e arquivo privado.
+- O novo layout não muda tabelas, Storage, checkout ou regras de entrega. **Nenhum SQL novo**.
+- Nota operacional: resultados limitados aos 500 registros mais recentes; paginação antes de escalar além desse volume.
+
+**Homologação pendente:** conferir filtros e layout desktop/mobile, cadastramento e edição, links, operações de download/arquivamento e não regressão. A prévia PDF permanece pendente do teste anterior; alteração de interface não a considera resolvida.
