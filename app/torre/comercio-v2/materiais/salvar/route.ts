@@ -17,15 +17,14 @@ const extensions: Record<string, string[]> = {
   webp: ["image/webp"], zip: ["application/zip", "application/x-zip-compressed"],
   txt: ["text/plain"],
 };
-const categories = new Set(["slides", "ebook", "worksheet", "checklist", "script", "image", "support", "other"]);
+const categories = new Set(["slides", "ebook", "worksheet", "checklist", "script", "image", "support", "exercises", "other"]);
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 function field(form: FormData, key: string, max: number) {
   return String(form.get(key) ?? "").trim().slice(0, max + 1);
 }
-function back(request: NextRequest, key: string, value = "") {
-  const url = new URL(base, request.url);
-  url.searchParams.set(key, value || "1");
-  return NextResponse.redirect(url, { status: 303 });
+function back(key: string, value = "") {
+  const params = new URLSearchParams({ [key]: value || "1" });
+  return new NextResponse(null, { status: 303, headers: { Location: base + "?" + params.toString(), "Cache-Control": "no-store" } });
 }
 export async function POST(request: NextRequest) {
   // Rotas POST nao recebem protecao CSRF automatica das Server Actions.
@@ -45,14 +44,14 @@ export async function POST(request: NextRequest) {
   }
   const length = Number(request.headers.get("content-length"));
   if (Number.isFinite(length) && length > maxRequest) {
-    return back(request, "erro", "arquivo");
+    return back("erro", "arquivo");
   }
   const { userId } = await requireAdmin();
   let form: FormData;
   try {
     form = await request.formData();
   } catch {
-    return back(request, "erro", "arquivo");
+    return back("erro", "arquivo");
   }
   const id = field(form, "id", 36);
   const productId = field(form, "product_id", 36);
@@ -63,26 +62,26 @@ export async function POST(request: NextRequest) {
   const file = uploaded instanceof File && uploaded.size > 0 ? uploaded : null;
   if ((id && !uuid.test(id)) || !uuid.test(productId) ||
     title.length < 2 || title.length > 180 || description.length > 4000 || !categories.has(category)) {
-    return back(request, "erro", "validacao");
+    return back("erro", "validacao");
   }
   let ext = "";
   if (file) {
     ext = file.name.split(".").at(-1)?.toLowerCase() ?? "";
     if (file.size > maxFile || !extensions[ext]?.includes(file.type) ||
         file.name.length > 255) {
-      return back(request, "erro", "arquivo");
+      return back("erro", "arquivo");
     }
   }
 
   const db = getSupabaseAdmin();
   const { data: product, error: productError } = await db.from("commerce_v2_products")
     .select("id").eq("id", productId).eq("status", "draft").maybeSingle();
-  if (productError || !product) return back(request, "erro", "produto");
+  if (productError || !product) return back("erro", "produto");
 
   const existingResult = id ? await db.from("commerce_v2_materials")
     .select("id,product_id,storage_path").eq("id", id).eq("is_archived", false).maybeSingle() : null;
   if (id && (existingResult?.error || !existingResult?.data ||
-      existingResult.data.product_id !== productId)) return back(request, "erro", "material");
+      existingResult.data.product_id !== productId)) return back("erro", "material");
 
   let path: string | null = null;
   let fileFields: Record<string, string | number> = {};
@@ -92,7 +91,7 @@ export async function POST(request: NextRequest) {
       .upload(path, await file.arrayBuffer(), { contentType: file.type, upsert: false });
     if (error) {
       console.error("Commerce V2 upload:", error.message);
-      return back(request, "erro", "upload");
+      return back("erro", "upload");
     }
     fileFields = {
       storage_path: path, original_filename: file.name,
@@ -113,7 +112,7 @@ export async function POST(request: NextRequest) {
   if (result.error || !result.data) {
     if (path) await db.storage.from(bucket).remove([path]);
     console.error("Commerce V2 save:", result.error?.code);
-    return back(request, "erro", "salvar");
+    return back("erro", "salvar");
   }
 
   const previousPath = existingResult?.data?.storage_path;
@@ -122,8 +121,6 @@ export async function POST(request: NextRequest) {
     if (error) console.error("Commerce V2 cleanup:", error.message);
   }
 
-  const url = new URL(base, request.url);
-  url.searchParams.set("produto", productId);
-  url.searchParams.set("salvo", "1");
-  return NextResponse.redirect(url, { status: 303 });
+  const params = new URLSearchParams({ produto: productId, salvo: "1" });
+  return new NextResponse(null, { status: 303, headers: { Location: base + "?" + params.toString(), "Cache-Control": "no-store" } });
 }
