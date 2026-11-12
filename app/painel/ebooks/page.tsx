@@ -1,14 +1,12 @@
 // app/painel/ebooks/page.tsx
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
-import { logout } from "../actions";
 import ProductPage from "../product-page";
 import ProductOffer from "../product-offer";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { ebookAccessUntil, ebookAccessActive, ebookAccessDateLabel } from "@/lib/ebooks/access";
+import { ebookAccessDateLabel } from "@/lib/ebooks/access";
+import { getEbookPurchaseAccess } from "@/lib/ebooks/purchase-access";
 
 export const metadata: Metadata = {
   title: "Meus E-books | Diana Voltolini",
@@ -16,8 +14,6 @@ export const metadata: Metadata = {
 };
 export const dynamic = "force-dynamic";
 
-const PRODUCT_CODE = "EBOOK-IBSCBS-001";
-const PAGE_URL = "https://dianavoltolini.com.br/ibs-cbs-na-pratica";
 
 export default async function EbooksPage() {
   const auth = await createClient();
@@ -25,33 +21,11 @@ export default async function EbooksPage() {
   const userId = typeof claims?.claims?.sub === "string" ? claims.claims.sub : null;
   if (authError || !userId) redirect("/login?retorno=%2Fpainel%2Febooks");
 
-  const admin = getSupabaseAdmin();
-  const { data: product, error: productError } = await admin.from("products")
-    .select("id, name").eq("code", PRODUCT_CODE).eq("active", true).maybeSingle();
-  if (productError) throw new Error("Não foi possível verificar o e-book.");
-
-  let hasPaidOrder = false;
-  let expiresAt: Date | null = null;
-  if (product) {
-    const { data: orders, error: orderError } = await admin.from("orders")
-      .select("paid_at,created_at")
-      .eq("user_id", userId)
-      .eq("product_id", product.id)
-      .eq("status", "paid")
-      .not("paid_at", "is", null)
-      .order("paid_at", { ascending: false })
-      .limit(1);
-    if (orderError) throw new Error("Não foi possível verificar sua compra.");
-    hasPaidOrder = Boolean(orders?.length);
-    expiresAt = ebookAccessUntil(orders ?? []);
-  }
-
+  const access = await getEbookPurchaseAccess(userId);
+  const { hasPaidOrder, hasEncounterOrder, expiresAt, isActive } = access;
   if(!hasPaidOrder) return <ProductPage title="IBS e CBS na Prática" description="E-book digital para compreender a Reforma Tributária e aplicar o conhecimento ao faturamento.">
     <ProductOffer eyebrow="GUIA PRÁTICO · REFORMA TRIBUTÁRIA" headline="Entenda IBS e CBS na prática" lead="Compras, vendas, créditos e notas fiscais explicados de forma simples e objetiva, com exemplos e roteiro para organizar sua preparação." price="R$ 29,90 · pagamento único" checkout="https://dianavoltolini.com.br/checkout/ibs-cbs-na-pratica" cta="Quero garantir meu e-book" features={["E-book digital com 21 páginas","Compras, vendas e créditos","NF-e, CST e cClassTrib","Split payment e transição","Checklist e glossário para consulta","Exemplos práticos para rotinas fiscais"]}>
-    <section style={{background:"#fff",border:"1px solid #e0e7ed",borderRadius:14,padding:30}}>
-      <p style={{color:"#96730e",fontWeight:850,fontSize:12}}>BÔNUS ESPECIAL</p><h2>Aula on-line · 21 de janeiro de 2027</h2>
-      <p style={{lineHeight:1.8,color:"#506477"}}>Ao adquirir o e-book, sua inscrição na aula on-line de 21/01/2027, das 19h30 às 21h (horário de Brasília), fica assegurada após a confirmação do pagamento. O encontro educativo de 1h30 é opcional e aborda os principais pontos de atenção do IBS e da CBS na rotina fiscal. Não inclui consultoria ou análise individual de XMLs.</p>
-    </section>
+
     </ProductOffer>
   </ProductPage>;
   return (
@@ -60,12 +34,13 @@ export default async function EbooksPage() {
           <p style={{ color: "#9f7d17", fontSize: 12, fontWeight: 800, letterSpacing: 1.5 }}>E-BOOK DIGITAL</p>
           <h2 style={{ fontFamily: "Georgia,serif", fontSize: 27, margin: "0 0 16px" }}>IBS e CBS na Prática</h2>
           <p>Guia de 21 páginas sobre IBS, CBS, compras, vendas, créditos e emissão de notas fiscais.</p>
+          {hasEncounterOrder && <p style={{background:"#f7f2e6",padding:15,borderRadius:8,lineHeight:1.65}}><strong>Inscrição confirmada:</strong> Reforma Tributária na Prática: Compras e Faturamento em 2027, em 21/01/2027, das 19h30 às 21h, pelo Google Meet. As orientações de acesso serão informadas separadamente.</p>}
           {hasPaidOrder ? (
             <>
               <p style={{ fontWeight: 700, color: "#167241" }}>Pagamento confirmado</p>
               <p>Seu acesso ao e-book termina em <strong>{expiresAt ? ebookAccessDateLabel(expiresAt) : "data indisponível"}</strong>.</p>
               <p>Durante os 90 dias após o pagamento, você pode visualizar e baixar a versão mais recente, incluindo eventuais atualizações sem custo adicional.</p>
-              {ebookAccessActive(expiresAt) ? <div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:12}}>
+              {isActive ? <div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:12}}>
                 <a href="/api/ebooks/ibs-cbs-na-pratica/download?mode=view" target="_blank" rel="noopener noreferrer"
                   style={{display:"inline-block",background:"#f5f7f9",border:"1px solid #cad4dc",color:"#0d1b2a",padding:"12px 20px",borderRadius:5,fontWeight:700}}>Visualizar PDF</a>
                 <a href="/api/ebooks/ibs-cbs-na-pratica/download"
