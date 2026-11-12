@@ -3,11 +3,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { archiveCommerceV2Material, saveCommerceV2Material } from "./actions";
+import { archiveCommerceV2Material, restoreCommerceV2Material, saveCommerceV2Material } from "./actions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Biblioteca de materiais | Comércio V2" };
-type Query = { produto?: string; categoria?: string; busca?: string; edit?: string; salvo?: string; excluido?: string; erro?: string };
+type Query = { produto?: string; categoria?: string; busca?: string; edit?: string; salvo?: string; excluido?: string; restaurado?: string; arquivados?: string; erro?: string };
 type Product = { id: string; code: string; name: string };
 type Material = {
   id: string; product_id: string; title: string; description: string; category: string;
@@ -26,6 +26,7 @@ const errors: Record<string, string> = {
   upload: "Não foi possível enviar o arquivo ao armazenamento privado.",
   salvar: "Não foi possível salvar o material. Confira se a migração foi executada.",
   excluir: "Não foi possível retirar o material da biblioteca.",
+  restaurar: "Não foi possível restaurar o material.",
 };
 const field: React.CSSProperties = { display: "block", marginBottom: 13, fontSize: 14, fontWeight: 700 };
 const control: React.CSSProperties = {
@@ -41,6 +42,7 @@ function linkTo(query: Query) {
   if (query.produto) params.set("produto", query.produto);
   if (query.categoria) params.set("categoria", query.categoria);
   if (query.busca) params.set("busca", query.busca);
+  if (query.arquivados) params.set("arquivados", query.arquivados);
   return "/torre/comercio-v2/materiais?" + params.toString();
 }
 
@@ -52,7 +54,7 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
     db.from("commerce_v2_products").select("id,code,name").order("name").limit(500),
     db.from("commerce_v2_materials").select(
       "id,product_id,title,description,category,original_filename,file_mime,file_size,storage_path,is_archived,created_at,updated_at",
-    ).eq("is_archived", false).order("created_at", { ascending: false }).limit(500),
+    ).order("created_at", { ascending: false }).limit(500),
   ]);
   const products = (productsResult.data ?? []) as Product[];
   const materials = (materialsResult.data ?? []) as Material[];
@@ -60,13 +62,15 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
   const validProduct = query.produto && map.has(query.produto) ? query.produto : "";
   const category = query.categoria && categories[query.categoria] ? query.categoria : "";
   const term = (query.busca ?? "").trim().toLocaleLowerCase("pt-BR").slice(0, 120);
+  const archived = query.arquivados === "1";
   const filtered = materials.filter(m =>
+    m.is_archived === archived &&
     (!validProduct || m.product_id === validProduct) &&
     (!category || m.category === category) &&
     (!term || [m.title, m.description, m.original_filename ?? "", map.get(m.product_id)?.name ?? "",
       map.get(m.product_id)?.code ?? ""].some(v => v.toLocaleLowerCase("pt-BR").includes(term)))
   );
-  const edit = query.edit ? materials.find(m => m.id === query.edit) : null;
+  const edit = query.edit ? materials.find(m => m.id === query.edit && !m.is_archived) : null;
   const selectedProduct = edit?.product_id ?? validProduct ?? "";
   const hasError = Boolean(productsResult.error || materialsResult.error);
 
@@ -79,7 +83,8 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
     </p>
     <p><Link href="/torre/comercio-v2/produtos">Produtos V2</Link> · <Link href="/torre/comercio-v2">Visão geral</Link></p>
     {query.salvo === "1" && <p role="status" style={{ color: "#166534" }}>Material salvo com sucesso.</p>}
-    {query.excluido === "1" && <p role="status" style={{ color: "#166534" }}>Material retirado da biblioteca ativa.</p>}
+    {query.excluido === "1" && <p role="status" style={{ color: "#166534" }}>Material arquivado. É possível restaurá-lo pelo filtro Arquivados.</p>}
+    {query.restaurado === "1" && <p role="status" style={{ color: "#166534" }}>Material restaurado.</p>}
     {query.erro && <p role="alert" style={{ color: "#b91c1c" }}>{errors[query.erro] ?? "Falha na operação."}</p>}
     {hasError ? <p role="alert" style={{ color: "#b91c1c" }}>
       Biblioteca indisponível. Confirme a migração SQL do Comércio V2.
@@ -90,7 +95,7 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
       <section style={{ padding: 22, border: "1px solid #dce4eb", borderRadius: 12, background: "#fff" }}>
         <h2 style={{ marginTop: 0, fontSize: 21 }}>{edit ? "Editar material" : "Adicionar material"}</h2>
         {edit && <Link href={linkTo({ produto: selectedProduct })}>+ Adicionar outro material</Link>}
-        <form action={saveCommerceV2Material} encType="multipart/form-data" style={{ marginTop: 18 }}>
+        <form action={saveCommerceV2Material} style={{ marginTop: 18 }}>
           <input type="hidden" name="id" value={edit?.id ?? ""} />
           <label style={field}>Produto
             <select name="product_id" style={control} required defaultValue={selectedProduct} key={edit?.id ?? selectedProduct}>
@@ -138,6 +143,12 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
               {Object.entries(categories).map(([key, value]) => <option key={key} value={key}>{value}</option>)}
             </select>
           </label>
+          <label style={field}>Situação
+            <select name="arquivados" defaultValue={archived ? "1" : ""} style={control}>
+              <option value="">Ativos</option>
+              <option value="1">Arquivados</option>
+            </select>
+          </label>
           <label style={field}>Buscar por nome ou descrição
             <input type="search" name="busca" style={control} defaultValue={query.busca ?? ""} maxLength={120} />
           </label>
@@ -156,14 +167,17 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
             {m.storage_path && <><a target="_blank" rel="noopener noreferrer"
               href={`/torre/comercio-v2/materiais/arquivo/${m.id}?modo=visualizar`}>Visualizar</a>
               <a href={`/torre/comercio-v2/materiais/arquivo/${m.id}`}>Baixar</a></>}
-            <Link href={linkTo({ produto: m.product_id }) + "&edit=" + encodeURIComponent(m.id)}>Editar</Link>
-            <form action={archiveCommerceV2Material} style={{ display: "inline" }}>
+            {!archived && <Link href={linkTo({ produto: m.product_id }) + "&edit=" + encodeURIComponent(m.id)}>Editar</Link>}
+            {!archived ? <form action={archiveCommerceV2Material} style={{ display: "inline" }}>
               <input type="hidden" name="id" value={m.id} />
               <input type="hidden" name="confirm" value="yes" />
               <button type="submit" style={{ color: "#b91c1c", border: "none", background: "transparent", cursor: "pointer", padding: 0 }}>
-                Excluir da lista
+                Arquivar / retirar da lista
               </button>
-            </form>
+            </form> : <form action={restoreCommerceV2Material} style={{ display: "inline" }}>
+              <input type="hidden" name="id" value={m.id} />
+              <button type="submit" style={{ color: "#166534", background: "transparent", border: "none", cursor: "pointer" }}>Restaurar</button>
+            </form>}
           </div>
         </article>)}
         {materials.length >= 500 && <p style={small}>Mostrando até 500 registros. A paginação será adicionada antes de uso em escala.</p>}
