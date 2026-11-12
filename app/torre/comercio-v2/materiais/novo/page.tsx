@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { materialCategories } from "../materials-table";
+import { materialCategories } from "../categories";
 import styles from "../materials.module.css";
 
 export const dynamic = "force-dynamic";
