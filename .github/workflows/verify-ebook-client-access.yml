@@ -7,6 +7,8 @@ on:
   pull_request:
     paths:
       - "app/painel/ebooks/**"
+      - "app/painel/outros-produtos/**"
+      - "lib/ebooks/purchase-access.ts"
       - ".github/workflows/verify-ebook-client-access.yml"
 jobs:
   test:
