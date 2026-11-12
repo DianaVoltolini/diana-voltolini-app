@@ -16,7 +16,7 @@ type Material = {
 };
 const categories: Record<string, string> = {
   slides: "Slides", ebook: "E-book", worksheet: "Planilha", checklist: "Checklist",
-  script: "Roteiro", image: "Imagem", support: "Material de apoio", other: "Outro",
+  script: "Roteiro", image: "Imagem", support: "Material de apoio", exercises: "Exercícios", other: "Outro",
 };
 const errors: Record<string, string> = {
   validacao: "Revise os campos informados.",
@@ -63,6 +63,7 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
   const category = query.categoria && categories[query.categoria] ? query.categoria : "";
   const term = (query.busca ?? "").trim().toLocaleLowerCase("pt-BR").slice(0, 120);
   const archived = query.arquivados === "1";
+  const canPreview = (mime: string | null) => ["application/pdf", "image/png", "image/jpeg", "image/webp", "text/plain"].includes(mime ?? "");
   const filtered = materials.filter(m =>
     m.is_archived === archived &&
     (!validProduct || m.product_id === validProduct) &&
@@ -164,8 +165,8 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
           {m.description && <p style={{ whiteSpace: "pre-wrap", color: "#334155", lineHeight: 1.5 }}>{m.description}</p>}
           <p style={small}>{m.original_filename ? `${m.original_filename} · ${formatSize(m.file_size)}` : "Sem arquivo anexado"}</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 14, alignItems: "center", fontSize: 14 }}>
-            {!archived && m.storage_path && <><a target="_blank" rel="noopener noreferrer"
-              href={`/torre/comercio-v2/materiais/arquivo/${m.id}?modo=visualizar`}>Visualizar</a>
+            {!archived && m.storage_path && <>{canPreview(m.file_mime) && <a target="_blank" rel="noopener noreferrer"
+              href={`/torre/comercio-v2/materiais/arquivo/${m.id}?modo=visualizar`}>Visualizar</a>}
               <a href={`/torre/comercio-v2/materiais/arquivo/${m.id}`}>Baixar</a></>}
             {!archived && <Link href={linkTo({ produto: m.product_id }) + "&edit=" + encodeURIComponent(m.id)}>Editar</Link>}
             {!archived ? <form action={archiveCommerceV2Material} style={{ display: "inline" }}>
