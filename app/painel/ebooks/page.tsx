@@ -1,6 +1,5 @@
 // app/painel/ebooks/page.tsx
 import type { Metadata } from "next";
-import Link from "next/link";
 import ProductPage from "../product-page";
 import ProductOffer from "../product-offer";
 import { redirect } from "next/navigation";
