@@ -44,7 +44,16 @@ values (
  ]
 )
 on conflict(id) do nothing;
--- Evita que um bucket existente com o mesmo nome seja usado como publico.
+-- Nao permitir reutilizar bucket publico preexistente.
+do $
+begin
+ if exists (
+  select 1 from storage.buckets where id = 'commerce-v2-materials' and public = true
+ ) then
+  raise exception 'Bucket commerce-v2-materials deve ser privado; revise a configuracao antes de continuar';
+ end if;
+end;
+$;
 -- Consultar configuracao do bucket apos aplicar; nao alterar buckets legados.
 comment on table public.commerce_v2_materials is
  'Biblioteca interna de arquivos dos produtos V2. Nao concede acesso a compradores.';
