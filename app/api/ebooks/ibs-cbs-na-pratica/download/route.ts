@@ -1,6 +1,6 @@
 // app/api/ebooks/ibs-cbs-na-pratica/download/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { ebookAccessActive, ebookAccessUntil } from "@/lib/ebooks/access";
+import { getEbookPurchaseAccess } from "@/lib/ebooks/purchase-access";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
@@ -34,18 +34,12 @@ export async function GET(request: NextRequest) {
     if (productError) throw productError;
     if (!product) return denied(403);
 
-    const { data: orders, error: orderError } = await admin
-      .from("orders").select("paid_at,created_at")
-      .eq("user_id", userId)
-      .eq("product_id", product.id)
-      .eq("status", "paid")
-      .not("paid_at", "is", null)
-      .order("paid_at", { ascending: false })
-      .limit(1);
-    if (orderError) throw orderError;
-    if (!orders?.length) return denied(403);
-    const expiresAt = ebookAccessUntil(orders);
-    if (!ebookAccessActive(expiresAt)) return NextResponse.json({error:"O período de acesso ao seu e-book foi encerrado."},{status:403,headers:{"Cache-Control":"no-store"}});
+    const access = await getEbookPurchaseAccess(userId);
+    if (!access.hasPaidOrder) return denied(403);
+    if (!access.isActive) return NextResponse.json(
+      { error: "O período de acesso ao seu e-book foi encerrado." },
+      { status: 403, headers: { "Cache-Control": "no-store" } },
+    );
     const isDownload = request.nextUrl.searchParams.get("mode") !== "view";
 
     // Prefere sempre a versão publicada na Torre, inclusive para compradores antigos.
