@@ -1,6 +1,8 @@
 // lib/ebooks/purchase-access.ts
 import "server-only";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+import { ensureClientAccess } from "@/lib/supabase/client-access";
 import { ebookAccessUntil, ebookAccessActive } from "@/lib/ebooks/access";
 
 // Uma compra confirmada de qualquer um dos dois produtos concede acesso
@@ -11,6 +13,33 @@ export const ENCOUNTER_PRODUCT_CODE = "ENC-RT-2027-001";
 
 export async function getEbookPurchaseAccess(userId: string) {
   const db = getSupabaseAdmin();
+
+  // O cliente pode comprar enquanto já está logado. Nesse caso o pedido
+  // é criado publicamente com user_id nulo e não passa por novo login.
+  // Vincular somente pedidos ainda sem dono, após conferir o usuário real
+  // pelo Auth, nunca usando e-mail fornecido pelo navegador.
+  const auth = await createClient();
+  const { data: verified, error: authError } = await auth.auth.getUser();
+  if (authError || !verified.user || verified.user.id !== userId || !verified.user.email) {
+    throw new Error("Não foi possível confirmar a identidade do cliente.");
+  }
+  const email = verified.user.email.trim().toLowerCase();
+  const { data: pendingLink, error: pendingLinkError } = await db.from("orders")
+    .select("id")
+    .ilike("customer_email", email)
+    .is("user_id", null)
+    .in("status", ["pending", "paid"])
+    .limit(1);
+  if (pendingLinkError) throw new Error("Não foi possível conferir o vínculo da compra.");
+  if (pendingLink?.length) {
+    await ensureClientAccess({
+      userId,
+      email,
+      fullName: typeof verified.user.user_metadata?.full_name === "string"
+        ? verified.user.user_metadata.full_name : null,
+    });
+  }
+
   const { data: products, error: productError } = await db.from("products")
     .select("id,code")
     .in("code", [EBOOK_PRODUCT_CODE, ENCOUNTER_PRODUCT_CODE]);
