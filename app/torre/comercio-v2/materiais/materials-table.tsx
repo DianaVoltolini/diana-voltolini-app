@@ -6,6 +6,7 @@ import Link from "next/link";
 import { archiveCommerceV2Material, restoreCommerceV2Material } from "./actions";
 import css from "../../modelos-email/models-list.module.css";
 import styles from "./materials.module.css";
+import { materialCategories } from "./categories";
 
 export type ProductOption = { id: string; code: string; name: string };
 export type MaterialRow = {
@@ -13,11 +14,6 @@ export type MaterialRow = {
   category: string; original_filename: string | null; file_mime: string | null;
   file_size: number | null; storage_path: string | null;
   is_archived: boolean; created_at: string; updated_at: string;
-};
-export const materialCategories: Record<string, string> = {
-  slides: "Slides", ebook: "E-book", worksheet: "Planilha", checklist: "Checklist",
-  script: "Roteiro", exercises: "Exercícios", image: "Imagem",
-  support: "Material de apoio", other: "Outro",
 };
 const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR");
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" });
