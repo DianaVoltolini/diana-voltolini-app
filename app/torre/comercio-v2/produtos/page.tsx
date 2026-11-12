@@ -55,9 +55,10 @@ export default async function ProductsV2({
     <p style={{ color: "#956f18", fontSize: 12, fontWeight: 800, letterSpacing: 1 }}>TORRE · COMÉRCIO V2 · PILOTO ISOLADO</p>
     <h1 style={{ fontSize: 32, marginBottom: 8 }}>Produtos V2</h1>
     <p style={{ color: "#475569", maxWidth: 780, lineHeight: 1.6 }}>
-      Cadastro experimental independente dos produtos em venda. Nesta fase, tudo permanece em rascunho:
+      Cadastro experimental independente dos produtos em venda. Organize os arquivos de cada produto na Biblioteca de Materiais. Nesta fase, tudo permanece em rascunho:
       não existem checkout, publicação, Bling ou entrega automática na V2.
     </p>
+    <p><Link href="/torre/comercio-v2/materiais">Abrir Biblioteca de Materiais</Link></p>
     {query.salvo === "1" && <p role="status" style={{ color: "#166534" }}>Produto V2 salvo em rascunho.</p>}
     {query.erro && <p role="alert" style={{ color: "#b91c1c" }}>{errorText[query.erro] ?? "Não foi possível concluir a operação."}</p>}
     {error && <section role="alert" style={{ padding: 18, border: "1px solid #fca5a5", borderRadius: 10 }}>
@@ -115,7 +116,7 @@ export default async function ProductsV2({
           <strong>{product.name}</strong>
           <p style={{ fontSize: 13, color: "#64748b", margin: "6px 0" }}>{product.code} · {types[product.product_type] ?? product.product_type} · Rascunho</p>
           <p style={{ fontSize: 12, color: "#64748b" }}>Criado em {humanDate(product.created_at)}</p>
-          <Link href={"/torre/comercio-v2/produtos?edit=" + encodeURIComponent(product.id)}>Editar cadastro</Link>
+          <Link href={"/torre/comercio-v2/produtos?edit=" + encodeURIComponent(product.id)}>Editar cadastro</Link> <span style={{ margin: "0 8px" }}>·</span> <Link href={"/torre/comercio-v2/materiais?produto=" + encodeURIComponent(product.id)}>Ver materiais</Link>
         </article>)}
       </section>
     </div>}
