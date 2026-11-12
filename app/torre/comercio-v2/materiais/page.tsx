@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { archiveCommerceV2Material, restoreCommerceV2Material, saveCommerceV2Material } from "./actions";
+import { archiveCommerceV2Material, restoreCommerceV2Material } from "./actions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Biblioteca de materiais | Comércio V2" };
@@ -95,7 +95,7 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
       <section style={{ padding: 22, border: "1px solid #dce4eb", borderRadius: 12, background: "#fff" }}>
         <h2 style={{ marginTop: 0, fontSize: 21 }}>{edit ? "Editar material" : "Adicionar material"}</h2>
         {edit && <Link href={linkTo({ produto: selectedProduct })}>+ Adicionar outro material</Link>}
-        <form action={saveCommerceV2Material} style={{ marginTop: 18 }}>
+        <form action="/torre/comercio-v2/materiais/salvar" method="POST" encType="multipart/form-data" style={{ marginTop: 18 }}>
           <input type="hidden" name="id" value={edit?.id ?? ""} />
           <label style={field}>Produto
             <select name="product_id" style={control} required defaultValue={selectedProduct} key={edit?.id ?? selectedProduct}>
