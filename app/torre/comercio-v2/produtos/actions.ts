@@ -38,12 +38,15 @@ export async function saveCommerceV2Product(form: FormData) {
   }
 
   if (salesPageUrl) {
+    let valid = false;
     try {
       const parsed = new URL(salesPageUrl);
-      if (parsed.protocol !== "https:" || parsed.username || parsed.password || salesPageUrl.length > 500) {
-        destination("url");
-      }
-    } catch { destination("url"); }
+      valid = parsed.protocol === "https:" && !parsed.username && !parsed.password &&
+        salesPageUrl.length <= 500;
+    } catch {
+      valid = false;
+    }
+    if (!valid) destination("url");
   }
 
   const db = getSupabaseAdmin();
