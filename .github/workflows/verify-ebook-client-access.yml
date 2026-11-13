@@ -24,6 +24,8 @@ on:
       - "tests/individual-ebook-encounter-products.test.mjs"
       - "tests/encounter-page-visual-parity.test.mjs"
       - "lib/ebooks/purchase-access.ts"
+      - "lib/ebooks/access.ts"
+      - "tests/ebook-civil-expiry.test.mjs"
       - ".github/workflows/verify-ebook-client-access.yml"
 jobs:
   test:
@@ -38,5 +40,6 @@ jobs:
       - run: npm ci
       - run: node --test tests/individual-ebook-encounter-products.test.mjs
       - run: node --test tests/encounter-page-visual-parity.test.mjs
+      - run: node --test tests/ebook-civil-expiry.test.mjs
       - run: npm run lint
       - run: npm run build
