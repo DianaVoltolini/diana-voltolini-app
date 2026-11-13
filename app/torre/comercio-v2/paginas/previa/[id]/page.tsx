@@ -23,7 +23,7 @@ export default async function PagePreview({params}:Context){
  const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
  if(!uuid.test(id))notFound();
  const db=getSupabaseAdmin();
- const {data,error}=await db.from("commerce_v2_pages").select("id,product_id,offer_id,title,eyebrow,headline,subtitle,benefits,audience,details,faq,cta_label,template,status").eq("id",id).eq("status","draft").maybeSingle();
+ const {data,error}=await db.from("commerce_v2_pages").select("id,product_id,offer_id,title,eyebrow,headline,subtitle,benefits,audience,details,faq,cta_label,template,status").eq("id",id).maybeSingle();
  if(error||!data)notFound();
  const page=data as Page;
  const [productResult,offerResult]=await Promise.all([

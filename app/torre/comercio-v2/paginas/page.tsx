@@ -4,6 +4,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import css from "../commercial.module.css";
+import { changeCommercialPagePublication } from "./publication-actions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Páginas de Vendas | Área Comercial" };
@@ -13,7 +14,7 @@ type Page = {
  offer_id: string; status: string; version: number; created_at: string;
 };
 type Product = { id: string; name: string; code: string };
-type Query = { salvo?: string; erro?: string };
+type Query = { salvo?: string; erro?: string; publicada?: string; retirada?: string };
 const errors: Record<string,string> = {
  validacao: "Confira os campos obrigatórios e os limites de texto.",
  vinculo: "O produto e a oferta devem pertencer ao mesmo cadastro V2.",
@@ -22,6 +23,7 @@ const errors: Record<string,string> = {
  salvar: "Não foi possível salvar. Confirme a migração de páginas.",
  conflito: "Este cadastro foi alterado em outra sessão. Abra-o novamente.",
  nao_encontrada: "Página não encontrada.",
+ publicacao: "Não foi possível alterar a publicação. Verifique os dados e tente novamente.",
 };
 export default async function CommercialPages({ searchParams }: { searchParams: Promise<Query> }) {
  await requireAdmin();
@@ -44,8 +46,10 @@ export default async function CommercialPages({ searchParams }: { searchParams: 
    </div>
    <Link className={css.button} href="/torre/comercio-v2/paginas/novo">+ Nova página</Link>
   </header>
-  <div className={css.banner}><strong>Publicação e checkout desabilitados</strong>A prévia é acessível somente para administradores. Nenhum link de venda será ativado por este cadastro.</div>
+  <div className={css.banner}><strong>Publicação controlada, checkout desabilitado</strong>O site só exibirá páginas publicadas quando a configuração COMMERCE_V2_PUBLIC_PAGES_ENABLED for habilitada separadamente. Nenhuma compra será permitida.</div>
   {q.salvo === "1" && <p className={css.message} role="status">Página salva em rascunho.</p>}
+  {q.publicada === "1" && <p className={css.message} role="status">Página marcada como publicada. O site só a exibirá quando sua configuração de ativação estiver habilitada.</p>}
+  {q.retirada === "1" && <p className={css.message} role="status">Página retirada da publicação e devolvida a rascunho.</p>}
   {q.erro && <p className={css.error} role="alert">{errors[q.erro] ?? "Não foi possível salvar."}</p>}
   <section className={css.section}>
    <h2>Páginas cadastradas</h2>
@@ -57,14 +61,22 @@ export default async function CommercialPages({ searchParams }: { searchParams: 
      <td><strong>{page.title}</strong><small>{page.slug} · versão {page.version}</small></td>
      <td>{pmap.get(page.product_id)?.name ?? "—"}<small>{pmap.get(page.product_id)?.code}</small></td>
      <td>{page.template === "online_event" ? "Encontro online" : page.template === "ebook" ? "E-book" : page.template === "service" ? "Serviço" : "Curso"}</td>
-     <td>Rascunho</td>
+     <td>{page.status === "published" ? "Publicada (condicionada ao site)" : "Rascunho"}</td>
      <td><div className={css.actions}>
-      <Link className={css.actionIcon} href={"/torre/comercio-v2/paginas/novo?editar="+encodeURIComponent(page.id)} title="Editar página" aria-label={"Editar "+page.title}>
+      {page.status === "draft" && <Link className={css.actionIcon} href={"/torre/comercio-v2/paginas/novo?editar="+encodeURIComponent(page.id)} title="Editar página" aria-label={"Editar "+page.title}>
        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m16 5 3 3M4 20l4.2-.8L20 7.4 16.6 4 4.8 15.8 4 20Z"/></svg>
-      </Link>
+      </Link>}
       <Link className={css.actionIcon} href={"/torre/comercio-v2/paginas/previa/"+encodeURIComponent(page.id)} title="Pré-visualizar página" aria-label={"Pré-visualizar "+page.title}>
        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7-3.5 7-10 7-10 7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
       </Link>
+      <form action={changeCommercialPagePublication}>
+       <input type="hidden" name="id" value={page.id}/>
+       <input type="hidden" name="version" value={page.version}/>
+       <input type="hidden" name="operation" value={page.status === "draft" ? "publish" : "unpublish"}/>
+       <button className={css.secondary} type="submit" name="confirm" value={page.status === "draft" ? "publish" : "unpublish"} title={page.status === "draft" ? "Marcar publicação" : "Retirar publicação"}>
+        {page.status === "draft" ? "Publicar" : "Retirar"}
+       </button>
+      </form>
      </div></td>
     </tr>)}
     {pages.length===0 && <tr><td colSpan={6}>Nenhuma página cadastrada.</td></tr>}
