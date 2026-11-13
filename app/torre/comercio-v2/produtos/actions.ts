@@ -21,9 +21,7 @@ export async function saveCommerceV2Product(form: FormData) {
   const id = read(form, "id", 36);
   const code = read(form, "code", 60).toUpperCase();
   const name = read(form, "name", 180);
-  const shortName = read(form, "short_name", 120);
   const productType = read(form, "product_type", 40);
-  const summary = read(form, "summary", 600);
   const description = read(form, "description", 8000);
   const deliveryDescription = read(form, "delivery_description", 4000);
   const salesPageUrl = read(form, "sales_page_url", 500);
@@ -31,7 +29,6 @@ export async function saveCommerceV2Product(form: FormData) {
   if ((id && !/^[a-f0-9-]{36}$/i.test(id)) ||
       !/^[A-Z0-9][A-Z0-9_-]{2,59}$/.test(code) ||
       name.length < 3 || name.length > 180 ||
-      shortName.length > 120 || summary.length > 600 ||
       description.length > 8000 || deliveryDescription.length > 4000 ||
       !["ebook", "online_event", "course", "service", "other"].includes(productType)) {
     destination("validacao");
@@ -51,8 +48,8 @@ export async function saveCommerceV2Product(form: FormData) {
 
   const db = getSupabaseAdmin();
   const common = {
-    name, short_name: optional(shortName), product_type: productType,
-    summary: optional(summary), description: optional(description),
+    name, product_type: productType,
+    description: optional(description),
     delivery_description: optional(deliveryDescription),
     sales_page_url: optional(salesPageUrl),
     updated_by: userId, updated_at: new Date().toISOString(),
