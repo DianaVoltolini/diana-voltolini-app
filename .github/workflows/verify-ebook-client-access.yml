@@ -16,6 +16,8 @@ on:
       - "supabase/migrations/20261112_encounter_attendance_confirmation.sql"
       - "supabase/migrations/20261112_encounter_attendance_awareness_reminders.sql"
       - "app/api/ebooks/**"
+      - "app/api/encounters/**"
+      - "supabase/migrations/20261112_encounter_materials.sql"
       - "tests/individual-ebook-encounter-products.test.mjs"
       - "lib/ebooks/purchase-access.ts"
       - ".github/workflows/verify-ebook-client-access.yml"
