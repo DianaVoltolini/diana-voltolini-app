@@ -32,7 +32,9 @@ export default async function PagePreview({params}:Context){
  ]);
  const offer=offerResult.data as Offer|null;
  if(productResult.error||offerResult.error||!offer)notFound();
- const now=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+ const parts=new Intl.DateTimeFormat("en-US",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+ const part=(type:string)=>parts.find(p=>p.type===type)?.value??"";
+ const now=part("year")+"-"+part("month")+"-"+part("day");
  const promo=Boolean(offer.promotional_price_cents!==null&&offer.promo_starts_on&&offer.promo_ends_on&&now>=offer.promo_starts_on&&now<=offer.promo_ends_on);
  const price=promo?offer.promotional_price_cents!:offer.regular_price_cents;
  return <main className={css.page}>
