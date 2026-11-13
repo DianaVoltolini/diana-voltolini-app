@@ -52,6 +52,7 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
       </div>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <Link className={styles.button} href={newUrl}>+ Novo conteúdo</Link>
+        <Link className={styles.button} href="/torre/produtos-entregas" title="Publicação anterior do e-book, mantida até validação da migração">Publicação anterior do e-book</Link>
         <Link className={styles.button} href={"/torre/comercio-v2/materiais/importar" + (chosenProduct ? "?produto=" + encodeURIComponent(chosenProduct) : "")}>Importar em lote</Link>
       </div>
     </header>

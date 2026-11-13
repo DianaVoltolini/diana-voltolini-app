@@ -3,10 +3,11 @@ import Link from "next/link";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 import {publishProductDelivery} from "./actions";
+import {copyCurrentEbookToV2} from "./import-to-v2";
 import styles from "./page.module.css";
 export const metadata:Metadata={title:"Produtos e Entregas | Torre"};
 export const dynamic="force-dynamic";
-type Search={searchParams:Promise<{salvo?:string;erro?:string}>};
+type Search={searchParams:Promise<{salvo?:string;erro?:string;migracao?:string}>};
 const failures:Record<string,string>={
  validacao:"Informe a página, o produto, o título e um arquivo PDF de até 15 MB.",
  produto:"Produto não encontrado ou inativo.",pagina:"Esta página já está vinculada a outro produto.",
@@ -17,17 +18,31 @@ export default async function DeliveriesPage({searchParams}:Search){
  await requireAdmin();
  const query=await searchParams;
  const db=getSupabaseAdmin();
- const [{data:products,error:productError},{data:mappings,error:mapError},{data:history}]=await Promise.all([
+ const [{data:products,error:productError},{data:mappings,error:mapError},{data:history},{data:imports,error:importsError}]=await Promise.all([
    db.from("products").select("id,code,name,active").eq("active",true).order("name"),
    db.from("product_deliveries").select("product_id,page_path,material_name,version,published_at,updated_at").order("page_path"),
-   db.from("product_delivery_versions").select("product_id,version,material_name,published_at").order("published_at",{ascending:false}).limit(40)
+   db.from("product_delivery_versions").select("product_id,version,material_name,published_at").order("published_at",{ascending:false}).limit(40),
+   db.from("commerce_v2_legacy_material_imports").select("legacy_product_id,material_id,legacy_version").limit(100)
  ]);
  if(productError)throw new Error("Não foi possível consultar os produtos.");
  const byId=new Map((products??[]).map(p=>[p.id,p]));
  return <main className={styles.page}>
-   <div className={styles.header}><p className={styles.eyebrow}>TORRE · CATÁLOGO DE ENTREGAS</p><h1>Produtos e Entregas</h1>
-     <p>Vincule cada página comercial a um produto. Publique novas versões do PDF sem trocar o checkout ou alterar compras anteriores.</p>
+   <div className={styles.header}><p className={styles.eyebrow}>TORRE · HISTÓRICO DE ENTREGAS</p><h1>Publicação anterior de e-book</h1>
+     <p>Esta área permanece disponível durante a migração, pois ainda fornece o PDF entregue aos compradores existentes. O cadastro central de materiais está no Comércio V2.</p>
+     <Link href="/torre/comercio-v2/materiais">Abrir Biblioteca V2</Link>
    </div>
+   <section className={styles.panel}>
+     <h2>Consolidar o e-book na Biblioteca V2</h2>
+     <p>Copie uma única vez o PDF vigente do e-book IBS e CBS na Prática para a Biblioteca. Esta operação não apaga o original, não altera a entrega aos compradores, não ativa o material e não envia avisos.</p>
+     {importsError && <p className={styles.error}>Consulte a migração SQL antes de importar o PDF.</p>}
+     {query.migracao==="concluida"&&<p className={styles.success}>Cópia concluída. Confira o novo arquivo na Biblioteca V2 antes de ativar qualquer entrega.</p>}
+     {query.migracao==="jaimportado"&&<p className={styles.success}>O e-book já possui uma cópia registrada na Biblioteca V2.</p>}
+     {query.migracao && !["concluida","jaimportado"].includes(query.migracao)&&<p className={styles.error}>A cópia não foi concluída ({query.migracao}). A entrega legada foi preservada.</p>}
+     <form action={copyCurrentEbookToV2} className={styles.form}>
+       <button type="submit" disabled={Boolean(importsError||imports?.some(i=>byId.get(i.legacy_product_id)?.code==="EBOOK-IBSCBS-001"))}>Copiar PDF vigente para a Biblioteca V2</button>
+     </form>
+     <p className={styles.hint}>A cópia ficará como “Disponível para aluno: Não” até revisão. A mudança de entrega e os avisos de atualização serão homologados separadamente.</p>
+   </section>
    {query.salvo==="1"&&<p className={styles.success} role="status">Material publicado. Todos os compradores com pagamento confirmado terão acesso à nova versão.</p>}
    {query.erro&&<p className={styles.error} role="alert">{failures[query.erro]??"Não foi possível concluir a publicação."}</p>}
    {(mapError||!mappings)&&<p className={styles.error}>Cadastro de entregas indisponível. Execute a migração SQL antes de publicar.</p>}
