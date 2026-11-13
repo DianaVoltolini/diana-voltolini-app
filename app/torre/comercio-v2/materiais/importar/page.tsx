@@ -30,7 +30,7 @@ export default async function ImportMaterialsPage({ searchParams }: { searchPara
     </header>
     {error && <p className={styles.error}>Não foi possível consultar os produtos.</p>}
     <section className={styles.editor}>
-      <form className={styles.editorForm} action="/torre/comercio-v2/materiais/importar" method="POST"
+      <form className={styles.editorForm} action="/torre/comercio-v2/materiais/importar/processar" method="POST"
         encType="multipart/form-data">
         <h2>Importar CSV e arquivos</h2>
         <p className={styles.note}>
