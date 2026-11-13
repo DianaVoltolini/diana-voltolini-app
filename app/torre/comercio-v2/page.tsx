@@ -20,8 +20,9 @@ const stages = [
   },
   {
     name: "03 · Ofertas e preços",
-    status: "Planejado",
-    description: "Preço, vigência e histórico das ofertas.",
+    status: "Módulo criado — validação pendente",
+    description: "Preço, promoção e histórico, sem checkout.",
+    href: "/torre/comercio-v2/ofertas",
   },
   {
     name: "04 · Páginas de vendas",
@@ -90,7 +91,7 @@ export default async function ComercioV2Home() {
             </p>
             {"href" in stage && stage.href ? (
               <Link href={stage.href} style={{ color: "#173c71", fontWeight: 750 }}>
-                {"href" in stage && stage.href.endsWith("/materiais") ? "Abrir biblioteca de materiais" : "Abrir cadastro de produtos"}
+                {"href" in stage && stage.href.endsWith("/materiais") ? "Abrir biblioteca de materiais" : stage.href.endsWith("/ofertas") ? "Abrir ofertas e preços" : "Abrir cadastro de produtos"}
               </Link>
             ) : (
               <span style={{ fontSize: 13, color: "#64748b" }}>

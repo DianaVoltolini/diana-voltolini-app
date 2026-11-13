@@ -37,7 +37,7 @@ Implantar fluxo comercial novo, independente: **produto → oferta → página �
 | F0 | Auditoria de tabelas, RLS, rotas, Bling e dependências | Matriz de compatibilidade, rollback e regressão registrados | Pendente | — |
 | F1 | Catálogo V2 isolado | Criar e editar piloto sem alterar produtos antigos | Em andamento (homologação pendente) | PR #168 |
 | F1B | Biblioteca de materiais V2 | Upload, edição, filtros, download e arquivamento sem acesso público | Parcialmente validado (5/6); prévia PDF pendente | PRs #170 e #172 |
-| F2 | Ofertas e precificação versionadas | Preço servidor e snapshot no pedido | Pendente | — |
+| F2 | Ofertas e precificação versionadas | Preço seguro, promoções e histórico (snapshot no pedido será implementado no checkout F4) | Em implementação; homologação pendente | PR #175 previsto |
 | F3 | Editor e publicação de página V2 | Criar/publicar/editar piloto sem PR de conteúdo | Pendente | — |
 | F4 | Checkout V2 isolado | Pix/boleto, idempotência e erros verificados | Pendente | — |
 | F5 | Entregas e área do cliente V2 | Pedido pago libera conteúdo e respeita prazo | Pendente | — |
@@ -145,3 +145,10 @@ O V2 só substitui o fluxo legado após homologação completa do piloto e migra
 - Nota operacional: resultados limitados aos 500 registros mais recentes; paginação antes de escalar além desse volume.
 
 **Homologação pendente:** conferir filtros e layout desktop/mobile, cadastramento e edição, links, operações de download/arquivamento e não regressão. A prévia PDF permanece pendente do teste anterior; alteração de interface não a considera resolvida.
+
+## Evolução F2 — Ofertas e Preços V2 (12/11/2026)
+- Biblioteca: listagem e botão Novo conteúdo informados como validados; prévia PDF continua pendente.
+- Implementação F2 proposta: `commerce_v2_offers`, `commerce_v2_offer_revisions`, formulário, histórico e menu.
+- Valores em centavos, promoção com período definido, status obrigatoriamente rascunho, nenhuma geração de pedidos ou cobranças.
+- Evidências pendentes: SQL no Supabase, build, lint, regras de segurança, testes funcionais e regressivos.
+- Nenhuma alteração no checkout atual. Migração de produtos legados continua proibida nesta etapa.

@@ -11,7 +11,7 @@ export default function TorreSidebar(){
  <p className={styles.kicker}>ADMINISTRAÇÃO</p>{admin.map(([url,label])=>item(url,label))}
  <div className={styles.group}><span className={styles.groupLabel}>SERVIÇOS</span>{services.map(([url,label])=>item(url,label))}</div>
  <div className={styles.group}><span className={styles.groupLabel}>MARKETING</span>{item("/torre/landings","Landing Pages")}{item("/torre/produtos-entregas","Produtos e Entregas")}{item("/torre/leads","Leads")}{item("/torre/conteudos","Blog")}{item("/torre/sugestoes","Sugestões de conteúdo")}{item("/torre/ctas","CTAs do Blog")}{item("/torre/modelos-email","Modelos de E-mail")}</div>
- <div className={styles.group}><span className={styles.groupLabel}>COMÉRCIO V2 · EM IMPLANTAÇÃO</span>{item("/torre/comercio-v2","Visão geral V2")}{item("/torre/comercio-v2/produtos","Produtos piloto")}{item("/torre/comercio-v2/materiais","Biblioteca de Materiais")}</div>
+ <div className={styles.group}><span className={styles.groupLabel}>COMÉRCIO V2 · EM IMPLANTAÇÃO</span>{item("/torre/comercio-v2","Visão geral V2")}{item("/torre/comercio-v2/produtos","Produtos piloto")}{item("/torre/comercio-v2/materiais","Biblioteca de Materiais")}{item("/torre/comercio-v2/ofertas","Ofertas e Preços")}</div>
  </nav>;
  return <aside className={styles.sidebar}><div className={styles.desktop}>{navigation}</div><details className={styles.mobile}><summary>Menu administrativo</summary>{navigation}</details></aside>;
 }
