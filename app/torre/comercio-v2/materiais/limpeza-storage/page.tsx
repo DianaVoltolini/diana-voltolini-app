@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { auditStorage } from "./audit";
-import { removeSelectedOrphans } from "./actions";
 import css from "../../commercial.module.css";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +39,7 @@ export default async function StorageCleanup({ searchParams }: {
       <h2>Conferência atual</h2>
       <p>Arquivos encontrados: <strong>{report.total}</strong> · Referenciados e protegidos: <strong>{report.protectedCount}</strong> · Candidatos órfãos: <strong>{report.orphanPaths.length}</strong>.</p>
       <p className={css.note}>A rotina só considera arquivos com nomenclatura padrão UUID/UUID.ext dentro das pastas de produtos V2. Outros arquivos exigem auditoria separada.</p>
-      {report.orphanPaths.length ? <form action={removeSelectedOrphans} className={css.form}>
+      {report.orphanPaths.length ? <form action="/torre/comercio-v2/materiais/limpeza-storage/excluir" method="POST" className={css.form}>
         <div className={css.tableScroll}><table className={css.table}>
           <thead><tr><th>Selecionar</th><th>Caminho do arquivo sem vínculo</th></tr></thead>
           <tbody>{report.orphanPaths.map(path => <tr key={path}><td><input type="checkbox" name="paths" value={path} aria-label={"Excluir " + path}/></td><td style={{overflowWrap:"anywhere"}}>{path}</td></tr>)}</tbody>
