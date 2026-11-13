@@ -17,7 +17,7 @@ export async function copyCurrentEbookToV2(){
   const db=getSupabaseAdmin();
   const {data:product,error:productError}=await db.from("products")
     .select("id,code").eq("code",ebookCode).maybeSingle();
-  if(productError||!product)dest("produto");
+  if(productError||!product)return dest("produto");
 
   const [{data:delivery,error:deliveryError},{data:v2product,error:v2error},
     {data:already,error:alreadyError}]=await Promise.all([
@@ -27,22 +27,22 @@ export async function copyCurrentEbookToV2(){
     db.from("commerce_v2_legacy_material_imports").select("material_id,legacy_version")
       .eq("legacy_product_id",product.id).maybeSingle()
   ]);
-  if(deliveryError||v2error||alreadyError)dest("consulta");
-  if(!v2product)dest("v2ausente");
+  if(deliveryError||v2error||alreadyError)return dest("consulta");
+  if(!v2product)return dest("v2ausente");
   if(!delivery?.storage_bucket||!delivery.storage_path||!delivery.version||delivery.version<1)
-    dest("semaquivo");
-  if(already)dest("jaimportado");
+    return dest("semaquivo");
+  if(already)return dest("jaimportado");
 
   const {data:source,error:downloadError}=await db.storage
     .from(delivery.storage_bucket).download(delivery.storage_path);
-  if(downloadError||!source)dest("download");
-  if(source.size===0||source.size>25*1024*1024)dest("tamanho");
+  if(downloadError||!source)return dest("download");
+  if(source.size===0||source.size>25*1024*1024)return dest("tamanho");
   const bytes=await source.arrayBuffer();
   // A versão original permanece no bucket legado; a cópia tem chave própria V2.
   const path=v2product.id+"/"+crypto.randomUUID()+".pdf";
   const {error:uploadError}=await db.storage.from("commerce-v2-materials")
     .upload(path,bytes,{contentType:"application/pdf",upsert:false});
-  if(uploadError)dest("upload");
+  if(uploadError)return dest("upload");
 
   const name=(delivery.material_name||"E-book IBS e CBS na Prática").slice(0,180);
   const {data:material,error:materialError}=await db.from("commerce_v2_materials")
@@ -54,7 +54,7 @@ export async function copyCurrentEbookToV2(){
     }).select("id").single();
   if(materialError||!material){
     await db.storage.from("commerce-v2-materials").remove([path]);
-    dest("cadastro");
+    return dest("cadastro");
   }
   // Registrar a origem antes de habilitar qualquer uso, evitando cópias repetidas.
   const {error:logError}=await db.from("commerce_v2_legacy_material_imports").insert({
@@ -63,7 +63,7 @@ export async function copyCurrentEbookToV2(){
   if(logError){
     await db.from("commerce_v2_materials").delete().eq("id",material.id);
     await db.storage.from("commerce-v2-materials").remove([path]);
-    dest("registro");
+    return dest("registro");
   }
   const {error:eligibilityError}=await db.from("commerce_v2_material_product_eligibility")
     .upsert({material_id:material.id,product_id:v2product.id},
@@ -72,9 +72,9 @@ export async function copyCurrentEbookToV2(){
     console.error("[v2-ebook-import] Produto de referência não associado",eligibilityError.code);
     // O arquivo permanece copiado e identificado. A elegibilidade pode ser
     // regularizada manualmente no editor V2; nunca apagá-lo sem inspeção.
-    dest("associacao");
+    return dest("associacao");
   }
   revalidatePath(v2Library);
   revalidatePath(legacy);
-  dest("concluida");
+  return dest("concluida");
 }
