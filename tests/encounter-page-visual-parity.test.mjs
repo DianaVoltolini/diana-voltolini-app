@@ -22,7 +22,7 @@ test("cards seguem cores, borda dourada, tipografia e botões do e-book",()=>{
  assert.match(css,/border-radius:9px/);
  assert.match(page,/className=\{styles\.encounterCard\}/);
  assert.match(page,/className=\{styles\.primaryButton\}/);
- assert.match(ebook,/borderTop:\\s*"4px solid #c9a227"/);
+ assert.match(ebook,/borderTop:\s*"4px solid #c9a227"/);
 });
 test("alterações visuais preservam materiais, download e preferências",()=>{
  assert.match(page,/purchases\.map\(order/);
