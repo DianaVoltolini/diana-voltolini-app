@@ -120,7 +120,7 @@ export default function MaterialsTable({
             <div><strong>Produtos relacionados</strong>
               {parents.length?<ul className={styles.productList}>{parents.map(p=><li key={p.id}><span>{p.name}</span><small>{p.code}</small></li>)}</ul>:<p className={styles.note}>Nenhum produto relacionado.</p>}
             </div>
-            <p className={styles.availability}><strong>Disponível para cliente:</strong> {m.available_to_student&&!m.is_archived?"Sim":"Não — somente Torre"}</p>
+            <p className={styles.availability}><strong>Disponível para aluno (cliente):</strong> {m.available_to_student&&!m.is_archived?"Sim":"Não — somente Torre"}</p>
           </div>
         </article>;
       })}
