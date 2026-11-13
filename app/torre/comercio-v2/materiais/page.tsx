@@ -9,7 +9,7 @@ import styles from "./materials.module.css";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Biblioteca de Materiais | Comércio V2" };
 
-type Query = { produto?: string; salvo?: string; excluido?: string; restaurado?: string; erro?: string };
+type Query = { produto?: string; salvo?: string; excluido?: string; restaurado?: string; importado?: string; erro?: string };
 const errors: Record<string, string> = {
   validacao: "Confira os dados informados.",
   arquivo: "Arquivo inválido ou maior que 25 MB.",
@@ -19,6 +19,10 @@ const errors: Record<string, string> = {
   salvar: "Não foi possível salvar o material.",
   excluir: "Não foi possível arquivar o material.",
   restaurar: "Não foi possível restaurar o material.",
+  csv: "CSV inválido, incompleto ou incompatível com o produto.",
+  correspondencia: "Os arquivos selecionados não correspondem exatamente aos nomes do CSV.",
+  consulta: "Não foi possível consultar os materiais existentes.",
+  importacao: "Falha ao importar. Confira os arquivos e tente novamente; os materiais anteriores foram preservados.",
 };
 export default async function MaterialsPage({ searchParams }: { searchParams: Promise<Query> }) {
   await requireAdmin();
@@ -40,8 +44,12 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
         <h1>Biblioteca de Materiais</h1>
         <p>Organize e consulte os arquivos vinculados aos produtos. Acesso privado da Torre.</p>
       </div>
-      <Link className={styles.button} href={newUrl}>+ Novo conteúdo</Link>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <Link className={styles.button} href={newUrl}>+ Novo conteúdo</Link>
+        <Link className={styles.button} href={"/torre/comercio-v2/materiais/importar" + (chosenProduct ? "?produto=" + encodeURIComponent(chosenProduct) : "")}>Importar em lote</Link>
+      </div>
     </header>
+    {query.importado === "1" && <p className={styles.message} role="status">Importação concluída. Os materiais anteriores deste produto foram arquivados.</p>}
     {query.salvo === "1" && <p className={styles.message} role="status">Material salvo com sucesso.</p>}
     {query.excluido === "1" && <p className={styles.message} role="status">Material arquivado. Você pode restaurá-lo pelo filtro Situação.</p>}
     {query.restaurado === "1" && <p className={styles.message} role="status">Material restaurado.</p>}
