@@ -18,14 +18,14 @@ export async function saveAuditTask(data:FormData){
  const id=field(data,"id",36), area=field(data,"area",100), title=field(data,"title",180);
  const priority=field(data,"priority",20), status=field(data,"status",20);
  const description=field(data,"description",3000), notes=field(data,"notes",3000);
- const owner=field(data,"owner_name",120),due=field(data,"due_date",10);
+ const due=field(data,"due_date",10);
  if((id&&!uuid.test(id))||area.length<2||area.length>100||title.length<3||title.length>180||
     !priorities.includes(priority)||!statuses.includes(status)||
-    description.length>3000||notes.length>3000||owner.length>120||
+    description.length>3000||notes.length>3000||
     (due&&!/^\d{4}-\d{2}-\d{2}$/.test(due))) return fail("validacao");
  const db=getSupabaseAdmin();
  const base={area,title,description:description||null,priority,status,
-  due_date:due||null,owner_name:owner||null,notes:notes||null,updated_at:new Date().toISOString()};
+  due_date:due||null,notes:notes||null,updated_at:new Date().toISOString()};
  if(id){
   const {data:previous,error:lookupError}=await db.from("torre_audit_tasks")
     .select("id,status,completed_at,validated_at").eq("id",id).maybeSingle();

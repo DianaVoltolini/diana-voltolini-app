@@ -32,7 +32,7 @@
 .form{display:grid;gap:15px}.form label,.addItem label{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:700}
 .form input,.form textarea,.form select,.addItem input{padding:10px 12px;min-height:43px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;color:#102033;font:inherit;box-sizing:border-box;width:100%}
 .form textarea{min-height:95px;resize:vertical}
-.twoColumns{display:grid;grid-template-columns:1fr 2fr;gap:16px}.fourColumns{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+.twoColumns{display:grid;grid-template-columns:1fr 2fr;gap:16px}.threeColumns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
 .checklist{display:grid;gap:8px}.checklistRow{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border:1px solid #e3e8f0;border-radius:8px;font-size:13px}
 .checklistRow>span{flex:1}.checked{text-decoration:line-through;color:#697987}
 .checkButton{border:0;background:none;color:#102033;font-size:21px;cursor:pointer}
@@ -41,5 +41,5 @@
 .error{padding:13px;background:#fff2ee;border:1px solid #f2ccc5;color:#9a251d;border-radius:8px;margin-bottom:15px}
 .success{padding:13px;background:#f1faf4;border:1px solid #bedec9;color:#176439;border-radius:8px;margin-bottom:15px}
 .note{margin-top:10px!important;font-size:12px!important}
-@media(max-width:900px){.summary{grid-template-columns:repeat(2,1fr)}.fourColumns{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:620px){.page{padding:24px 15px 45px}.section{padding:17px}.twoColumns,.fourColumns{grid-template-columns:1fr}.addItem{flex-direction:column;align-items:stretch}.summary{gap:9px}}
+@media(max-width:900px){.summary{grid-template-columns:repeat(2,1fr)}.threeColumns{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.page{padding:24px 15px 45px}.section{padding:17px}.twoColumns,.threeColumns{grid-template-columns:1fr}.addItem{flex-direction:column;align-items:stretch}.summary{gap:9px}}
