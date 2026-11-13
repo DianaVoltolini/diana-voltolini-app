@@ -87,7 +87,7 @@ export default async function OtherProducts() {
   );
   const acquired: Record<(typeof products)[number]["key"], boolean> = {
     diagnostic: Boolean(diagnostics?.length),
-    ebook: hasDirectEbookPurchase || access.hasEncounterOrder,
+    ebook: hasDirectEbookPurchase,
     encounter: access.hasEncounterOrder,
     subscription: Boolean(subscriptions?.length),
   };
