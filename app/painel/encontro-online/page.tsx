@@ -6,7 +6,8 @@ import {createClient} from "@/lib/supabase/server";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 import {ebookAccessActive,ebookAccessDateLabel,ebookAccessUntil} from "@/lib/ebooks/access";
 import {confirmEncounterAttendance} from "./actions";
-import styles from "../outros-produtos/page.module.css";
+import ProductPage from "../product-page";
+import styles from "./encounter-page.module.css";
 
 export const metadata:Metadata={title:"Meus Encontros Online | Diana Voltolini",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
@@ -57,18 +58,13 @@ export default async function EncounterPage({searchParams}:Props){
     : {data:[],error:null};
   if(materialsError) throw new Error("Não foi possível consultar os materiais do encontro.");
   const search=await searchParams;
-  const inputStyle={width:"100%",maxWidth:520,padding:"12px 14px",border:"1px solid #cbd5df",borderRadius:7,fontSize:15};
 
-  return <main className={styles.page}><div className={styles.container}>
-    <header className={styles.intro}>
-      <p>MINHAS COMPRAS · ENCONTROS ONLINE</p>
-      <h1>Meus Encontros Online</h1>
-      <span>Suas inscrições, materiais e orientações, organizados por encontro.</span>
-    </header>
-    {!purchases.length && <section className={styles.card} style={{marginTop:25,minHeight:0}}>
-      <h2 style={{minHeight:0}}>Você ainda não possui encontros confirmados</h2>
+  return <ProductPage title="Meus Encontros Online" description="Suas inscrições, materiais e orientações, organizados por encontro.">
+    <div className={styles.stack}>
+    {!purchases.length && <section className={styles.encounterCard}>
+      <h2 className={styles.productTitle}>Você ainda não possui encontros confirmados</h2>
       <p>Quando a confirmação do pagamento estiver registrada, sua inscrição aparecerá aqui.</p>
-      <Link className={styles.cta} href="/painel/outros-produtos">Conhecer os encontros →</Link>
+      <Link className={styles.primaryButton} href="/painel/outros-produtos">Conhecer os encontros →</Link>
     </section>}
     {purchases.map(order=>{
       const product=catalog.find(item=>item.id===order.product_id);
@@ -79,79 +75,79 @@ export default async function EncounterPage({searchParams}:Props){
       const confirmation=confirmations.get(order.id);
       const publishedMaterials=(availableMaterials??[]).filter(item=>item.product_id===order.product_id);
       const confirmed=Boolean(confirmation?.terms_acknowledged_at);
-      return <section className={styles.card} key={order.id}
-        style={{marginTop:24,minHeight:0,maxWidth:1100,gap:0}}>
+      return <section className={styles.encounterCard} key={order.id}>
         <div className={styles.cardHeading}>
           <span>ENCONTRO ONLINE · INSCRIÇÃO CONFIRMADA</span>
-          <span className={styles.acquired}>✓ Pagamento confirmado</span>
+          <span className={styles.paidBadge}>✓ Pagamento confirmado</span>
         </div>
-        <h2 style={{minHeight:0,marginBottom:12}}>
+        <h2 className={styles.productTitle}>
           {isFirstEncounter?"Reforma Tributária na Prática: Compras e Faturamento em 2027":product.name}
         </h2>
         {isFirstEncounter?
-          <p><strong>21/01/2027, das 19h30 às 21h</strong>, horário de Brasília, pelo Google Meet.
+          <p className={styles.lead}><strong>21/01/2027, das 19h30 às 21h</strong>, horário de Brasília, pelo Google Meet.
           O link de participação será enviado nas orientações próximas ao encontro.</p>:
-          <p>{product.checkout_description??"Os detalhes e orientações deste encontro serão comunicados pela organização."}</p>}
-        <p>O acesso aos materiais desta compra termina em{" "}
+          <p className={styles.lead}>{product.checkout_description??"Os detalhes e orientações deste encontro serão comunicados pela organização."}</p>}
+        <p className={styles.expires}>O acesso aos materiais desta compra termina em{" "}
           <strong>{expiresAt?ebookAccessDateLabel(expiresAt):"data indisponível"}</strong>.
           Os materiais disponibilizados posteriormente compartilham essa mesma data final.</p>
 
-        <div style={{borderTop:"1px solid #e8e0d4",paddingTop:22,marginTop:6,width:"100%"}}>
-          <span className={styles.cardLabel}>MATERIAIS DESTE ENCONTRO</span>
-          <h3 style={{font:"600 23px Georgia,serif",margin:"14px 0",color:"#102033"}}>Materiais incluídos</h3>
-          {isFirstEncounter&&<div style={{border:"1px solid #e5ded0",borderRadius:9,padding:18,marginBottom:14}}>
+        <div className={styles.sectionBlock}>
+          <span className={styles.sectionEyebrow}>MATERIAIS DESTE ENCONTRO</span>
+          <h3 className={styles.sectionTitle}>Materiais incluídos</h3>
+          {isFirstEncounter&&<div className={styles.materialItem}>
             <strong>E-book IBS e CBS na Prática</strong>
-            <p style={{margin:"8px 0 14px"}}>Disponível após a confirmação do pagamento, com atualizações durante o prazo de acesso.</p>
+            <p>Disponível após a confirmação do pagamento, com atualizações durante o prazo de acesso.</p>
             {inAccessPeriod?
-              <a className={styles.cta} href="/api/ebooks/ibs-cbs-na-pratica/download?origem=encontro">Baixar e-book (PDF) ↓</a>:
+              <a className={styles.primaryButton} href="/api/ebooks/ibs-cbs-na-pratica/download?origem=encontro">Baixar e-book (PDF) ↓</a>:
               <p style={{fontWeight:750}}>Período de download encerrado.</p>}
           </div>}
-          {publishedMaterials.length>0&&<div style={{display:"grid",gap:11,marginBottom:16}}>
+          {publishedMaterials.length>0&&<div className={styles.materialList}>
             {publishedMaterials.map(material=><div key={material.id}
-              style={{border:"1px solid #e5ded0",borderRadius:9,padding:16,background:"#fbf9f4"}}>
+              className={styles.materialItem}>
               <strong>{material.title}</strong>
               {inAccessPeriod?
-                <a className={styles.cta} style={{display:"table",marginTop:12}}
+                <a className={styles.primaryButton}
                   href={`/api/encounters/materials/${material.id}/download?pedido=${order.id}`}>
                   Baixar material ↓
                 </a>:
                 <p style={{marginTop:9}}>Prazo de download encerrado.</p>}
             </div>)}
           </div>}
-          {isFirstEncounter&&publishedMaterials.length===0&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:10}}>
-            {materials.map(name=><div key={name} style={{border:"1px solid #e5ded0",borderRadius:9,padding:16,background:"#fbf9f4"}}>
+          {isFirstEncounter&&publishedMaterials.length===0&&<div className={styles.materialGrid}>
+            {materials.map(name=><div key={name} className={styles.materialItem}>
               <strong>{name}</strong>
-              <p style={{margin:"8px 0 0",fontSize:13}}>Disponibilização prevista para janeiro de 2027.</p>
+              <p>Disponibilização prevista para janeiro de 2027.</p>
             </div>)}
           </div>}
         </div>
 
-        <div style={{borderTop:"1px solid #e8e0d4",paddingTop:23,marginTop:23,width:"100%"}}>
-          <span className={styles.cardLabel}>ORIENTAÇÕES E LEMBRETES</span>
-          <h3 style={{font:"600 24px Georgia,serif",margin:"14px 0",color:"#102033"}}>Confirmação das informações do encontro</h3>
+        <div className={styles.sectionBlock}>
+          <span className={styles.sectionEyebrow}>ORIENTAÇÕES E LEMBRETES</span>
+          <h3 className={styles.sectionTitle}>Confirmação das informações do encontro</h3>
           <p>Sua inscrição já está garantida pelo pagamento. Confirme que tomou conhecimento da data e das condições de participação. Não é necessário responder novamente para manter a inscrição.</p>
           <p>O encontro será realizado ao vivo e <strong>não está prevista reposição individual ou disponibilização de gravação</strong>.
             A ausência não gera, por si só, reembolso automático, sem prejuízo do direito de arrependimento e dos demais direitos previstos na legislação aplicável.</p>
-          {search.salvo==="1"&&<p role="status" style={{color:"#167241",fontWeight:800}}>Informações registradas com sucesso.</p>}
-          {search.erro&&<p role="alert" style={{color:"#a42c2c",fontWeight:800}}>Confira os campos obrigatórios e tente novamente.</p>}
-          {confirmed&&<p style={{color:"#167241",fontWeight:750}}>Ciência das condições registrada. {confirmation?.reminder_opt_in?"Você autorizou o envio de lembretes por e-mail.":"Você não selecionou lembretes por e-mail."}</p>}
-          <form action={confirmEncounterAttendance} style={{display:"grid",gap:14,width:"100%",maxWidth:680}}>
+          {search.salvo==="1"&&<p role="status" className={styles.successText}>Informações registradas com sucesso.</p>}
+          {search.erro&&<p role="alert" className={styles.errorText}>Confira os campos obrigatórios e tente novamente.</p>}
+          {confirmed&&<p className={styles.successText}>Ciência das condições registrada. {confirmation?.reminder_opt_in?"Você autorizou o envio de lembretes por e-mail.":"Você não selecionou lembretes por e-mail."}</p>}
+          <form action={confirmEncounterAttendance} className={styles.preferencesForm}>
             <input type="hidden" name="orderId" value={order.id}/>
-            <label htmlFor={`attendee-${order.id}`} style={{fontWeight:750}}>Nome completo do participante</label>
+            <label htmlFor={`attendee-${order.id}`} className={styles.inputLabel}>Nome completo do participante</label>
             <input id={`attendee-${order.id}`} name="attendeeName" autoComplete="name" required
-              minLength={3} maxLength={150} defaultValue={confirmation?.attendee_name||order.customer_name||""} style={inputStyle}/>
-            <label style={{display:"flex",gap:10,alignItems:"flex-start",lineHeight:1.5}}>
-              <input type="checkbox" name="termsAcknowledged" value="yes" required defaultChecked={confirmed} style={{marginTop:5}}/>
+              minLength={3} maxLength={150} defaultValue={confirmation?.attendee_name||order.customer_name||""} className={styles.textInput}/>
+            <label className={styles.checkLabel}>
+              <input type="checkbox" name="termsAcknowledged" value="yes" required defaultChecked={confirmed} />
               <span>Li e estou ciente da data, do horário e das condições de realização do encontro ao vivo.</span>
             </label>
-            <label style={{display:"flex",gap:10,alignItems:"flex-start",lineHeight:1.5}}>
-              <input type="checkbox" name="reminderOptIn" value="yes" defaultChecked={confirmation?.reminder_opt_in===true} style={{marginTop:5}}/>
+            <label className={styles.checkLabel}>
+              <input type="checkbox" name="reminderOptIn" value="yes" defaultChecked={confirmation?.reminder_opt_in===true} />
               <span>Desejo receber um lembrete sobre este encontro no e-mail cadastrado, próximo à data do evento.</span>
             </label>
-            <button type="submit" className={styles.cta} style={{border:0,cursor:"pointer",justifySelf:"start"}}>Salvar minhas preferências</button>
+            <button type="submit" className={styles.primaryButton}>Salvar minhas preferências</button>
           </form>
         </div>
       </section>;
     })}
-  </div></main>;
+    </div>
+  </ProductPage>;
 }
