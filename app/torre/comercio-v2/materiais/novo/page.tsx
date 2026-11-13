@@ -12,7 +12,7 @@ type Query = { produto?: string; editar?: string };
 type Product = { id: string; code: string; name: string };
 type Material = {
   id: string; product_id: string; title: string; category: string;
-  description: string; original_filename: string | null; is_archived: boolean;
+  description: string; original_filename: string | null; is_archived: boolean; available_to_student: boolean;
 };
 const back = "/torre/comercio-v2/materiais";
 
@@ -24,7 +24,7 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
     db.from("commerce_v2_products").select("id,code,name").order("name").limit(500),
     query.editar
       ? db.from("commerce_v2_materials")
-          .select("id,product_id,title,category,description,original_filename,is_archived")
+          .select("id,product_id,title,category,description,original_filename,is_archived,available_to_student")
           .eq("id", query.editar).eq("is_archived", false).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
   ]);
@@ -74,6 +74,10 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
           <textarea name="description" maxLength={4000} rows={5}
             defaultValue={material?.description ?? ""}
             placeholder="Descreva a finalidade e o conteúdo do arquivo." />
+        </label>
+        <label className={styles.note} style={{display:"flex",alignItems:"center",gap:10}}>
+          <input type="checkbox" name="available_to_student" value="yes" defaultChecked={material?.available_to_student ?? false}/>
+          Disponível para aluno — permite selecionar o material para entrega em Produtos. Não publica automaticamente.
         </label>
         <label>{material ? "Substituir arquivo (opcional)" : "Enviar arquivo (opcional)"}
           <input type="file" name="file" accept=".pdf,.docx,.pptx,.xlsx,.png,.jpg,.jpeg,.webp,.zip,.txt" />
