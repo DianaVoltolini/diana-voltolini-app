@@ -154,6 +154,10 @@ export async function POST(request: NextRequest) {
     if (inserted.error || !inserted.data || inserted.data.length !== entries.length)
       throw Error("insert");
     newIds = inserted.data.map(m => m.id as string);
+    // Importação antiga exige um produto de referência; registrar também sua elegibilidade.
+    const {error:linksError}=await db.from("commerce_v2_material_product_eligibility")
+      .insert(newIds.map(materialId=>({material_id:materialId,product_id:productId})));
+    if(linksError) throw Error("eligibility");
     if (previousIds.length) {
       const archived = await db.from("commerce_v2_materials")
         .update({ is_archived: true, updated_at: new Date().toISOString(), updated_by: userId })
