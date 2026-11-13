@@ -48,12 +48,14 @@ export async function GET(request: NextRequest) {
         .eq("product_id",encounter.id).eq("status","paid").not("paid_at","is",null)
         .order("paid_at",{ascending:false}).limit(100);
       if (encounterOrdersError) throw encounterOrdersError;
-      if (!ebookAccessActive(ebookAccessUntil(encounterOrders??[]))) return denied(403);
-    } else if (!access.hasDirectEbookOrder || !access.directEbookActive) {
-      // A seção de e-books é exclusiva do produto adquirido separadamente.
+      if (!(encounterOrders??[]).length) return denied(403);
+      if (!ebookAccessActive(ebookAccessUntil(encounterOrders??[]))) return NextResponse.json(
+        {error:"O período de acesso ao e-book incluído no encontro foi encerrado."},
+        {status:403,headers:{"Cache-Control":"no-store"}}
+      );
+    } else if (!access.hasDirectEbookOrder) {
       return denied(403);
-    }
-    if (!fromEncounter && !access.directEbookActive) return NextResponse.json(
+    } else if (!access.directEbookActive) return NextResponse.json(
       { error: "O período de acesso ao seu e-book foi encerrado." },
       { status: 403, headers: { "Cache-Control": "no-store" } },
     );
