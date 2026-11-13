@@ -9,9 +9,18 @@ CREATE UNIQUE INDEX IF NOT EXISTS commerce_v2_products_sales_product_unique
   ON public.commerce_v2_products(sales_product_id)
   WHERE sales_product_id IS NOT NULL;
 
-ALTER TABLE public.commerce_v2_products
-  ADD CONSTRAINT commerce_v2_active_requires_sales_product
-  CHECK (NOT student_delivery_active OR sales_product_id IS NOT NULL);
+DO $
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname='commerce_v2_active_requires_sales_product'
+      AND conrelid='public.commerce_v2_products'::regclass
+  ) THEN
+    ALTER TABLE public.commerce_v2_products
+      ADD CONSTRAINT commerce_v2_active_requires_sales_product
+      CHECK (NOT student_delivery_active OR sales_product_id IS NOT NULL);
+  END IF;
+END $;
 
 COMMENT ON COLUMN public.commerce_v2_products.sales_product_id IS
   'Produto de venda real em public.products; vínculo explícito feito na Torre';
