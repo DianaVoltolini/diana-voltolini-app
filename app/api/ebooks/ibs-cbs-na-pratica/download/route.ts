@@ -1,6 +1,7 @@
 // app/api/ebooks/ibs-cbs-na-pratica/download/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getEbookPurchaseAccess } from "@/lib/ebooks/purchase-access";
+import { getEbookPurchaseAccess, ENCOUNTER_PRODUCT_CODE } from "@/lib/ebooks/purchase-access";
+import { ebookAccessUntil, ebookAccessActive } from "@/lib/ebooks/access";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
@@ -35,8 +36,24 @@ export async function GET(request: NextRequest) {
     if (!product) return denied(403);
 
     const access = await getEbookPurchaseAccess(userId);
-    if (!access.hasPaidOrder) return denied(403);
-    if (!access.isActive) return NextResponse.json(
+    const fromEncounter = request.nextUrl.searchParams.get("origem") === "encontro";
+    if (fromEncounter) {
+      // No encontro, o prazo é exclusivo da própria compra: outra aquisição
+      // do e-book não prolonga o acesso aos materiais do encontro.
+      const {data: encounter, error: encounterError} = await admin.from("products")
+        .select("id").eq("code", ENCOUNTER_PRODUCT_CODE).maybeSingle();
+      if (encounterError || !encounter) return denied(403);
+      const {data: encounterOrders,error: encounterOrdersError} = await admin.from("orders")
+        .select("paid_at,created_at").eq("user_id",userId)
+        .eq("product_id",encounter.id).eq("status","paid").not("paid_at","is",null)
+        .order("paid_at",{ascending:false}).limit(100);
+      if (encounterOrdersError) throw encounterOrdersError;
+      if (!ebookAccessActive(ebookAccessUntil(encounterOrders??[]))) return denied(403);
+    } else if (!access.hasDirectEbookOrder || !access.directEbookActive) {
+      // A seção de e-books é exclusiva do produto adquirido separadamente.
+      return denied(403);
+    }
+    if (!fromEncounter && !access.directEbookActive) return NextResponse.json(
       { error: "O período de acesso ao seu e-book foi encerrado." },
       { status: 403, headers: { "Cache-Control": "no-store" } },
     );
