@@ -74,6 +74,7 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
         <Link className={styles.button} href={newUrl}>+ Novo conteúdo</Link>
         <Link className={styles.button} href="/torre/comercio-v2/materiais/limpeza-storage">Auditar arquivos órfãos</Link>
         <Link className={styles.button} href={"/torre/comercio-v2/materiais/importar" + (chosenProduct ? "?produto=" + encodeURIComponent(chosenProduct) : "")}>Importar em lote</Link>
+        <Link className={styles.button} href={"/torre/comercio-v2/materiais/disponibilidade" + (chosenProduct ? "?produto=" + encodeURIComponent(chosenProduct) : "")}>Atualizar disponibilidade via CSV</Link>
       </div>
     </header>
     {query.importado === "1" && <p className={styles.message} role="status">Importação concluída. Os materiais anteriores deste produto foram arquivados.</p>}
