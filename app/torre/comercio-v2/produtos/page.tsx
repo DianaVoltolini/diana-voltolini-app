@@ -92,23 +92,27 @@ export default async function ProductsV2({
       <section className={css.section} id="cadastro">
         <h2>{edit ? "Editar produto" : "Novo produto"}</h2>
         {edit && <p><Link className={css.link} href="/torre/comercio-v2/produtos#cadastro">+ Cadastrar outro</Link></p>}
-        <form action={saveCommerceV2Product} className={css.form} style={{maxWidth:780}}>
+        <form action={saveCommerceV2Product} className={`${css.form} ${css.formWide}`}>
           <input type="hidden" name="id" value={edit?.id ?? ""}/>
-          <label>Código interno
-            <input name="code" required maxLength={60} minLength={3} pattern="[A-Za-z0-9][A-Za-z0-9_-]{2,59}"
-              defaultValue={edit?.code ?? "TESTE-FLUXO-001"} readOnly={Boolean(edit)}/>
-          </label>
-          <label>Nome comercial
-            <input name="name" required minLength={3} maxLength={180} defaultValue={edit?.name ?? "Produto piloto — Validação da Torre V2"}/>
-          </label>
-          <label>Nome resumido
-            <input name="short_name" maxLength={120} defaultValue={edit?.short_name ?? ""}/>
-          </label>
-          <label>Tipo de produto
-            <select name="product_type" defaultValue={edit?.product_type ?? "online_event"}>
-              {Object.entries(types).map(([key,label])=><option key={key} value={key}>{label}</option>)}
-            </select>
-          </label>
+          <div className={css.formRow}>
+            <label>Código interno
+              <input name="code" required maxLength={60} minLength={3} pattern="[A-Za-z0-9][A-Za-z0-9_-]{2,59}"
+                defaultValue={edit?.code ?? "TESTE-FLUXO-001"} readOnly={Boolean(edit)}/>
+            </label>
+            <label>Nome do produto
+              <input name="name" required minLength={3} maxLength={180} defaultValue={edit?.name ?? "Produto piloto — Validação da Torre V2"}/>
+            </label>
+          </div>
+          <div className={css.formRowBalanced}>
+            <label>Nome resumido
+              <input name="short_name" maxLength={120} defaultValue={edit?.short_name ?? ""}/>
+            </label>
+            <label>Tipo de produto
+              <select name="product_type" defaultValue={edit?.product_type ?? "online_event"}>
+                {Object.entries(types).map(([key,label])=><option key={key} value={key}>{label}</option>)}
+              </select>
+            </label>
+          </div>
           <label>Descrição curta
             <textarea name="summary" rows={3} maxLength={600} defaultValue={edit?.summary ?? ""}/>
           </label>

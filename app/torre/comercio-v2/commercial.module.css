@@ -41,3 +41,11 @@
 .form button[type="submit"]:hover{background:#d8b43b}
 .note{color:#64748b;font-size:13px;line-height:1.55}
 @media(max-width:650px){.page{padding:26px 16px 52px}.section{padding:20px}.header{align-items:flex-start}.title{font-size:32px}}
+
+/* Formulários comerciais: aproveitar largura com hierarquia de campos. */
+.formWide{max-width:1160px;width:100%}
+.formRow{display:grid;grid-template-columns:minmax(190px,1fr) minmax(0,2.5fr);gap:18px;align-items:start}
+.formRowBalanced{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+.formFull{min-width:0}
+.formRow > label,.formRowBalanced > label{min-width:0}
+@media(max-width:760px){.formRow,.formRowBalanced{grid-template-columns:1fr;gap:15px}}

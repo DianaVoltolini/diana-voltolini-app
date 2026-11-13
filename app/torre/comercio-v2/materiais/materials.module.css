@@ -16,7 +16,7 @@
 .archive{color:#b42318}.restore{color:#177245}
 .message{padding:12px 16px;margin:0 0 16px;background:#effaf3;border:1px solid #bfe4cb;border-radius:8px;color:#166534}
 .error{padding:12px 16px;margin:0 0 16px;background:#fff4f2;border:1px solid #ecc1bc;border-radius:8px;color:#a52a21}
-.editor{max-width:900px}
+.editor{max-width:1200px;width:100%}
 .editorForm{background:#fff;border:1px solid #d6e0e8;border-radius:12px;padding:28px;display:grid;gap:18px}
 .editorForm label{display:grid;gap:7px;font-size:13px;font-weight:800}
 .editorForm input,.editorForm select,.editorForm textarea{width:100%;min-width:0;box-sizing:border-box;padding:12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#102033;font:inherit;font-weight:400}
@@ -37,3 +37,10 @@
 .iconButton:focus-visible,.dangerIcon:focus-visible{outline:2px solid #173c71;outline-offset:2px}
 
 .section,.editorForm{border-top:4px solid #c9a227}
+
+/* Formulário de materiais, com distribuição lateral mais eficiente */
+.editorForm{max-width:1160px}
+.editorRow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.editorRow > label{min-width:0}
+.editorForm input[type="file"]{max-width:100%}
+@media(max-width:760px){.editorRow{grid-template-columns:1fr;gap:15px}}

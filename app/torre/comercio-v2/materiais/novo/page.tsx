@@ -52,21 +52,23 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
         encType="multipart/form-data"
       >
         <input type="hidden" name="id" value={material?.id ?? ""} />
-        <label>Produto
-          <select name="product_id" required defaultValue={selectedProduct} key={selectedProduct}>
-            <option value="" disabled>Selecione um produto</option>
-            {products.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
-          </select>
-        </label>
-        {products.length === 0 && <p className={styles.note}>Primeiro cadastre um produto em <Link href="/torre/comercio-v2/produtos">Produtos piloto</Link>.</p>}
+        <div className={styles.editorRow}>
+          <label>Produto
+            <select name="product_id" required defaultValue={selectedProduct} key={selectedProduct}>
+              <option value="" disabled>Selecione um produto</option>
+              {products.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
+            </select>
+          </label>
+          <label>Tipo do material
+            <select name="category" defaultValue={material?.category ?? "support"}>
+              {Object.entries(materialCategories).map(([key, name]) => <option value={key} key={key}>{name}</option>)}
+            </select>
+          </label>
+        </div>
+        {products.length === 0 && <p className={styles.note}>Primeiro cadastre um produto em <Link href="/torre/comercio-v2/produtos">Produtos</Link>.</p>}
         <label>Nome do material
           <input type="text" name="title" maxLength={180} minLength={2} required
             defaultValue={material?.title ?? ""} placeholder="Ex.: Caderno de Exercícios 2027" />
-        </label>
-        <label>Tipo do material
-          <select name="category" defaultValue={material?.category ?? "support"}>
-            {Object.entries(materialCategories).map(([key, name]) => <option value={key} key={key}>{name}</option>)}
-          </select>
         </label>
         <label>Descrição — o que contém este material
           <textarea name="description" maxLength={4000} rows={5}
