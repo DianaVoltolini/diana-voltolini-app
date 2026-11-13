@@ -3,13 +3,13 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
-import {saveStudentDelivery,removeStudentDelivery} from "./actions";
+import {saveStudentDelivery,removeStudentDelivery,linkSalesProduct,setStudentDeliveryActive} from "./actions";
 import css from "../../commercial.module.css";
 
 export const metadata:Metadata={title:"Materiais para entrega | Produtos V2"};
 export const dynamic="force-dynamic";
-type Query={produto?:string;salvo?:string;removido?:string;erro?:string};
-type Product={id:string;name:string;code:string};
+type Query={produto?:string;salvo?:string;removido?:string;vinculado?:string;ativado?:string;desativado?:string;erro?:string};
+type Product={id:string;name:string;code:string;sales_product_id:string|null;student_delivery_active:boolean};
 type Material={id:string;title:string;category:string;product_id:string};
 type Assignment={material_id:string;release_mode:string;release_date:string|null};
 
@@ -18,11 +18,11 @@ export default async function DeliveryMaterials({searchParams}:{searchParams:Pro
   const query=await searchParams;
   const db=getSupabaseAdmin();
   const {data:products,error:productsError}=await db.from("commerce_v2_products")
-    .select("id,name,code").order("name").limit(500);
+    .select("id,name,code,sales_product_id,student_delivery_active").order("name").limit(500);
   const catalog=(products??[]) as Product[];
   const selected=catalog.find(p=>p.id===query.produto)??null;
   const [{data:materials,error:materialsError},{data:linked,error:linkedError},
-    {data:eligibilities,error:eligibilityError}]=await Promise.all([
+    {data:eligibilities,error:eligibilityError},{data:salesProducts,error:salesError}]=await Promise.all([
     db.from("commerce_v2_materials").select("id,title,category,product_id")
       .eq("is_archived",false).eq("available_to_student",true)
       .not("storage_path","is",null).order("title").limit(500),
@@ -32,12 +32,13 @@ export default async function DeliveryMaterials({searchParams}:{searchParams:Pro
     selected?db.from("commerce_v2_material_product_eligibility")
       .select("material_id").eq("product_id",selected.id)
       :Promise.resolve({data:[] as {material_id:string}[],error:null}),
+    db.from("products").select("id,code,name").order("name").limit(300),
   ]);
   const allowedIds=new Set((eligibilities??[]).map(row=>row.material_id));
   const eligible=((materials??[]) as Material[]).filter(material=>allowedIds.has(material.id));
   const assignments=(linked??[]) as Assignment[];
   const activeMaterialIds=new Set(assignments.map(item=>item.material_id));
-  const errors=Boolean(productsError||materialsError||linkedError||eligibilityError);
+  const errors=Boolean(productsError||materialsError||linkedError||eligibilityError||salesError);
 
   return <main className={css.page}>
     <header className={css.header}>
@@ -49,10 +50,13 @@ export default async function DeliveryMaterials({searchParams}:{searchParams:Pro
       <Link className={css.secondary} href="/torre/comercio-v2/produtos">Voltar a Produtos</Link>
     </header>
     <div className={css.banner}>
-      <strong>Configuração V2 — sem publicação automática</strong>
-      Este cadastro ainda não altera a entrega aos clientes ou o checkout. A integração com a Área do Cliente será ativada depois da homologação.
+      <strong>Entrega aos clientes controlada por produto</strong>
+      A programação só aparece aos compradores após vincular o mesmo código do catálogo de vendas e ativar explicitamente a entrega. O checkout não é alterado.
     </div>
     {errors&&<p className={css.error} role="alert">Falha ao consultar os materiais. Verifique a migração e os cadastros.</p>}
+    {query.vinculado==="1"&&<p className={css.message} role="status">Produto de vendas vinculado. A entrega permanece desativada.</p>}
+    {query.ativado==="1"&&<p className={css.message} role="status">Entrega V2 ativada para este produto.</p>}
+    {query.desativado==="1"&&<p className={css.message} role="status">Entrega V2 desativada para este produto.</p>}
     {query.salvo==="1"&&<p className={css.message} role="status">Material vinculado ao produto.</p>}
     {query.removido==="1"&&<p className={css.message} role="status">Vínculo removido.</p>}
     {query.erro&&<p className={css.error} role="alert">Não foi possível salvar. Confira o produto, o arquivo e a data de liberação.</p>}
@@ -69,6 +73,29 @@ export default async function DeliveryMaterials({searchParams}:{searchParams:Pro
       </form>
     </section>
     {selected&&!errors&&<>
+      <section className={css.section}>
+        <h2>Integração com o produto vendido</h2>
+        <p className={css.note}>Para evitar entregas incorretas, somente é permitido vincular o mesmo código nos dois cadastros. A liberação está desligada por padrão.</p>
+        <p><strong>Produto V2:</strong> {selected.code} — {selected.name}</p>
+        <p><strong>Entrega na Área do Cliente:</strong> {selected.student_delivery_active?"Ativa":"Desativada"}</p>
+        <form action={linkSalesProduct} className={css.form}>
+          <input type="hidden" name="productId" value={selected.id}/>
+          <label>Produto correspondente no catálogo de vendas
+            <select name="salesProductId" defaultValue={selected.sales_product_id??""} disabled={selected.student_delivery_active}>
+              <option value="">Não vincular ainda</option>
+              {(salesProducts??[]).filter(p=>p.code===selected.code).map(p=><option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
+            </select>
+          </label>
+          <div><button type="submit" disabled={selected.student_delivery_active}>Salvar vínculo</button></div>
+        </form>
+        <form action={setStudentDeliveryActive} className={css.form}>
+          <input type="hidden" name="productId" value={selected.id}/>
+          <input type="hidden" name="active" value={selected.student_delivery_active?"false":"true"}/>
+          <div><button type="submit" disabled={!selected.student_delivery_active&&(!selected.sales_product_id||assignments.length===0)}>
+            {selected.student_delivery_active?"Desativar entrega aos clientes":"Ativar entrega aos clientes"}
+          </button></div>
+        </form>
+      </section>
       <section className={css.section}>
         <h2>Materiais vinculados a {selected.name}</h2>
         <div className={css.tableScroll}>
