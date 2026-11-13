@@ -96,16 +96,16 @@ export default async function EncounterPage({searchParams}:Props){
           <strong>{expiresAt?ebookAccessDateLabel(expiresAt):"data indisponível"}</strong>.
           Os materiais disponibilizados posteriormente compartilham essa mesma data final.</p>
 
-        {isFirstEncounter&&<div style={{borderTop:"1px solid #e8e0d4",paddingTop:22,marginTop:6,width:"100%"}}>
+        <div style={{borderTop:"1px solid #e8e0d4",paddingTop:22,marginTop:6,width:"100%"}}>
           <span className={styles.cardLabel}>MATERIAIS DESTE ENCONTRO</span>
           <h3 style={{font:"600 23px Georgia,serif",margin:"14px 0",color:"#102033"}}>Materiais incluídos</h3>
-          <div style={{border:"1px solid #e5ded0",borderRadius:9,padding:18,marginBottom:14}}>
+          {isFirstEncounter&&<div style={{border:"1px solid #e5ded0",borderRadius:9,padding:18,marginBottom:14}}>
             <strong>E-book IBS e CBS na Prática</strong>
             <p style={{margin:"8px 0 14px"}}>Disponível após a confirmação do pagamento, com atualizações durante o prazo de acesso.</p>
             {inAccessPeriod?
               <a className={styles.cta} href="/api/ebooks/ibs-cbs-na-pratica/download?origem=encontro">Baixar e-book (PDF) ↓</a>:
               <p style={{fontWeight:750}}>Período de download encerrado.</p>}
-          </div>
+          </div>}
           {publishedMaterials.length>0&&<div style={{display:"grid",gap:11,marginBottom:16}}>
             {publishedMaterials.map(material=><div key={material.id}
               style={{border:"1px solid #e5ded0",borderRadius:9,padding:16,background:"#fbf9f4"}}>
@@ -118,13 +118,13 @@ export default async function EncounterPage({searchParams}:Props){
                 <p style={{marginTop:9}}>Prazo de download encerrado.</p>}
             </div>)}
           </div>}
-          {publishedMaterials.length===0&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:10}}>
+          {isFirstEncounter&&publishedMaterials.length===0&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:10}}>
             {materials.map(name=><div key={name} style={{border:"1px solid #e5ded0",borderRadius:9,padding:16,background:"#fbf9f4"}}>
               <strong>{name}</strong>
               <p style={{margin:"8px 0 0",fontSize:13}}>Disponibilização prevista para janeiro de 2027.</p>
             </div>)}
           </div>}
-        </div>}
+        </div>
 
         <div style={{borderTop:"1px solid #e8e0d4",paddingTop:23,marginTop:23,width:"100%"}}>
           <span className={styles.cardLabel}>ORIENTAÇÕES E LEMBRETES</span>
