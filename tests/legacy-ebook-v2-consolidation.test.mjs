@@ -17,7 +17,7 @@ test("copy requires admin and keeps legacy file and customer access intact",()=>
  assert.match(action,/\.from\(delivery\.storage_bucket\)\.download\(delivery\.storage_path\)/);
  assert.match(action,/\.from\("commerce-v2-materials"\)/);
  assert.match(action,/available_to_student:false/);
- assert.match(action,/if\(already\)dest\("jaimportado"\)/);
+ assert.match(action,/if\(already\)return dest\("jaimportado"\)/);
  assert.doesNotMatch(action,/publish_product_delivery|product_delivery_versions|student_delivery_active/);
  assert.match(download,/\.from\("product_deliveries"\)/);
 });
