@@ -40,7 +40,7 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
   const newUrl = "/torre/comercio-v2/materiais/novo" + (chosenProduct ? "?produto=" + encodeURIComponent(chosenProduct) : "");
   return <main className={styles.page}>
     <header className={styles.header}>
-      <div><p className={styles.eyebrow}>TORRE · COMÉRCIO V2</p>
+      <div><p className={styles.eyebrow}>TORRE · ÁREA COMERCIAL</p>
         <h1>Biblioteca de Materiais</h1>
         <p>Organize e consulte os arquivos vinculados aos produtos. Acesso privado da Torre.</p>
       </div>
@@ -57,7 +57,7 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
     <section className={styles.section}>
       <h2>Materiais cadastrados</h2>
       {(productsResult.error || materialsResult.error)
-        ? <p className={styles.error} role="alert">Não foi possível consultar a Biblioteca V2.</p>
+        ? <p className={styles.error} role="alert">Não foi possível consultar a Biblioteca de Materiais.</p>
         : <MaterialsTable materials={materials} products={products} initialProduct={chosenProduct ?? ""} />}
       {!productsResult.error && !materialsResult.error && materials.length === 500 &&
         <p className={styles.note}>Mostrando os 500 registros mais recentes. A paginação será incluída antes de ultrapassar esse limite.</p>}
