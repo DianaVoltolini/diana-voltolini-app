@@ -21,8 +21,8 @@ export default async function EbooksPage() {
   if (authError || !userId) redirect("/login?retorno=%2Fpainel%2Febooks");
 
   const access = await getEbookPurchaseAccess(userId);
-  const { hasPaidOrder, hasEncounterOrder, expiresAt, isActive } = access;
-  if(!hasPaidOrder) return <ProductPage title="IBS e CBS na Prática" description="E-book digital para compreender a Reforma Tributária e aplicar o conhecimento ao faturamento.">
+  const { hasDirectEbookOrder, directEbookExpiresAt, directEbookActive } = access;
+  if(!hasDirectEbookOrder) return <ProductPage title="IBS e CBS na Prática" description="E-book digital para compreender a Reforma Tributária e aplicar o conhecimento ao faturamento.">
     <ProductOffer eyebrow="GUIA PRÁTICO · REFORMA TRIBUTÁRIA" headline="Entenda IBS e CBS na prática" lead="Compras, vendas, créditos e notas fiscais explicados de forma simples e objetiva, com exemplos e roteiro para organizar sua preparação." price="R$ 29,90 · pagamento único" checkout="https://dianavoltolini.com.br/checkout/ibs-cbs-na-pratica" cta="Quero garantir meu e-book" features={["E-book digital com 21 páginas","Compras, vendas e créditos","NF-e, CST e cClassTrib","Split payment e transição","Checklist e glossário para consulta","Exemplos práticos para rotinas fiscais"]}>
 
     </ProductOffer>
@@ -33,13 +33,12 @@ export default async function EbooksPage() {
           <p style={{ color: "#9f7d17", fontSize: 12, fontWeight: 800, letterSpacing: 1.5 }}>E-BOOK DIGITAL</p>
           <h2 style={{ fontFamily: "Georgia,serif", fontSize: 27, margin: "0 0 16px" }}>IBS e CBS na Prática</h2>
           <p>Guia de 21 páginas sobre IBS, CBS, compras, vendas, créditos e emissão de notas fiscais.</p>
-          {hasEncounterOrder && <p style={{background:"#f7f2e6",padding:15,borderRadius:8,lineHeight:1.65}}>Este e-book está incluído na sua inscrição do encontro online. <a href="/painel/encontro-online" style={{fontWeight:800,color:"#765b20"}}>Consultar encontro e confirmar presença →</a></p>}
-          {hasPaidOrder ? (
+          {hasDirectEbookOrder ? (
             <>
               <p style={{ fontWeight: 700, color: "#167241" }}>Pagamento confirmado</p>
-              <p>{hasEncounterOrder ? "O acesso a todos os materiais termina em" : "Seu acesso ao e-book termina em"} <strong>{expiresAt ? ebookAccessDateLabel(expiresAt) : "data indisponível"}</strong>.</p>
+              <p>Seu acesso ao e-book termina em <strong>{directEbookExpiresAt ? ebookAccessDateLabel(directEbookExpiresAt) : "data indisponível"}</strong>.</p>
               <p>Durante os 90 dias após o pagamento, você pode visualizar e baixar a versão mais recente, incluindo eventuais atualizações sem custo adicional.</p>
-              {isActive ? <div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:12}}>
+              {directEbookActive ? <div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:12}}>
                 <a href="/api/ebooks/ibs-cbs-na-pratica/download"
                   style={{display:"inline-block",background:"#c9a227",color:"#0d1b2a",padding:"12px 20px",borderRadius:5,fontWeight:700}}>Baixar e-book (PDF) ↓</a>
               </div> : <p style={{fontWeight:700,color:"#765b2b"}}>O período de acesso ao seu e-book foi encerrado.</p>}
