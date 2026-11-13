@@ -22,21 +22,21 @@ export async function saveAuditTask(data:FormData){
  if((id&&!uuid.test(id))||area.length<2||area.length>100||title.length<3||title.length>180||
     !priorities.includes(priority)||!statuses.includes(status)||
     description.length>3000||notes.length>3000||owner.length>120||
-    (due&&!/^\d{4}-\d{2}-\d{2}$/.test(due)))fail("validacao");
+    (due&&!/^\d{4}-\d{2}-\d{2}$/.test(due))) return fail("validacao");
  const db=getSupabaseAdmin();
  const base={area,title,description:description||null,priority,status,
   due_date:due||null,owner_name:owner||null,notes:notes||null,updated_at:new Date().toISOString()};
  if(id){
   const {data:previous,error:lookupError}=await db.from("torre_audit_tasks")
     .select("id,status,completed_at,validated_at").eq("id",id).maybeSingle();
-  if(lookupError||!previous)fail("nao_encontrada");
+  if(lookupError||!previous) return fail("nao_encontrada");
   const now=new Date().toISOString();
   const {error}=await db.from("torre_audit_tasks").update({
     ...base,
     completed_at:status==="concluida"||status==="validada" ? previous.completed_at??now : null,
     validated_at:status==="validada"?previous.validated_at??now:null,
   }).eq("id",id);
-  if(error)fail("salvar");
+  if(error) return fail("salvar");
  }else{
   const now=new Date().toISOString();
   const {error}=await db.from("torre_audit_tasks").insert({
@@ -44,7 +44,7 @@ export async function saveAuditTask(data:FormData){
    completed_at:status==="concluida"||status==="validada"?now:null,
    validated_at:status==="validada"?now:null,
   });
-  if(error)fail("salvar");
+  if(error) return fail("salvar");
  }
  reload();
 }
@@ -52,12 +52,12 @@ export async function saveAuditTask(data:FormData){
 export async function addAuditChecklistItem(data:FormData){
  await requireAdmin();
  const taskId=field(data,"task_id",36),title=field(data,"title",240);
- if(!uuid.test(taskId)||title.length<3||title.length>240)fail("validacao");
+ if(!uuid.test(taskId)||title.length<3||title.length>240) return fail("validacao");
  const db=getSupabaseAdmin();
  const {data:task}=await db.from("torre_audit_tasks").select("id").eq("id",taskId).maybeSingle();
- if(!task)fail("nao_encontrada");
+ if(!task) return fail("nao_encontrada");
  const {error}=await db.from("torre_audit_checklist").insert({task_id:taskId,title});
- if(error)fail("salvar");
+ if(error) return fail("salvar");
  revalidatePath(home);
  redirect(home+"?tarefa="+taskId+"&salvo=1");
 }
@@ -65,16 +65,16 @@ export async function addAuditChecklistItem(data:FormData){
 export async function toggleAuditChecklistItem(data:FormData){
  await requireAdmin();
  const taskId=field(data,"task_id",36),id=field(data,"item_id",36);
- if(!uuid.test(taskId)||!uuid.test(id))fail("validacao");
+ if(!uuid.test(taskId)||!uuid.test(id)) return fail("validacao");
  const db=getSupabaseAdmin();
  const {data:item,error:readError}=await db.from("torre_audit_checklist")
   .select("id,is_done").eq("id",id).eq("task_id",taskId).maybeSingle();
- if(readError||!item)fail("nao_encontrada");
+ if(readError||!item) return fail("nao_encontrada");
  const done=!item.is_done;
  const {error}=await db.from("torre_audit_checklist")
   .update({is_done:done,completed_at:done?new Date().toISOString():null})
   .eq("id",id).eq("task_id",taskId);
- if(error)fail("salvar");
+ if(error) return fail("salvar");
  revalidatePath(home);
  redirect(home+"?tarefa="+taskId);
 }
@@ -82,10 +82,10 @@ export async function toggleAuditChecklistItem(data:FormData){
 export async function removeAuditChecklistItem(data:FormData){
  await requireAdmin();
  const taskId=field(data,"task_id",36),id=field(data,"item_id",36);
- if(!uuid.test(taskId)||!uuid.test(id))fail("validacao");
+ if(!uuid.test(taskId)||!uuid.test(id)) return fail("validacao");
  const db=getSupabaseAdmin();
  const {error}=await db.from("torre_audit_checklist").delete().eq("id",id).eq("task_id",taskId);
- if(error)fail("salvar");
+ if(error) return fail("salvar");
  revalidatePath(home);
  redirect(home+"?tarefa="+taskId);
 }
