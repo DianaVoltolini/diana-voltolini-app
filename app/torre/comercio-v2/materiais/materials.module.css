@@ -44,3 +44,30 @@
 .editorRow > label{min-width:0}
 .editorForm input[type="file"]{max-width:100%}
 @media(max-width:760px){.editorRow{grid-template-columns:1fr;gap:15px}}
+
+/* Biblioteca: um cartão por material, exibindo claramente todos os produtos. */
+.filterField{display:grid;gap:7px;font-size:13px;font-weight:700;min-width:0}
+.filterField input,.filterField select{box-sizing:border-box;width:100%;min-width:0;background:white;color:#102033;border:1px solid #cbd5e1;border-radius:7px;padding:11px;font:inherit;font-weight:400}
+.filterButton{min-height:42px;background:white;color:#102033;border:1px solid #cbd5e1;border-radius:7px;padding:9px 12px;cursor:pointer;font-weight:700}
+.resultsCount{color:#536372;font-size:13px;margin:16px 0}
+.materialCards{display:grid;gap:16px;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:14px}
+.materialCard{min-width:0;display:flex;flex-direction:column;justify-content:space-between;border:1px solid #d6e0e8;border-top:4px solid #c9a227;border-radius:10px;padding:20px;background:white;gap:18px}
+.materialCardTop{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.materialCardTop>div:first-child{flex:1 1 250px;min-width:0}
+.materialCard h3{font-size:18px;color:#102033;margin:4px 0 10px;overflow-wrap:anywhere}
+.materialCategory{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#997100;margin:0}
+.materialCard .note{margin:6px 0;overflow-wrap:anywhere}
+.materialCardFooter{border-top:1px solid #e0e7ef;padding-top:16px;display:grid;gap:14px}
+.materialCardFooter strong{font-size:13px}
+.productList{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:7px}
+.productList li{background:#f5f8fb;border:1px solid #e1e8ee;border-radius:7px;padding:9px 12px;display:grid;gap:3px;font-size:13px;overflow-wrap:anywhere}
+.productList small{color:#607184}
+.availability{margin:0;color:#40566a;font-size:13px}
+.editorRow{grid-template-columns:minmax(0,3fr) minmax(175px,1fr)}
+.choiceList{border:1px solid #dfe6ee;border-radius:9px;padding:18px;display:grid;gap:12px;min-width:0}
+.choiceList legend{font-weight:750;padding:0 6px}
+.choiceRow{display:flex!important;flex-direction:row!important;align-items:flex-start!important;justify-content:flex-start!important;text-align:left;gap:12px!important;font-size:14px!important;font-weight:500!important}
+.choiceRow input[type=checkbox]{width:18px!important;min-width:18px;height:18px;margin:1px 0 0!important;flex:0 0 18px}
+.choiceRow span{flex:1;min-width:0}
+@media(max-width:900px){.materialCards{grid-template-columns:1fr}}
+@media(max-width:760px){.editorRow{grid-template-columns:1fr}}
