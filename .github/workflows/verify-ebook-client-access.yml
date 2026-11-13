@@ -24,6 +24,10 @@ on:
       - "tests/individual-ebook-encounter-products.test.mjs"
       - "tests/encounter-page-visual-parity.test.mjs"
       - "lib/ebooks/purchase-access.ts"
+      - "app/torre/comercio-v2/produtos/**"
+      - "app/torre/comercio-v2/materiais/**"
+      - "supabase/migrations/20261112_commerce_v2_student_delivery_planning.sql"
+      - "tests/commerce-v2-student-materials.test.mjs"
       - ".github/workflows/verify-ebook-client-access.yml"
 jobs:
   test:
@@ -38,5 +42,6 @@ jobs:
       - run: npm ci
       - run: node --test tests/individual-ebook-encounter-products.test.mjs
       - run: node --test tests/encounter-page-visual-parity.test.mjs
+      - run: node --test tests/commerce-v2-student-materials.test.mjs
       - run: npm run lint
       - run: npm run build
