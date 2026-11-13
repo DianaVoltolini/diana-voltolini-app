@@ -10,7 +10,7 @@ import { materialCategories } from "./categories";
 
 export type ProductOption = { id: string; code: string; name: string };
 export type MaterialRow = {
-  id: string; product_id: string; title: string; description: string;
+  id: string; product_id: string; eligible_product_ids: string[]; title: string; description: string;
   category: string; original_filename: string | null; file_mime: string | null;
   file_size: number | null; storage_path: string | null;
   is_archived: boolean; available_to_student: boolean; created_at: string; updated_at: string;
@@ -32,14 +32,15 @@ export default function MaterialsTable({
   const filtered = useMemo(() => {
     const search = normalize(query.trim());
     return materials.filter(item => {
-      if (product && item.product_id !== product) return false;
+      if (product && !item.eligible_product_ids.includes(product)) return false;
       if (category !== "todos" && item.category !== category) return false;
       if (status === "ativos" && item.is_archived) return false;
       if (status === "arquivados" && !item.is_archived) return false;
+      const relatedProducts = item.eligible_product_ids.map(id=>productMap.get(id)).filter(Boolean);
       const parent = productMap.get(item.product_id);
       return !search || normalize([
         item.title, item.description, item.original_filename ?? "",
-        parent?.name ?? "", parent?.code ?? "",
+        ...relatedProducts.flatMap(p => [p?.name ?? "",p?.code ?? ""]),
       ].join(" ")).includes(search);
     });
   }, [materials, productMap, query, product, category, status]);
@@ -85,11 +86,11 @@ export default function MaterialsTable({
         </tr></thead>
         <tbody>
           {filtered.map(m => {
-            const parent = productMap.get(m.product_id);
+            const parents = m.eligible_product_ids.map(id=>productMap.get(id)).filter(Boolean);
             return <tr key={m.id}>
               <td className={css.date}>{dateFormatter.format(new Date(m.created_at))}</td>
               <td><strong>{m.title}</strong><small>{m.original_filename ?? "Sem arquivo"}{m.file_size !== null ? " · " + size(m.file_size) : ""}</small></td>
-              <td>{parent?.name ?? "Produto não encontrado"}<small>{parent?.code ?? ""}</small></td>
+              <td>{parents.length ? parents.map(p=>p?.name).join(" · ") : "Nenhum produto selecionado"}<small>{parents.map(p=>p?.code).join(" · ")}</small></td>
               <td className={styles.description}>{m.description || "—"}</td>
               <td>{materialCategories[m.category] ?? m.category}</td>
               <td>{m.available_to_student && !m.is_archived ? "Sim" : "Não"}</td>
