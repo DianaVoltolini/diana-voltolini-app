@@ -1,0 +1,15 @@
+/* app/torre/comercio-v2/paginas/pages.module.css */
+.editorGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.editorGrid label{min-width:0}
+.form{max-width:1160px}
+.preview{background:#f4f6f8;padding:32px;border-radius:12px;border:1px solid #d6e0e8}
+.previewHero{background:#102033;color:#fff;border-radius:12px;padding:clamp(24px,4vw,54px);margin-bottom:22px}
+.previewHero h2{color:#fff;font-size:clamp(28px,3vw,40px);margin:12px 0}
+.previewHero p{color:#e1e5eb;font-size:16px;line-height:1.65}
+.previewHero small{color:#edcf78}
+.previewCta{display:inline-block;background:#c9a227;color:#102033;padding:14px 20px;font-weight:800;border-radius:8px;margin-top:12px}
+.previewCard{background:#fff;border:1px solid #d6e0e8;border-top:4px solid #c9a227;padding:22px;border-radius:12px;margin:18px 0;white-space:pre-line;line-height:1.65}
+.previewCard h3{margin-top:0;font-size:21px;color:#102033}
+.price{font-size:25px;color:#102033;font-weight:850}
+.form textarea{min-height:105px}
+@media(max-width:750px){.editorGrid{grid-template-columns:1fr}}

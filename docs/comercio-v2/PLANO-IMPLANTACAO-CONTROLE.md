@@ -38,7 +38,7 @@ Implantar fluxo comercial novo, independente: **produto → oferta → página �
 | F1 | Catálogo V2 isolado | Criar e editar piloto sem alterar produtos antigos | Em andamento (homologação pendente) | PR #168 |
 | F1B | Biblioteca de materiais V2 | Upload, edição, filtros, download e arquivamento sem acesso público | Parcialmente validado (5/6); prévia PDF pendente | PRs #170 e #172 |
 | F2 | Ofertas e precificação versionadas | Preço seguro, promoções e histórico (snapshot no pedido será implementado no checkout F4) | Em implementação; homologação pendente | PR #175 previsto |
-| F3 | Editor e publicação de página V2 | Criar/publicar/editar piloto sem PR de conteúdo | Pendente | — |
+| F3 | Páginas de Vendas V2 | F3A: cadastro e prévia restrita; F3B: publicação pública posterior | F3A desenvolvido, testes pendentes | PR F3A em preparação |
 | F4 | Checkout V2 isolado | Pix/boleto, idempotência e erros verificados | Pendente | — |
 | F5 | Entregas e área do cliente V2 | Pedido pago libera conteúdo e respeita prazo | Pendente | — |
 | F6 | Homologação ponta a ponta | Evidências, rollback e zero regressão | Pendente | — |
@@ -152,3 +152,11 @@ O V2 só substitui o fluxo legado após homologação completa do piloto e migra
 - Valores em centavos, promoção com período definido, status obrigatoriamente rascunho, nenhuma geração de pedidos ou cobranças.
 - Evidências pendentes: SQL no Supabase, build, lint, regras de segurança, testes funcionais e regressivos.
 - Nenhuma alteração no checkout atual. Migração de produtos legados continua proibida nesta etapa.
+
+## F3A — Páginas de Vendas, registro de implantação
+- Tela da Área Comercial para listar páginas, criar rascunho, editar textos e pré-visualizar.
+- Nova tabela independente `commerce_v2_pages`; vínculos exclusivos com produtos e ofertas V2.
+- Todas as páginas continuam em rascunho, com CTA desabilitado e acesso administrativo.
+- Nenhum checkout, pagamento, Bling, página pública ou entrega existente foi alterado.
+- Pendente: SQL no Supabase, build/lint, homologação de prévia, acessos, regras comerciais e regressão.
+- F3B de publicação pública será desenvolvido **separadamente**, após aprovação explícita do piloto.

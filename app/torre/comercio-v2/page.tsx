@@ -27,8 +27,9 @@ const stages = [
   },
   {
     name: "04 · Páginas de vendas",
-    status: "Planejado",
-    description: "Modelos, prévia e publicação sem alteração no código.",
+    status: "Cadastro e prévia — homologação pendente",
+    description: "Página de rascunho com produto, oferta e prévia restrita; publicação virá depois.",
+    href: "/torre/comercio-v2/paginas",
   },
   {
     name: "05 · Checkout",
@@ -74,7 +75,7 @@ export default async function ComercioV2Home() {
               {"href" in stage && stage.href ? (
                 <Link className={css.link} href={stage.href}>
                   {stage.href.endsWith("/materiais") ? "Abrir biblioteca de materiais" :
-                   stage.href.endsWith("/ofertas") ? "Abrir ofertas e preços" : "Abrir produtos"}
+                   stage.href.endsWith("/ofertas") ? "Abrir ofertas e preços" : stage.href.endsWith("/paginas") ? "Abrir páginas de vendas" : "Abrir produtos"}
                 </Link>
               ) : <span className={css.note}>Disponível em uma próxima etapa</span>}
             </article>
