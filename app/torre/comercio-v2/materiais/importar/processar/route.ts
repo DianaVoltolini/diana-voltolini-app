@@ -21,7 +21,7 @@ const ACCEPTED: Record<string, string[]> = {
   png: ["image/png"], jpg: ["image/jpeg"], jpeg: ["image/jpeg"], webp: ["image/webp"],
 };
 const CATEGORIES = new Set(["slides", "ebook", "worksheet", "checklist", "script", "exercises", "image", "support", "other"]);
-type Entry = { code: string; title: string; category: string; description: string; filename: string };
+type Entry = { code: string; title: string; category: string; description: string; filename: string; availableToStudent: boolean };
 
 function response(status: string, product = "") {
   const params = new URLSearchParams({ [status === "ok" ? "importado" : "erro"]: status === "ok" ? "1" : status });
@@ -95,11 +95,20 @@ export async function POST(request: NextRequest) {
   try {
     const rows = parseCsv(await manifest.text());
     const expected = ["codigo_produto", "nome_material", "tipo_codigo", "descricao", "arquivo"];
-    if (!rows.length || rows[0].map(v => v.trim().toLowerCase()).join("|") !== expected.join("|"))
+    const header = rows[0]?.map(v => v.trim().toLowerCase()) ?? [];
+    const extended = [...expected, "disponivel_para_aluno"];
+    const hasAvailability = header.join("|") === extended.join("|");
+    if (!rows.length || (!hasAvailability && header.join("|") !== expected.join("|")))
       return response("csv", productId);
     entries = rows.slice(1).map(r => {
-      if (r.length !== 5) throw Error("Número de colunas incorreto");
-      return { code: r[0].trim(), title: r[1].trim(), category: r[2].trim(), description: r[3].trim(), filename: r[4].trim() };
+      if (r.length !== (hasAvailability ? 6 : 5)) throw Error("Número de colunas incorreto");
+      const flag = hasAvailability ? r[5].trim().toLowerCase() : "nao";
+      if (!["sim", "nao"].includes(flag)) throw Error("Disponibilidade inválida");
+      return {
+        code: r[0].trim(), title: r[1].trim(), category: r[2].trim(),
+        description: r[3].trim(), filename: r[4].trim(),
+        availableToStudent: flag === "sim",
+      };
     });
     if (entries.length < 1 || entries.length > MAX_ITEMS ||
       entries.some(e => e.code !== product.code || e.title.length < 2 || e.title.length > 180 ||
@@ -144,7 +153,8 @@ export async function POST(request: NextRequest) {
       newPaths.push(path);
       rows.push({
         product_id: productId, title: entry.title, description: entry.description,
-        category: entry.category, storage_path: path, original_filename: entry.filename,
+        category: entry.category, available_to_student: entry.availableToStudent,
+        storage_path: path, original_filename: entry.filename,
         file_mime: file.type, file_size: file.size,
         created_by: userId, updated_by: userId, updated_at: new Date().toISOString(),
       });

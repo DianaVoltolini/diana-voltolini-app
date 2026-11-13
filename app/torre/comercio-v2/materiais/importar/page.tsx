@@ -45,13 +45,16 @@ export default async function ImportMaterialsPage({ searchParams }: { searchPara
             {products.map(p => <option value={p.id} key={p.id}>{p.code} — {p.name}</option>)}
           </select>
         </label>
-        <label>CSV de cadastro
+        <label>CSV de cadastro (com coluna disponivel_para_aluno)
           <input type="file" name="manifest" accept=".csv,text/csv" required />
         </label>
         <label>Arquivos que constam do CSV (até 20 arquivos)
           <input type="file" name="files" accept=".pdf,.docx,.pptx,.xlsx,.png,.jpg,.jpeg,.webp,.zip,.txt"
             multiple required />
         </label>
+        <p className={styles.note}>
+          No CSV, utilize a coluna <strong>disponivel_para_aluno</strong> com <strong>sim</strong> ou <strong>nao</strong> para cada material. “Sim” permite selecionar o material posteriormente em Produtos → Materiais para entrega; não libera o arquivo ao aluno automaticamente. CSV antigo sem essa coluna é aceito, com todos os materiais marcados como “não”.
+        </p>
         <p className={styles.note}>
           O sistema confere os nomes exatos, as categorias, o código do produto, a quantidade
           de arquivos, as extensões e os limites de 25 MB por arquivo e 90 MB por lote.
