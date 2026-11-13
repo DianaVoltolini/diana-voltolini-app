@@ -75,15 +75,14 @@ export default async function PainelLayout({
   const [diagnosticsResult, ordersResult, ebookProductResult, subscriptionAccess, subscriptionHistory] = await Promise.all([
     admin.from("diagnostics").select("id").eq("user_id",userId).limit(1),
     admin.from("orders").select("id,product_id").eq("user_id",userId).eq("status","paid").limit(200),
-    admin.from("products").select("id,code").in("code",["EBOOK-IBSCBS-001","ENC-RT-2027-001"]),
+    admin.from("products").select("id,code").or("code.like.EBOOK-%,code.like.ENC-%"),
     getFiscalAccess(userId),
     admin.from("fiscal_subscriptions").select("id").eq("user_id",userId).limit(1)
   ]);
   const hasDiagnostics = Boolean(diagnosticsResult.data?.length);
-  const ebookProductId = ebookProductResult.data?.find(p=>p.code==="EBOOK-IBSCBS-001")?.id;
-  const encounterProductId = ebookProductResult.data?.find(p=>p.code==="ENC-RT-2027-001")?.id;
-  const hasEncounter = Boolean(encounterProductId && ordersResult.data?.some(o=>o.product_id===encounterProductId));
-  const hasEbook = Boolean(ebookProductId && ordersResult.data?.some(o => o.product_id === ebookProductId));
+  const ownedProductIds=new Set((ordersResult.data??[]).map(o=>o.product_id));
+  const hasEncounter=Boolean(ebookProductResult.data?.some(p=>p.code.startsWith("ENC-")&&ownedProductIds.has(p.id)));
+  const hasEbook=Boolean(ebookProductResult.data?.some(p=>p.code.startsWith("EBOOK-")&&ownedProductIds.has(p.id)));
   const hasSubscription = subscriptionAccess.allowed;
   const hasFiscalHistory = Boolean(subscriptionHistory.data?.length);
   const purchasedProductIds=[...new Set((ordersResult.data??[]).map(o=>o.product_id).filter((id):id is string=>typeof id==="string"))];
