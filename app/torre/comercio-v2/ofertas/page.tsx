@@ -66,7 +66,30 @@ export default async function OffersPage({ searchParams }: { searchParams: Promi
             <td>{o.promotional_price_cents === null ? "—" : brl(o.promotional_price_cents)}</td>
             <td>{o.promo_starts_on && o.promo_ends_on ? o.promo_starts_on.split("-").reverse().join("/") + " a " + o.promo_ends_on.split("-").reverse().join("/") : "—"}</td>
             <td>Rascunho</td>
-            <td><Link className={styles.edit} href={"/torre/comercio-v2/ofertas/novo?editar=" + encodeURIComponent(o.id)}>Editar / histórico</Link></td>
+            <td>
+              <div className={styles.actions}>
+                <Link
+                  className={styles.actionIcon}
+                  href={"/torre/comercio-v2/ofertas/novo?editar=" + encodeURIComponent(o.id)}
+                  title={"Editar oferta: " + o.name}
+                  aria-label={"Editar oferta: " + o.name}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="m16 5 3 3M4 20l4.2-.8L20 7.4 16.6 4 4.8 15.8 4 20Z"/>
+                  </svg>
+                </Link>
+                <Link
+                  className={styles.actionIcon}
+                  href={"/torre/comercio-v2/ofertas/novo?editar=" + encodeURIComponent(o.id) + "#historico"}
+                  title={"Ver histórico: " + o.name}
+                  aria-label={"Ver histórico de preços: " + o.name}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>
+                  </svg>
+                </Link>
+              </div>
+            </td>
           </tr>)}
           {offers.length === 0 && <tr><td colSpan={8}>Nenhuma oferta cadastrada.</td></tr>}
           </tbody>
