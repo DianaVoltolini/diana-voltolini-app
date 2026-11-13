@@ -17,6 +17,8 @@ on:
       - "supabase/migrations/20261112_encounter_attendance_awareness_reminders.sql"
       - "app/api/ebooks/**"
       - "app/api/encounters/**"
+      - "app/api/commerce-v2/**"
+      - "lib/commerce-v2/**"
       - "supabase/migrations/20261112_encounter_materials.sql"
       - "supabase/migrations/20261112_encounter_reminder_dispatches.sql"
       - "lib/encounters/**"
@@ -31,6 +33,8 @@ on:
       - "supabase/migrations/20261112_commerce_v2_student_delivery_planning.sql"
       - "tests/commerce-v2-student-materials.test.mjs"
       - "tests/commerce-v2-material-eligibility.test.mjs"
+      - "supabase/migrations/20261113_commerce_v2_customer_delivery_bridge.sql"
+      - "tests/commerce-v2-customer-delivery.test.mjs"
       - "supabase/migrations/20261113_commerce_v2_material_product_eligibility.sql"
       - ".github/workflows/verify-ebook-client-access.yml"
 jobs:
@@ -49,5 +53,6 @@ jobs:
       - run: node --test tests/commerce-v2-student-materials.test.mjs
       - run: node --test tests/commerce-v2-material-eligibility.test.mjs
       - run: node --test tests/ebook-civil-expiry.test.mjs
+      - run: node --test tests/commerce-v2-customer-delivery.test.mjs
       - run: npm run lint
       - run: npm run build
