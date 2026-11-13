@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
   const title = field(form, "title", 180);
   const description = field(form, "description", 4000);
   const category = field(form, "category", 30);
+  const availableToStudent = form.get("available_to_student") === "yes";
   const uploaded = form.get("file");
   const file = uploaded instanceof File && uploaded.size > 0 ? uploaded : null;
   if ((id && !uuid.test(id)) || !uuid.test(productId) ||
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
   }
 
   const values = {
-    title, description, category, updated_by: userId,
+    title, description, category, available_to_student: availableToStudent, updated_by: userId,
     updated_at: new Date().toISOString(), ...fileFields,
   };
   const result = id
