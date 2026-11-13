@@ -22,6 +22,7 @@ on:
       - "lib/encounters/**"
       - ".github/workflows/encounter-online-reminder.yml"
       - "tests/individual-ebook-encounter-products.test.mjs"
+      - "tests/encounter-page-visual-parity.test.mjs"
       - "lib/ebooks/purchase-access.ts"
       - ".github/workflows/verify-ebook-client-access.yml"
 jobs:
@@ -36,5 +37,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node --test tests/individual-ebook-encounter-products.test.mjs
+      - run: node --test tests/encounter-page-visual-parity.test.mjs
       - run: npm run lint
       - run: npm run build
