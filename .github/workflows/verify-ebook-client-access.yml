@@ -8,6 +8,12 @@ on:
     paths:
       - "app/painel/ebooks/**"
       - "app/painel/outros-produtos/**"
+      - "app/painel/encontro-online/**"
+      - "app/painel/minhas-compras/**"
+      - "app/painel/customer-sidebar.tsx"
+      - "app/painel/layout.tsx"
+      - "app/painel/page.tsx"
+      - "supabase/migrations/20261112_encounter_attendance_confirmation.sql"
       - "lib/ebooks/purchase-access.ts"
       - ".github/workflows/verify-ebook-client-access.yml"
 jobs:

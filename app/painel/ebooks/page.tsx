@@ -33,15 +33,13 @@ export default async function EbooksPage() {
           <p style={{ color: "#9f7d17", fontSize: 12, fontWeight: 800, letterSpacing: 1.5 }}>E-BOOK DIGITAL</p>
           <h2 style={{ fontFamily: "Georgia,serif", fontSize: 27, margin: "0 0 16px" }}>IBS e CBS na Prática</h2>
           <p>Guia de 21 páginas sobre IBS, CBS, compras, vendas, créditos e emissão de notas fiscais.</p>
-          {hasEncounterOrder && <p style={{background:"#f7f2e6",padding:15,borderRadius:8,lineHeight:1.65}}><strong>Inscrição confirmada:</strong> Reforma Tributária na Prática: Compras e Faturamento em 2027, em 21/01/2027, das 19h30 às 21h, pelo Google Meet. As orientações de acesso serão informadas separadamente.</p>}
+          {hasEncounterOrder && <p style={{background:"#f7f2e6",padding:15,borderRadius:8,lineHeight:1.65}}>Este e-book está incluído na sua inscrição do encontro online. <a href="/painel/encontro-online" style={{fontWeight:800,color:"#765b20"}}>Consultar encontro e confirmar presença →</a></p>}
           {hasPaidOrder ? (
             <>
               <p style={{ fontWeight: 700, color: "#167241" }}>Pagamento confirmado</p>
-              <p>Seu acesso ao e-book termina em <strong>{expiresAt ? ebookAccessDateLabel(expiresAt) : "data indisponível"}</strong>.</p>
+              <p>{hasEncounterOrder ? "O acesso a todos os materiais termina em" : "Seu acesso ao e-book termina em"} <strong>{expiresAt ? ebookAccessDateLabel(expiresAt) : "data indisponível"}</strong>.</p>
               <p>Durante os 90 dias após o pagamento, você pode visualizar e baixar a versão mais recente, incluindo eventuais atualizações sem custo adicional.</p>
               {isActive ? <div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:12}}>
-                <a href="/api/ebooks/ibs-cbs-na-pratica/download?mode=view" target="_blank" rel="noopener noreferrer"
-                  style={{display:"inline-block",background:"#f5f7f9",border:"1px solid #cad4dc",color:"#0d1b2a",padding:"12px 20px",borderRadius:5,fontWeight:700}}>Visualizar PDF</a>
                 <a href="/api/ebooks/ibs-cbs-na-pratica/download"
                   style={{display:"inline-block",background:"#c9a227",color:"#0d1b2a",padding:"12px 20px",borderRadius:5,fontWeight:700}}>Baixar e-book (PDF) ↓</a>
               </div> : <p style={{fontWeight:700,color:"#765b2b"}}>O período de acesso ao seu e-book foi encerrado.</p>}
