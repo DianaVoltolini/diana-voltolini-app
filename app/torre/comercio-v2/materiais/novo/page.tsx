@@ -30,6 +30,10 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
   ]);
   const products = (productsResult.data ?? []) as Product[];
   const material = materialResult.data as Material | null;
+  const eligibilityResult = material ? await db.from("commerce_v2_material_product_eligibility")
+    .select("product_id").eq("material_id", material.id)
+    : { data: [] as {product_id:string}[], error: null };
+  const eligibilityIds = new Set((eligibilityResult.data ?? []).map(item => item.product_id));
   const selectedProduct = material?.product_id ??
     (products.some(p => p.id === query.produto) ? query.produto : "");
   const invalidEdit = Boolean(query.editar && (materialResult.error || !material));
@@ -43,9 +47,9 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
         </div>
         <Link href={back}>Voltar à lista</Link>
       </header>
-      {(productsResult.error || materialResult.error) && <p className={styles.error} role="alert">Não foi possível consultar os dados do editor.</p>}
+      {(productsResult.error || materialResult.error || eligibilityResult.error) && <p className={styles.error} role="alert">Não foi possível consultar os dados do editor.</p>}
       {invalidEdit && <p className={styles.error} role="alert">Material indisponível para edição. Volte à Biblioteca.</p>}
-      {!productsResult.error && !invalidEdit && <form
+      {!productsResult.error && !eligibilityResult.error && !invalidEdit && <form
         className={styles.editorForm}
         action="/torre/comercio-v2/materiais/salvar"
         method="POST"
@@ -53,7 +57,7 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
       >
         <input type="hidden" name="id" value={material?.id ?? ""} />
         <div className={styles.editorRow}>
-          <label>Produto
+          <label>Produto de referência (organização interna)
             <select name="product_id" required defaultValue={selectedProduct} key={selectedProduct}>
               <option value="" disabled>Selecione um produto</option>
               {products.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
@@ -65,6 +69,15 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
             </select>
           </label>
         </div>
+        <fieldset style={{border:"1px solid #dfe6ee",borderRadius:9,padding:18,display:"grid",gap:10}}>
+          <legend style={{fontWeight:750}}>Em quais produtos este material pode ser utilizado?</legend>
+          <p className={styles.note}>Marque todos os produtos correspondentes. O arquivo será cadastrado uma única vez. A liberação e a data serão definidas em Produtos → Materiais para entrega.</p>
+          {products.map(product=><label key={product.id} style={{display:"flex",alignItems:"center",gap:10,fontSize:14}}>
+            <input type="checkbox" name="eligible_product_ids" value={product.id}
+              defaultChecked={material ? eligibilityIds.has(product.id) : product.id === selectedProduct}/>
+            <span>{product.code} — {product.name}</span>
+          </label>)}
+        </fieldset>
         {products.length === 0 && <p className={styles.note}>Primeiro cadastre um produto em <Link href="/torre/comercio-v2/produtos">Produtos</Link>.</p>}
         <label>Nome do material
           <input type="text" name="title" maxLength={180} minLength={2} required

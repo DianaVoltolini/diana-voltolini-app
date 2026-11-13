@@ -28,14 +28,20 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
   await requireAdmin();
   const query = await searchParams;
   const db = getSupabaseAdmin();
-  const [productsResult, materialsResult] = await Promise.all([
+  const [productsResult, materialsResult, eligibilityResult] = await Promise.all([
     db.from("commerce_v2_products").select("id,code,name").order("name").limit(500),
     db.from("commerce_v2_materials")
       .select("id,product_id,title,description,category,original_filename,file_mime,file_size,storage_path,is_archived,available_to_student,created_at,updated_at")
       .order("created_at", { ascending: false }).limit(500),
+    db.from("commerce_v2_material_product_eligibility").select("material_id,product_id").limit(5000),
   ]);
   const products = (productsResult.data ?? []) as ProductOption[];
-  const materials = (materialsResult.data ?? []) as MaterialRow[];
+  const links = eligibilityResult.data ?? [];
+  const materials = (materialsResult.data ?? []).map(material => ({
+    ...material,
+    eligible_product_ids: links.filter(link => link.material_id === material.id)
+      .map(link => link.product_id),
+  })) as MaterialRow[];
   const chosenProduct = products.some(p => p.id === query.produto) ? query.produto : "";
   const newUrl = "/torre/comercio-v2/materiais/novo" + (chosenProduct ? "?produto=" + encodeURIComponent(chosenProduct) : "");
   return <main className={styles.page}>
@@ -56,10 +62,10 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
     {query.erro && <p className={styles.error} role="alert">{errors[query.erro] ?? "Não foi possível concluir."}</p>}
     <section className={styles.section}>
       <h2>Materiais cadastrados</h2>
-      {(productsResult.error || materialsResult.error)
+      {(productsResult.error || materialsResult.error || eligibilityResult.error)
         ? <p className={styles.error} role="alert">Não foi possível consultar a Biblioteca de Materiais.</p>
         : <MaterialsTable materials={materials} products={products} initialProduct={chosenProduct ?? ""} />}
-      {!productsResult.error && !materialsResult.error && materials.length === 500 &&
+      {!productsResult.error && !materialsResult.error && !eligibilityResult.error && materials.length === 500 &&
         <p className={styles.note}>Mostrando os 500 registros mais recentes. A paginação será incluída antes de ultrapassar esse limite.</p>}
     </section>
   </main>;

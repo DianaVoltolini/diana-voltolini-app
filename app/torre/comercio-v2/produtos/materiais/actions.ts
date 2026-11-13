@@ -33,6 +33,10 @@ export async function saveStudentDelivery(form:FormData){
       .eq("is_archived",false).eq("available_to_student",true).maybeSingle(),
   ]);
   if(productError||!product||materialError||!material?.storage_path)go(productId,"erro=material");
+  const {data:eligibility,error:eligibilityError}=await db
+    .from("commerce_v2_material_product_eligibility").select("material_id")
+    .eq("material_id",materialId).eq("product_id",productId).maybeSingle();
+  if(eligibilityError||!eligibility)go(productId,"erro=material");
   const {error}=await db.from("commerce_v2_product_materials").upsert({
     product_id:productId,material_id:materialId,
     release_mode:mode,release_date:mode==="scheduled"?date:null,
