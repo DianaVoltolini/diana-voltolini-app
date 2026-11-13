@@ -1,0 +1,40 @@
+# .github/workflows/encounter-online-reminder.yml
+name: Lembrete do encontro Reforma Tributaria 2027
+on:
+  schedule:
+    # 20/01/2027, 08h de Brasilia (UTC-3).
+    - cron: "0 11 20 1 *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: encounter-online-reminder-2027
+  cancel-in-progress: false
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Validar segredo de autenticacao
+        env:
+          CRON_SECRET: ${{ secrets.MARKETING_CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::Configure MARKETING_CRON_SECRET nos secrets do repositorio."
+            exit 1
+          fi
+      - name: Executar lembretes autorizados
+        env:
+          CRON_SECRET: ${{ secrets.MARKETING_CRON_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          http="$(curl --silent --show-error --max-time 150 -o response.json -w '%{http_code}' \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -H 'Accept: application/json' \
+            'https://app.dianavoltolini.com.br/api/encounters/reminders/run')"
+          if [ "$http" != "200" ]; then
+            echo "::error::Falha no lembrete (HTTP $http)."
+            exit 1
+          fi
+          node -e "const r=require('./response.json');console.log(JSON.stringify(r));if(typeof r.sent!=='number'&&!r.skipped)process.exit(1)"
