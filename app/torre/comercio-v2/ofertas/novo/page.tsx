@@ -93,7 +93,7 @@ export default async function OfferEditor({ searchParams }: { searchParams: Prom
         <p className={styles.note}><strong>Situação: rascunho.</strong> Publicação, checkout e alteração de cobranças permanecem indisponíveis.</p>
         <footer><button type="submit" disabled={products.length === 0}>Salvar oferta</button><Link href="/torre/comercio-v2/ofertas">Cancelar</Link></footer>
       </form>}
-    {offer && !historyResult.error && <section className={styles.history}>
+    {offer && !historyResult.error && <section id="historico" className={styles.history}>
       <h2>Histórico de preços e alterações</h2>
       <p className={styles.note}>Cada salvamento gera uma versão para conferência. O histórico não é editável pela Torre.</p>
       <ol>{revisions.map(r => <li key={r.id}>
