@@ -109,11 +109,10 @@ export default async function AuditHome({searchParams}:{searchParams:Promise<Que
       </div>
       <datalist id="audit-areas">{areas.map(a=><option key={a} value={a}/>)}</datalist>
       <label>Descrição<textarea name="description" rows={3} maxLength={3000} defaultValue={selected?.description??""}/></label>
-      <div className={css.fourColumns}>
+      <div className={css.threeColumns}>
        <label>Prioridade<select name="priority" defaultValue={selected?.priority??"media"}>{Object.entries(priorityNames).map(([v,label])=><option key={v} value={v}>{label}</option>)}</select></label>
        <label>Situação<select name="status" defaultValue={selected?.status??"pendente"}>{Object.entries(statusNames).map(([v,label])=><option key={v} value={v}>{label}</option>)}</select></label>
        <label>Prazo<input type="date" name="due_date" defaultValue={selected?.due_date??""}/></label>
-       <label>Responsável<input name="owner_name" maxLength={120} defaultValue={selected?.owner_name??""}/></label>
       </div>
       <label>Observações / evidências<textarea name="notes" rows={3} maxLength={3000} defaultValue={selected?.notes??""}/></label>
       <div><button type="submit" className={css.primary}>{selected?"Salvar alterações":"Cadastrar pendência"}</button></div>
