@@ -34,3 +34,7 @@
 .actionIcon:hover{background:#f4f7fb;border-color:#acbdce}
 .actionIcon:focus-visible{outline:2px solid #173c71;outline-offset:2px}
 .history{scroll-margin-top:28px}
+
+/* Destaques discretos em dourado, preservando o cabeçalho azul da tabela. */
+.section{border-top:4px solid #c9a227}
+.form{border-top:4px solid #c9a227}
