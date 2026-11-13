@@ -35,3 +35,5 @@
 .dangerIcon{border-color:#e6c4c4;background:#fff7f7;color:#a42323}
 .dangerIcon:hover{background:#ffeded}
 .iconButton:focus-visible,.dangerIcon:focus-visible{outline:2px solid #173c71;outline-offset:2px}
+
+.section,.editorForm{border-top:4px solid #c9a227}
