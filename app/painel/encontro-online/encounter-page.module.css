@@ -1,0 +1,52 @@
+/* app/painel/encontro-online/encounter-page.module.css */
+/* Mesma linguagem visual do ProductPage, de Meus E-books e da assinatura. */
+.stack{display:grid;gap:22px}
+.encounterCard{
+  width:100%;min-width:0;background:#fff;
+  border:1px solid #e1e7ed;border-top:4px solid #c9a227;
+  border-radius:9px;padding:32px;
+  color:#102033;
+}
+.cardHeading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin:0 0 18px}
+.cardHeading>span:first-child,.sectionEyebrow{
+  color:#9f7d17;font-size:12px;letter-spacing:1.5px;font-weight:800;text-transform:uppercase
+}
+.paidBadge{background:#eaf6ee;color:#167241;border-radius:99px;padding:7px 11px;font-size:12px;font-weight:800}
+.productTitle{
+  font-family:Georgia,serif;font-size:clamp(24px,2.4vw,29px);
+  font-weight:700;line-height:1.25;color:#102033;margin:0 0 17px
+}
+.lead,.expires,.encounterCard p{font-size:15px;line-height:1.75;color:#405266}
+.encounterCard p{margin:0 0 17px}
+.expires strong{color:#102033}
+.sectionBlock{border-top:1px solid #e1e7ed;margin-top:24px;padding-top:23px}
+.sectionTitle{font:700 24px/1.25 Georgia,serif;color:#102033;margin:13px 0 19px}
+.materialList{display:grid;gap:12px;margin:0 0 18px}
+.materialGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.materialItem{border:1px solid #e1e7ed;border-radius:9px;background:#fff;padding:19px;margin-bottom:13px}
+.materialItem strong{font-size:15px;font-weight:800;color:#102033}
+.materialItem p{font-size:14px;margin:9px 0 16px;color:#65758a}
+.materialGrid .materialItem{background:#f4f6f8;margin:0}
+.materialGrid .materialItem p{margin:9px 0 0;font-size:13px}
+.primaryButton{
+  display:inline-flex;align-items:center;justify-content:center;align-self:flex-start;
+  background:#c9a227;color:#102033;padding:13px 20px;
+  font-size:14px;font-weight:800;border:0;border-radius:6px;
+  text-decoration:none;cursor:pointer;width:fit-content;max-width:100%;
+}
+.primaryButton:hover{background:#d9b33b}
+.primaryButton:focus-visible,.textInput:focus-visible{outline:3px solid #184f92;outline-offset:2px}
+.preferencesForm{display:grid;gap:15px;width:100%;max-width:680px;margin-top:21px}
+.inputLabel{font-size:14px;color:#102033;font-weight:750}
+.textInput{display:block;box-sizing:border-box;max-width:520px;width:100%;padding:12px 14px;border:1px solid #cbd5df;border-radius:7px;font-size:15px;color:#102033;background:#fff}
+.checkLabel{display:flex;align-items:flex-start;gap:11px;font-size:14px;line-height:1.65;color:#405266;cursor:pointer}
+.checkLabel input{margin-top:5px;flex-shrink:0;accent-color:#c9a227}
+.successText{font-weight:750!important;color:#167241!important}
+.errorText{font-weight:750!important;color:#a42c2c!important}
+@media(max-width:760px){
+ .encounterCard{padding:22px}
+ .cardHeading{align-items:flex-start}
+ .sectionTitle{font-size:22px}
+ .materialGrid{grid-template-columns:1fr}
+ .primaryButton{white-space:normal}
+}
