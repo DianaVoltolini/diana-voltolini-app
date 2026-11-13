@@ -21,7 +21,6 @@ const materials=[
   "Planilha de simulação",
   "Checklists operacionais",
 ];
-const formatMoneyFree=()=>null; // Sem exibir valores duplicados na Área do Cliente.
 
 export default async function EncounterPage({searchParams}:Props){
   const auth=await createClient();
