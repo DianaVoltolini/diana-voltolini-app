@@ -51,6 +51,8 @@ export async function getEbookPurchaseAccess(userId: string) {
   if (!productIds.length) return {
     hasPaidOrder: false, hasEncounterOrder: false,
     expiresAt: null as Date | null, isActive: false,
+    hasDirectEbookOrder: false, directEbookExpiresAt: null as Date | null,
+    directEbookActive: false,
   };
 
   const { data: orders, error: orderError } = await db.from("orders")
@@ -64,9 +66,14 @@ export async function getEbookPurchaseAccess(userId: string) {
   if (orderError) throw new Error("Não foi possível verificar suas compras.");
 
   const paidOrders = orders ?? [];
+  const directEbookOrders = paidOrders.filter(order => order.product_id === ebookId);
+  const directEbookExpiresAt = ebookAccessUntil(directEbookOrders);
   const expiresAt = ebookAccessUntil(paidOrders);
   return {
     hasPaidOrder: paidOrders.length > 0,
+    hasDirectEbookOrder: directEbookOrders.length > 0,
+    directEbookExpiresAt,
+    directEbookActive: ebookAccessActive(directEbookExpiresAt),
     hasEncounterOrder: Boolean(encounterId && paidOrders.some(order => order.product_id === encounterId)),
     expiresAt,
     isActive: ebookAccessActive(expiresAt),
