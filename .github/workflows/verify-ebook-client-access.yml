@@ -14,6 +14,9 @@ on:
       - "app/painel/layout.tsx"
       - "app/painel/page.tsx"
       - "supabase/migrations/20261112_encounter_attendance_confirmation.sql"
+      - "supabase/migrations/20261112_encounter_attendance_awareness_reminders.sql"
+      - "app/api/ebooks/**"
+      - "tests/individual-ebook-encounter-products.test.mjs"
       - "lib/ebooks/purchase-access.ts"
       - ".github/workflows/verify-ebook-client-access.yml"
 jobs:
@@ -27,5 +30,6 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
+      - run: node --test tests/individual-ebook-encounter-products.test.mjs
       - run: npm run lint
       - run: npm run build
