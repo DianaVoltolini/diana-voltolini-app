@@ -27,3 +27,11 @@
 .note{font-size:13px;color:#607184;font-weight:400;line-height:1.55}
 @media(max-width:1150px){.filterPanel{grid-template-columns:repeat(2,minmax(0,1fr))}.filterPanel label:first-child{grid-column:1/-1}}
 @media(max-width:600px){.filterPanel{grid-template-columns:1fr}.filterPanel label:first-child{grid-column:auto}.section,.editorForm{padding:18px}.page{padding:20px 14px 50px}}
+
+/* Padrão único de ações: bordas, tamanho e símbolos na área comercial. */
+.actions{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.iconButton,.dangerIcon{width:42px;height:40px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #d6dfe8;border-radius:8px;background:#fff;color:#253649;text-decoration:none;cursor:pointer}
+.iconButton:hover{background:#f5f8fb}
+.dangerIcon{border-color:#e6c4c4;background:#fff7f7;color:#a42323}
+.dangerIcon:hover{background:#ffeded}
+.iconButton:focus-visible,.dangerIcon:focus-visible{outline:2px solid #173c71;outline-offset:2px}
