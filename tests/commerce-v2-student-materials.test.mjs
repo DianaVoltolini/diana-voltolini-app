@@ -32,5 +32,5 @@ test("Torre seleciona produto, material e modalidade sem ativar entrega legada",
  assert.match(page,/name="releaseDate"/);
  assert.match(page,/after_payment/);
  assert.match(page,/scheduled/);
- assert.match(page,/sem publicação automática/i);
+ assert.match(page,/student_delivery_active|Ativar entrega aos clientes/);
 });
