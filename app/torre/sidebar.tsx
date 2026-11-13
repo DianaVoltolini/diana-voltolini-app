@@ -12,6 +12,7 @@ export default function TorreSidebar(){
  <div className={styles.group}><span className={styles.groupLabel}>SERVIÇOS</span>{services.map(([url,label])=>item(url,label))}</div>
  <div className={styles.group}><span className={styles.groupLabel}>MARKETING</span>{item("/torre/landings","Landing Pages")}{item("/torre/produtos-entregas","Produtos e Entregas")}{item("/torre/leads","Leads")}{item("/torre/conteudos","Blog")}{item("/torre/sugestoes","Sugestões de conteúdo")}{item("/torre/ctas","CTAs do Blog")}{item("/torre/modelos-email","Modelos de E-mail")}</div>
  <div className={styles.group}><span className={styles.groupLabel}>ÁREA COMERCIAL · EM IMPLANTAÇÃO</span>{item("/torre/comercio-v2","Visão geral")}{item("/torre/comercio-v2/produtos","Produtos")}{item("/torre/comercio-v2/materiais","Biblioteca de Materiais")}{item("/torre/comercio-v2/ofertas","Ofertas e Preços")}{item("/torre/comercio-v2/paginas","Páginas de Vendas")}</div>
+ <div className={styles.group}><span className={styles.groupLabel}>AUDITORIA · ACOMPANHAMENTO</span>{item("/torre/auditoria","Visão geral e pendências")}{item("/torre/auditoria?filtro=concluidas","Concluídas")}</div>
  </nav>;
  return <aside className={styles.sidebar}><div className={styles.desktop}>{navigation}</div><details className={styles.mobile}><summary>Menu administrativo</summary>{navigation}</details></aside>;
 }
