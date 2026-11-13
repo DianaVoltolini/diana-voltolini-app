@@ -4,15 +4,17 @@ import ProductPage from "../product-page";
 import ProductOffer from "../product-offer";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ebookAccessDateLabel } from "@/lib/ebooks/access";
-import { getEbookPurchaseAccess } from "@/lib/ebooks/purchase-access";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { ebookAccessDateLabel, ebookAccessUntil, ebookAccessActive } from "@/lib/ebooks/access";
+import { EBOOK_PRODUCT_CODE, getEbookPurchaseAccess } from "@/lib/ebooks/purchase-access";
 
 export const metadata: Metadata = {
   title: "Meus E-books | Diana Voltolini",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";
-
+type Book={id:string;code:string;name:string};
+type BookOrder={product_id:string;paid_at:string;created_at:string};
 
 export default async function EbooksPage() {
   const auth = await createClient();
@@ -20,41 +22,61 @@ export default async function EbooksPage() {
   const userId = typeof claims?.claims?.sub === "string" ? claims.claims.sub : null;
   if (authError || !userId) redirect("/login?retorno=%2Fpainel%2Febooks");
 
-  const access = await getEbookPurchaseAccess(userId);
-  const { hasDirectEbookOrder, directEbookExpiresAt, directEbookActive } = access;
-  if(!hasDirectEbookOrder) return <ProductPage title="IBS e CBS na Prática" description="E-book digital para compreender a Reforma Tributária e aplicar o conhecimento ao faturamento.">
-    <ProductOffer eyebrow="GUIA PRÁTICO · REFORMA TRIBUTÁRIA" headline="Entenda IBS e CBS na prática" lead="Compras, vendas, créditos e notas fiscais explicados de forma simples e objetiva, com exemplos e roteiro para organizar sua preparação." price="R$ 29,90 · pagamento único" checkout="https://dianavoltolini.com.br/checkout/ibs-cbs-na-pratica" cta="Quero garantir meu e-book" features={["E-book digital com 21 páginas","Compras, vendas e créditos","NF-e, CST e cClassTrib","Split payment e transição","Checklist e glossário para consulta","Exemplos práticos para rotinas fiscais"]}>
+  // Reaproveita a verificação da identidade e o vínculo de compras sem dono.
+  await getEbookPurchaseAccess(userId);
+  const db=getSupabaseAdmin();
+  const {data:products,error:productsError}=await db.from("products")
+    .select("id,code,name").like("code","EBOOK-%");
+  if(productsError) throw new Error("Não foi possível consultar o catálogo de e-books.");
+  const catalog=(products??[]) as Book[];
+  const productIds=catalog.map(item=>item.id);
+  const {data:orders,error:ordersError}=productIds.length
+    ? await db.from("orders")
+      .select("product_id,paid_at,created_at").eq("user_id",userId)
+      .in("product_id",productIds).eq("status","paid")
+      .not("paid_at","is",null).order("paid_at",{ascending:false}).limit(200)
+    : {data:[] as BookOrder[],error:null};
+  if(ordersError) throw new Error("Não foi possível verificar seus e-books.");
+  const bought=(orders??[]) as BookOrder[];
+  const ownedBooks=catalog.filter(product=>bought.some(order=>order.product_id===product.id));
 
-    </ProductOffer>
-  </ProductPage>;
+  if(!ownedBooks.length) return (
+    <ProductPage title="IBS e CBS na Prática" description="E-book digital para compreender a Reforma Tributária e aplicar o conhecimento ao faturamento.">
+      <ProductOffer eyebrow="GUIA PRÁTICO · REFORMA TRIBUTÁRIA"
+        headline="Entenda IBS e CBS na prática"
+        lead="Compras, vendas, créditos e notas fiscais explicadas de forma simples e objetiva, com exemplos e roteiro para organizar sua preparação."
+        price="R$ 29,90 · pagamento único"
+        checkout="https://dianavoltolini.com.br/checkout/ibs-cbs-na-pratica"
+        cta="Quero garantir meu e-book"
+        features={["E-book digital com 21 páginas","Compras, vendas e créditos","NF-e, CST e cClassTrib","Split payment e transição","Checklist e glossário para consulta","Exemplos práticos para rotinas fiscais"]}/>
+    </ProductPage>
+  );
+
   return (
-    <ProductPage title="Meus E-books" description="Seus materiais digitais e o acesso às compras realizadas.">
-        <section style={{ border: "1px solid #e1e7ed", borderTop: "4px solid #c9a227", borderRadius: 9, background: "#fff", padding: "32px" }}>
-          <p style={{ color: "#9f7d17", fontSize: 12, fontWeight: 800, letterSpacing: 1.5 }}>E-BOOK DIGITAL</p>
-          <h2 style={{ fontFamily: "Georgia,serif", fontSize: 27, margin: "0 0 16px" }}>IBS e CBS na Prática</h2>
-          <p>Guia de 21 páginas sobre IBS, CBS, compras, vendas, créditos e emissão de notas fiscais.</p>
-          {hasDirectEbookOrder ? (
-            <>
-              <p style={{ fontWeight: 700, color: "#167241" }}>Pagamento confirmado</p>
-              <p>Seu acesso ao e-book termina em <strong>{directEbookExpiresAt ? ebookAccessDateLabel(directEbookExpiresAt) : "data indisponível"}</strong>.</p>
-              <p>Durante os 90 dias após o pagamento, você pode visualizar e baixar a versão mais recente, incluindo eventuais atualizações sem custo adicional.</p>
-              {directEbookActive ? <div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:12}}>
-                <a href="/api/ebooks/ibs-cbs-na-pratica/download"
-                  style={{display:"inline-block",background:"#c9a227",color:"#0d1b2a",padding:"12px 20px",borderRadius:5,fontWeight:700}}>Baixar e-book (PDF) ↓</a>
-              </div> : <p style={{fontWeight:700,color:"#765b2b"}}>O período de acesso ao seu e-book foi encerrado.</p>}
-            </>
-          ) : (
-            <>
-              <p style={{color:"#586a7c",lineHeight:1.75}}>Um guia direto para compreender os principais conceitos do IBS e da CBS e seus impactos nas operações de compras, vendas e emissão de notas fiscais.</p>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12,margin:"20px 0"}}>
-               {["Fundamentos do IBS e da CBS","Compras, vendas e créditos","Emissão de notas fiscais","Glossário de termos práticos"].map(item=><div key={item} style={{background:"#f4f6f8",borderRadius:8,padding:15,color:"#243549",fontWeight:700,fontSize:13}}>{item}</div>)}
-              </div>
-              <p style={{fontSize:23,fontWeight:850,color:"#102033"}}>R$ 29,90</p>
-              <a href="https://dianavoltolini.com.br/checkout/ebook-ibs-cbs" style={{display:"inline-block",marginTop:12,background:"#c9a227",color:"#0d1b2a",padding:"13px 20px",borderRadius:8,fontWeight:800,textDecoration:"none"}}>Adquirir meu e-book →</a>
-              <p style={{fontSize:12,color:"#65717e",marginTop:12}}>O pagamento é finalizado pelo checkout seguro do site. Após a confirmação, o e-book ficará disponível nesta mesma Área do Cliente.</p>
-            </>
-          )}
-        </section>
+    <ProductPage title="Meus E-books" description="Os e-books adquiridos, organizados individualmente para download durante o prazo de acesso.">
+      <div style={{display:"grid",gap:22}}>
+        {ownedBooks.map(book=>{
+          const expiresAt=ebookAccessUntil(bought.filter(order=>order.product_id===book.id));
+          const active=ebookAccessActive(expiresAt);
+          const isIbsCbs=book.code===EBOOK_PRODUCT_CODE;
+          return <section key={book.id} style={{border:"1px solid #e1e7ed",borderTop:"4px solid #c9a227",borderRadius:9,background:"#fff",padding:"32px"}}>
+            <p style={{color:"#9f7d17",fontSize:12,fontWeight:800,letterSpacing:1.5}}>E-BOOK DIGITAL</p>
+            <h2 style={{fontFamily:"Georgia,serif",fontSize:27,margin:"0 0 16px"}}>{isIbsCbs?"IBS e CBS na Prática":book.name}</h2>
+            {isIbsCbs&&<p>Guia de 21 páginas sobre IBS, CBS, compras, vendas, créditos e emissão de notas fiscais.</p>}
+            <p style={{fontWeight:700,color:"#167241"}}>Pagamento confirmado</p>
+            <p>Seu acesso ao e-book termina em <strong>{expiresAt?ebookAccessDateLabel(expiresAt):"data indisponível"}</strong>.</p>
+            <p>Durante o período de acesso, você pode baixar a versão mais recente do material, incluindo eventuais atualizações sem custo adicional.</p>
+            {active&&isIbsCbs?
+              <a href="/api/ebooks/ibs-cbs-na-pratica/download"
+                style={{display:"inline-block",background:"#c9a227",color:"#0d1b2a",padding:"12px 20px",borderRadius:5,fontWeight:700}}>
+                Baixar e-book (PDF) ↓
+              </a>:
+              <p style={{fontWeight:700,color:"#765b2b"}}>
+                {!active?"O período de acesso ao seu e-book foi encerrado.":"O arquivo deste e-book será disponibilizado conforme as informações da compra."}
+              </p>}
+          </section>;
+        })}
+      </div>
     </ProductPage>
   );
 }
