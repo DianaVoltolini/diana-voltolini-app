@@ -83,7 +83,7 @@ export default async function PainelLayout({
   const ebookProductId = ebookProductResult.data?.find(p=>p.code==="EBOOK-IBSCBS-001")?.id;
   const encounterProductId = ebookProductResult.data?.find(p=>p.code==="ENC-RT-2027-001")?.id;
   const hasEncounter = Boolean(encounterProductId && ordersResult.data?.some(o=>o.product_id===encounterProductId));
-  const hasEbook = hasEncounter || Boolean(ebookProductId && ordersResult.data?.some(o => o.product_id === ebookProductId));
+  const hasEbook = Boolean(ebookProductId && ordersResult.data?.some(o => o.product_id === ebookProductId));
   const hasSubscription = subscriptionAccess.allowed;
   const hasFiscalHistory = Boolean(subscriptionHistory.data?.length);
   const purchasedProductIds=[...new Set((ordersResult.data??[]).map(o=>o.product_id).filter((id):id is string=>typeof id==="string"))];
