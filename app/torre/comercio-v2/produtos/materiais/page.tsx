@@ -21,18 +21,23 @@ export default async function DeliveryMaterials({searchParams}:{searchParams:Pro
     .select("id,name,code").order("name").limit(500);
   const catalog=(products??[]) as Product[];
   const selected=catalog.find(p=>p.id===query.produto)??null;
-  const [{data:materials,error:materialsError},{data:linked,error:linkedError}]=await Promise.all([
+  const [{data:materials,error:materialsError},{data:linked,error:linkedError},
+    {data:eligibilities,error:eligibilityError}]=await Promise.all([
     db.from("commerce_v2_materials").select("id,title,category,product_id")
       .eq("is_archived",false).eq("available_to_student",true)
       .not("storage_path","is",null).order("title").limit(500),
     selected?db.from("commerce_v2_product_materials")
       .select("material_id,release_mode,release_date").eq("product_id",selected.id)
       :Promise.resolve({data:[] as Assignment[],error:null}),
+    selected?db.from("commerce_v2_material_product_eligibility")
+      .select("material_id").eq("product_id",selected.id)
+      :Promise.resolve({data:[] as {material_id:string}[],error:null}),
   ]);
-  const eligible=(materials??[]) as Material[];
+  const allowedIds=new Set((eligibilities??[]).map(row=>row.material_id));
+  const eligible=((materials??[]) as Material[]).filter(material=>allowedIds.has(material.id));
   const assignments=(linked??[]) as Assignment[];
   const activeMaterialIds=new Set(assignments.map(item=>item.material_id));
-  const errors=Boolean(productsError||materialsError||linkedError);
+  const errors=Boolean(productsError||materialsError||linkedError||eligibilityError);
 
   return <main className={css.page}>
     <header className={css.header}>
@@ -90,7 +95,7 @@ export default async function DeliveryMaterials({searchParams}:{searchParams:Pro
       </section>
       <section className={css.section}>
         <h2>Adicionar material da Biblioteca</h2>
-        <p className={css.note}>São listados apenas materiais ativos, com arquivo e com “Disponível para aluno: Sim”.</p>
+        <p className={css.note}>São listados apenas materiais vinculados a este produto na Biblioteca, ativos, com arquivo e com “Disponível para aluno: Sim”.</p>
         <form action={saveStudentDelivery} className={css.form}>
           <input type="hidden" name="productId" value={selected.id}/>
           <label>Material
@@ -113,7 +118,7 @@ export default async function DeliveryMaterials({searchParams}:{searchParams:Pro
           <p className={css.note}>Para data programada, será utilizada a data civil em Brasília, a partir de 00h. A entrega sempre depende de pedido pago e de prazo de acesso válido.</p>
           <div><button type="submit" disabled={!eligible.length}>Salvar material para entrega</button></div>
         </form>
-        {!eligible.length&&<p className={css.note}>Não há materiais elegíveis. <Link href="/torre/comercio-v2/materiais">Acesse a Biblioteca</Link> e marque “Disponível para aluno”.</p>}
+        {!eligible.length&&<p className={css.note}>Não há materiais elegíveis para este produto. <Link href="/torre/comercio-v2/materiais">Acesse a Biblioteca</Link>, marque “Disponível para aluno” e selecione este produto.</p>}
       </section>
     </>}
   </main>;
