@@ -13,7 +13,7 @@ export type MaterialRow = {
   id: string; product_id: string; title: string; description: string;
   category: string; original_filename: string | null; file_mime: string | null;
   file_size: number | null; storage_path: string | null;
-  is_archived: boolean; created_at: string; updated_at: string;
+  is_archived: boolean; available_to_student: boolean; created_at: string; updated_at: string;
 };
 const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR");
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" });
@@ -81,7 +81,7 @@ export default function MaterialsTable({
     <div className={css.scroll}>
       <table className={css.table}>
         <thead><tr>
-          <th>Data</th><th>Material</th><th>Produto</th><th>Descrição</th><th>Tipo</th><th>Situação</th><th>Ações</th>
+          <th>Data</th><th>Material</th><th>Produto</th><th>Descrição</th><th>Tipo</th><th>Disponível para aluno</th><th>Situação</th><th>Ações</th>
         </tr></thead>
         <tbody>
           {filtered.map(m => {
@@ -92,6 +92,7 @@ export default function MaterialsTable({
               <td>{parent?.name ?? "Produto não encontrado"}<small>{parent?.code ?? ""}</small></td>
               <td className={styles.description}>{m.description || "—"}</td>
               <td>{materialCategories[m.category] ?? m.category}</td>
+              <td>{m.available_to_student && !m.is_archived ? "Sim" : "Não"}</td>
               <td>{m.is_archived ? "Arquivado" : "Ativo"}</td>
               <td><div className={styles.actions}>
                 {!m.is_archived && <>
@@ -124,7 +125,7 @@ export default function MaterialsTable({
               </div></td>
             </tr>;
           })}
-          {!filtered.length && <tr><td colSpan={7} className={css.noResults}>
+          {!filtered.length && <tr><td colSpan={8} className={css.noResults}>
             {materials.length === 0 ? "Nenhum material cadastrado." : "Nenhum material encontrado com estes filtros."}
             {filtering && <div><button type="button" className={css.resetInline} onClick={clear}>Limpar filtros</button></div>}
           </td></tr>}

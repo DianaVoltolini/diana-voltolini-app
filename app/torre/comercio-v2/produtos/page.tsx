@@ -81,7 +81,7 @@ export default async function ProductsV2({
                   <Link className={css.actionIcon} href={"/torre/comercio-v2/produtos?edit=" + encodeURIComponent(product.id)} title={"Editar " + product.name} aria-label={"Editar " + product.name}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m16 5 3 3M4 20l4.2-.8L20 7.4 16.6 4 4.8 15.8 4 20Z"/></svg>
                   </Link>
-                  <Link className={css.secondary} href={"/torre/comercio-v2/materiais?produto=" + encodeURIComponent(product.id)}>Materiais</Link>
+                  <Link className={css.secondary} href={"/torre/comercio-v2/produtos/materiais?produto=" + encodeURIComponent(product.id)}>Materiais para entrega</Link>
                 </div></td>
               </tr>)}
               {products.length === 0 && <tr><td colSpan={6}>Nenhum produto cadastrado.</td></tr>}
