@@ -4,9 +4,10 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { saveCommerceV2Product } from "./actions";
+import css from "../commercial.module.css";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Produtos V2 (piloto) | Torre" };
+export const metadata: Metadata = { title: "Produtos | Área Comercial" };
 type Query = { edit?: string; salvo?: string; erro?: string };
 type Product = {
   id: string; code: string; name: string; short_name: string | null;
@@ -51,74 +52,79 @@ export default async function ProductsV2({
   const products = (data ?? []) as Product[];
   const edit = query.edit ? products.find(p => p.id === query.edit) : null;
 
-  return <main style={{ maxWidth: 1150, margin: "0 auto", padding: "28px 20px 64px" }}>
-    <p style={{ color: "#956f18", fontSize: 12, fontWeight: 800, letterSpacing: 1 }}>TORRE · COMÉRCIO V2 · PILOTO ISOLADO</p>
-    <h1 style={{ fontSize: 32, marginBottom: 8 }}>Produtos V2</h1>
-    <p style={{ color: "#475569", maxWidth: 780, lineHeight: 1.6 }}>
-      Cadastro experimental independente dos produtos em venda. Organize os arquivos de cada produto na Biblioteca de Materiais. Nesta fase, tudo permanece em rascunho:
-      não existem checkout, publicação, Bling ou entrega automática na V2.
-    </p>
-    <p><Link href="/torre/comercio-v2/materiais">Abrir Biblioteca de Materiais</Link></p>
-    {query.salvo === "1" && <p role="status" style={{ color: "#166534" }}>Produto V2 salvo em rascunho.</p>}
-    {query.erro && <p role="alert" style={{ color: "#b91c1c" }}>{errorText[query.erro] ?? "Não foi possível concluir a operação."}</p>}
-    {error && <section role="alert" style={{ padding: 18, border: "1px solid #fca5a5", borderRadius: 10 }}>
-      O catálogo V2 não está disponível. Verifique se a migração SQL específica da V2 foi aplicada.
-      <p style={{ fontSize: 12 }}>Nenhum cadastro legado foi alterado.</p>
-    </section>}
-    {!error && <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 24, marginTop: 28, alignItems: "start" }}>
-      <section style={{ background: "#fff", border: "1px solid #dbe2ee", borderRadius: 14, padding: 22 }}>
-        <h2 style={{ fontSize: 20, marginTop: 0 }}>{edit ? "Editar produto piloto" : "Novo produto piloto"}</h2>
-        {edit && <Link href="/torre/comercio-v2/produtos">+ Cadastrar outro</Link>}
-        <form action={saveCommerceV2Product} style={{ marginTop: 20 }}>
-          <input type="hidden" name="id" value={edit?.id ?? ""} />
-          <label style={fieldStyle}>Código interno
-            <input style={{ ...inputStyle, background: edit ? "#f1f5f9" : "#fff" }}
-              name="code" required maxLength={60} minLength={3}
-              pattern="[A-Za-z0-9][A-Za-z0-9_-]{2,59}"
-              defaultValue={edit?.code ?? "TESTE-FLUXO-001"} readOnly={Boolean(edit)} />
+  return <main className={css.page}>
+    <header className={css.header}>
+      <div>
+        <p className={css.eyebrow}>TORRE · ÁREA COMERCIAL</p>
+        <h1 className={css.title}>Produtos</h1>
+        <p className={css.subtitle}>Cadastre seus produtos e organize os materiais relacionados. Os registros desta área ainda não geram vendas.</p>
+      </div>
+      <Link className={css.secondary} href="/torre/comercio-v2/materiais">Biblioteca de Materiais</Link>
+    </header>
+    <div className={css.banner}><strong>Produtos em rascunho</strong>Nenhum cadastro desta área está conectado ao checkout ou às entregas atuais.</div>
+    {query.salvo === "1" && <p role="status" className={css.message}>Produto salvo em rascunho.</p>}
+    {query.erro && <p role="alert" className={css.error}>{errorText[query.erro] ?? "Não foi possível concluir a operação."}</p>}
+    {error ? <section role="alert" className={css.error}>O catálogo V2 não está disponível. Verifique a migração SQL; os produtos antigos permanecem inalterados.</section> : <>
+      <section className={css.section}>
+        <h2>Produtos cadastrados ({products.length})</h2>
+        <div className={css.tableScroll}>
+          <table className={css.table}>
+            <thead><tr><th>Data</th><th>Código</th><th>Produto</th><th>Tipo</th><th>Situação</th><th>Ações</th></tr></thead>
+            <tbody>
+              {products.map(product => <tr key={product.id}>
+                <td>{humanDate(product.created_at)}</td>
+                <td>{product.code}</td>
+                <td><strong>{product.name}</strong><small>{product.short_name ?? ""}</small></td>
+                <td>{types[product.product_type] ?? product.product_type}</td>
+                <td>Rascunho</td>
+                <td><div className={css.actions}>
+                  <Link className={css.actionIcon} href={"/torre/comercio-v2/produtos?edit=" + encodeURIComponent(product.id)} title={"Editar " + product.name} aria-label={"Editar " + product.name}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m16 5 3 3M4 20l4.2-.8L20 7.4 16.6 4 4.8 15.8 4 20Z"/></svg>
+                  </Link>
+                  <Link className={css.secondary} href={"/torre/comercio-v2/materiais?produto=" + encodeURIComponent(product.id)}>Materiais</Link>
+                </div></td>
+              </tr>)}
+              {products.length === 0 && <tr><td colSpan={6}>Nenhum produto cadastrado.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section className={css.section} id="cadastro">
+        <h2>{edit ? "Editar produto" : "Novo produto"}</h2>
+        {edit && <p><Link className={css.link} href="/torre/comercio-v2/produtos#cadastro">+ Cadastrar outro</Link></p>}
+        <form action={saveCommerceV2Product} className={css.form} style={{maxWidth:780}}>
+          <input type="hidden" name="id" value={edit?.id ?? ""}/>
+          <label>Código interno
+            <input name="code" required maxLength={60} minLength={3} pattern="[A-Za-z0-9][A-Za-z0-9_-]{2,59}"
+              defaultValue={edit?.code ?? "TESTE-FLUXO-001"} readOnly={Boolean(edit)}/>
           </label>
-          <label style={fieldStyle}>Nome comercial
-            <input style={inputStyle} name="name" required minLength={3} maxLength={180}
-              defaultValue={edit?.name ?? "Produto piloto — Validação da Torre V2"} />
+          <label>Nome comercial
+            <input name="name" required minLength={3} maxLength={180} defaultValue={edit?.name ?? "Produto piloto — Validação da Torre V2"}/>
           </label>
-          <label style={fieldStyle}>Nome resumido
-            <input style={inputStyle} name="short_name" maxLength={120} defaultValue={edit?.short_name ?? ""} />
+          <label>Nome resumido
+            <input name="short_name" maxLength={120} defaultValue={edit?.short_name ?? ""}/>
           </label>
-          <label style={fieldStyle}>Tipo
-            <select style={inputStyle} name="product_type" defaultValue={edit?.product_type ?? "online_event"}>
-              {Object.entries(types).map(([key, label]) => <option value={key} key={key}>{label}</option>)}
+          <label>Tipo de produto
+            <select name="product_type" defaultValue={edit?.product_type ?? "online_event"}>
+              {Object.entries(types).map(([key,label])=><option key={key} value={key}>{label}</option>)}
             </select>
           </label>
-          <label style={fieldStyle}>Descrição curta
-            <textarea style={inputStyle} name="summary" rows={3} maxLength={600} defaultValue={edit?.summary ?? ""} />
+          <label>Descrição curta
+            <textarea name="summary" rows={3} maxLength={600} defaultValue={edit?.summary ?? ""}/>
           </label>
-          <label style={fieldStyle}>Descrição completa
-            <textarea style={inputStyle} name="description" rows={5} maxLength={8000} defaultValue={edit?.description ?? ""} />
+          <label>Descrição completa
+            <textarea name="description" rows={5} maxLength={8000} defaultValue={edit?.description ?? ""}/>
           </label>
-          <label style={fieldStyle}>O que será entregue
-            <textarea style={inputStyle} name="delivery_description" rows={4} maxLength={4000}
-              defaultValue={edit?.delivery_description ?? "Material demonstrativo, sem cobrança ou entrega real."} />
+          <label>O que será entregue
+            <textarea name="delivery_description" rows={4} maxLength={4000} defaultValue={edit?.delivery_description ?? "Material demonstrativo, sem cobrança ou entrega real."}/>
           </label>
-          <label style={fieldStyle}>Link da página (somente referência)
-            <input style={inputStyle} name="sales_page_url" type="url" maxLength={500}
-              placeholder="https://..." defaultValue={edit?.sales_page_url ?? ""} />
+          <label>Link da página (referência)
+            <input name="sales_page_url" type="url" maxLength={500} placeholder="https://..." defaultValue={edit?.sales_page_url ?? ""}/>
           </label>
-          <p style={{ fontSize: 13, color: "#64748b" }}>
-            Situação: <strong>Rascunho obrigatório.</strong> Preço, ofertas, links públicos e checkout serão implantados em etapas separadas.
-          </p>
-          <button type="submit" style={{ padding: "13px 18px", background: "#173c71", color: "#fff", border: 0, borderRadius: 8, fontWeight: 700, cursor: "pointer" }}>Salvar rascunho</button>
+          <p className={css.note}>Cadastro exclusivamente em rascunho. Nenhuma publicação ou cobrança será gerada.</p>
+          <div><button type="submit">Salvar produto</button></div>
         </form>
       </section>
-      <section style={{ background: "#fff", border: "1px solid #dbe2ee", borderRadius: 14, padding: 22 }}>
-        <h2 style={{ fontSize: 20, marginTop: 0 }}>Cadastros V2 ({products.length})</h2>
-        {products.length === 0 && <p>Nenhum produto piloto cadastrado.</p>}
-        {products.map(product => <article key={product.id} style={{ padding: "16px 0", borderBottom: "1px solid #e2e8f0" }}>
-          <strong>{product.name}</strong>
-          <p style={{ fontSize: 13, color: "#64748b", margin: "6px 0" }}>{product.code} · {types[product.product_type] ?? product.product_type} · Rascunho</p>
-          <p style={{ fontSize: 12, color: "#64748b" }}>Criado em {humanDate(product.created_at)}</p>
-          <Link href={"/torre/comercio-v2/produtos?edit=" + encodeURIComponent(product.id)}>Editar cadastro</Link> <span style={{ margin: "0 8px" }}>·</span> <Link href={"/torre/comercio-v2/materiais?produto=" + encodeURIComponent(product.id)}>Ver materiais</Link>
-        </article>)}
-      </section>
-    </div>}
+    </>}
   </main>;
 }
