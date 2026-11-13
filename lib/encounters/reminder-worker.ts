@@ -14,9 +14,11 @@ const EVENT_URL="https://app.dianavoltolini.com.br/painel/encontro-online";
 const emailOk=(email:string)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 function localDate(){
-  return new Intl.DateTimeFormat("en-CA",{
+  const parts=new Intl.DateTimeFormat("en-US",{
     timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit",
-  }).format(new Date());
+  }).formatToParts(new Date());
+  const dateParts=Object.fromEntries(parts.map(part=>[part.type,part.value]));
+  return `${dateParts.year}-${dateParts.month}-${dateParts.day}`;
 }
 
 function smtpTransport(){
