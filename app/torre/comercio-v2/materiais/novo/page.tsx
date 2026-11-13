@@ -43,7 +43,7 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
         <div>
           <p className={styles.eyebrow}>ÁREA COMERCIAL · BIBLIOTECA DE MATERIAIS</p>
           <h1>{material ? "Editar conteúdo" : "Novo conteúdo"}</h1>
-          <p>Cadastre o material e o associe ao produto correspondente.</p>
+          <p>Cadastre o material uma única vez e selecione em quais produtos ele será utilizado.</p>
         </div>
         <Link href={back}>Voltar à lista</Link>
       </header>
@@ -57,11 +57,9 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
       >
         <input type="hidden" name="id" value={material?.id ?? ""} />
         <div className={styles.editorRow}>
-          <label>Produto de referência (organização interna)
-            <select name="product_id" required defaultValue={selectedProduct} key={selectedProduct}>
-              <option value="" disabled>Selecione um produto</option>
-              {products.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
-            </select>
+          <label>Nome do material
+            <input type="text" name="title" maxLength={180} minLength={2} required
+              defaultValue={material?.title ?? ""} placeholder="Ex.: Caderno de Exercícios 2027" />
           </label>
           <label>Tipo do material
             <select name="category" defaultValue={material?.category ?? "support"}>
@@ -70,7 +68,7 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
           </label>
         </div>
         <fieldset className={styles.choiceList}>
-          <legend style={{fontWeight:750}}>Em quais produtos este material pode ser utilizado?</legend>
+          <legend style={{fontWeight:750}}>Em quais produtos este material será entregue?</legend>
           <p className={styles.note}>Selecione os produtos que utilizarão este material. O arquivo será cadastrado uma única vez; a data da entrega é configurada no produto.</p>
           {products.map(product=><label key={product.id} className={styles.choiceRow}>
             <input type="checkbox" name="eligible_product_ids" value={product.id}
@@ -79,10 +77,6 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
           </label>)}
         </fieldset>
         {products.length === 0 && <p className={styles.note}>Primeiro cadastre um produto em <Link href="/torre/comercio-v2/produtos">Produtos</Link>.</p>}
-        <label>Nome do material
-          <input type="text" name="title" maxLength={180} minLength={2} required
-            defaultValue={material?.title ?? ""} placeholder="Ex.: Caderno de Exercícios 2027" />
-        </label>
         <label>Descrição — o que contém este material
           <textarea name="description" maxLength={4000} rows={5}
             defaultValue={material?.description ?? ""}

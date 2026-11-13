@@ -54,7 +54,6 @@ export async function POST(request: NextRequest) {
     return back("erro", "arquivo");
   }
   const id = field(form, "id", 36);
-  const productId = field(form, "product_id", 36);
   const title = field(form, "title", 180);
   const description = field(form, "description", 4000);
   const category = field(form, "category", 30);
@@ -62,7 +61,7 @@ export async function POST(request: NextRequest) {
   const eligibleProductIds = [...new Set(form.getAll("eligible_product_ids").map(value=>String(value)))];
   const uploaded = form.get("file");
   const file = uploaded instanceof File && uploaded.size > 0 ? uploaded : null;
-  if ((id && !uuid.test(id)) || !uuid.test(productId) ||
+  if ((id && !uuid.test(id)) ||
     eligibleProductIds.length === 0 || eligibleProductIds.length > 100 ||
     eligibleProductIds.some(value=>!uuid.test(value)) ||
     title.length < 2 || title.length > 180 || description.length > 4000 || !categories.has(category)) {
@@ -78,9 +77,6 @@ export async function POST(request: NextRequest) {
   }
 
   const db = getSupabaseAdmin();
-  const { data: product, error: productError } = await db.from("commerce_v2_products")
-    .select("id").eq("id", productId).eq("status", "draft").maybeSingle();
-  if (productError || !product) return back("erro", "produto");
   const {data:allowedProducts,error:allowedError} = await db.from("commerce_v2_products")
     .select("id").in("id",eligibleProductIds).eq("status","draft");
   if(allowedError || (allowedProducts??[]).length!==eligibleProductIds.length)
@@ -88,8 +84,13 @@ export async function POST(request: NextRequest) {
 
   const existingResult = id ? await db.from("commerce_v2_materials")
     .select("id,product_id,storage_path").eq("id", id).eq("is_archived", false).maybeSingle() : null;
-  if (id && (existingResult?.error || !existingResult?.data ||
-      existingResult.data.product_id !== productId)) return back("erro", "material");
+  if (id && (existingResult?.error || !existingResult?.data))
+    return back("erro", "material");
+
+  // O campo product_id permanece no banco por compatibilidade com o acervo existente.
+  // Na criação, é derivado de um produto selecionado. Na edição, preserva-se o valor
+  // original, sem exigir um segundo vínculo visível e redundante no formulário.
+  const productId = existingResult?.data?.product_id ?? eligibleProductIds[0];
 
   let path: string | null = null;
   let fileFields: Record<string, string | number> = {};
