@@ -49,6 +49,13 @@ export default async function EncounterPage({searchParams}:Props){
     : {data:[],error:null};
   if(confirmationResult.error) throw new Error("Não foi possível consultar suas confirmações.");
   const confirmations=new Map((confirmationResult.data??[]).map(row=>[row.order_id,row]));
+  const {data:availableMaterials,error:materialsError}=purchases.length
+    ? await db.from("encounter_materials").select("id,product_id,title,display_order")
+      .in("product_id",ids).eq("active",true)
+      .lte("published_at",new Date().toISOString())
+      .order("display_order",{ascending:true})
+    : {data:[],error:null};
+  if(materialsError) throw new Error("Não foi possível consultar os materiais do encontro.");
   const search=await searchParams;
   const inputStyle={width:"100%",maxWidth:520,padding:"12px 14px",border:"1px solid #cbd5df",borderRadius:7,fontSize:15};
 
@@ -70,6 +77,7 @@ export default async function EncounterPage({searchParams}:Props){
       const expiresAt=ebookAccessUntil([order]);
       const inAccessPeriod=ebookAccessActive(expiresAt);
       const confirmation=confirmations.get(order.id);
+      const publishedMaterials=(availableMaterials??[]).filter(item=>item.product_id===order.product_id);
       const confirmed=Boolean(confirmation?.terms_acknowledged_at);
       return <section className={styles.card} key={order.id}
         style={{marginTop:24,minHeight:0,maxWidth:1100,gap:0}}>
@@ -98,12 +106,24 @@ export default async function EncounterPage({searchParams}:Props){
               <a className={styles.cta} href="/api/ebooks/ibs-cbs-na-pratica/download?origem=encontro">Baixar e-book (PDF) ↓</a>:
               <p style={{fontWeight:750}}>Período de download encerrado.</p>}
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:10}}>
+          {publishedMaterials.length>0&&<div style={{display:"grid",gap:11,marginBottom:16}}>
+            {publishedMaterials.map(material=><div key={material.id}
+              style={{border:"1px solid #e5ded0",borderRadius:9,padding:16,background:"#fbf9f4"}}>
+              <strong>{material.title}</strong>
+              {inAccessPeriod?
+                <a className={styles.cta} style={{display:"table",marginTop:12}}
+                  href={`/api/encounters/materials/${material.id}/download?pedido=${order.id}`}>
+                  Baixar material ↓
+                </a>:
+                <p style={{marginTop:9}}>Prazo de download encerrado.</p>}
+            </div>)}
+          </div>}
+          {publishedMaterials.length===0&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:10}}>
             {materials.map(name=><div key={name} style={{border:"1px solid #e5ded0",borderRadius:9,padding:16,background:"#fbf9f4"}}>
               <strong>{name}</strong>
               <p style={{margin:"8px 0 0",fontSize:13}}>Disponibilização prevista para janeiro de 2027.</p>
             </div>)}
-          </div>
+          </div>}
         </div>}
 
         <div style={{borderTop:"1px solid #e8e0d4",paddingTop:23,marginTop:23,width:"100%"}}>
