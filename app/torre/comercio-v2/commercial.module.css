@@ -49,3 +49,9 @@
 .formFull{min-width:0}
 .formRow > label,.formRowBalanced > label{min-width:0}
 @media(max-width:760px){.formRow,.formRowBalanced{grid-template-columns:1fr;gap:15px}}
+
+/* Cadastro de produto simplificado: tipo e código compactos; nome flexível. */
+.formRowTriple{display:grid;grid-template-columns:minmax(145px,.8fr) minmax(170px,1fr) minmax(300px,2.7fr);gap:16px}
+.formRowTriple>label{min-width:0}
+@media(max-width:860px){.formRowTriple{grid-template-columns:repeat(2,minmax(0,1fr))}.formRowTriple>label:last-child{grid-column:1/-1}}
+@media(max-width:560px){.formRowTriple{grid-template-columns:1fr}.formRowTriple>label:last-child{grid-column:auto}}
