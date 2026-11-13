@@ -56,3 +56,20 @@ test("materiais privados publicados são baixados apenas pelo respectivo comprad
  assert.match(materialsApi,/ebookAccessActive\(until\)/);
  assert.match(materialsApi,/createSignedUrl\(material\.storage_path,60/);
 });
+
+const reminder=read("lib/encounters/reminder-worker.ts");
+const reminderRoute=read("app/api/encounters/reminders/run/route.ts");
+const reminderWorkflow=read(".github/workflows/encounter-online-reminder.yml");
+const reminderSql=read("supabase/migrations/20261112_encounter_reminder_dispatches.sql");
+test("lembrete autorizado somente para confirmação paga, com chave única e data correta",()=>{
+ assert.match(reminder,/reminder_opt_in",true/);
+ assert.match(reminder,/terms_acknowledged_at/);
+ assert.match(reminder,/\.eq\("status","paid"\)/);
+ assert.match(reminder,/SEND_DATE="2027-01-20"/);
+ assert.match(reminder,/America\/Sao_Paulo/);
+ assert.match(reminder,/ignoreDuplicates:true/);
+ assert.match(reminderSql,/PRIMARY KEY\(order_id,reminder_key\)/);
+ assert.match(reminderWorkflow,/cron: "0 11 20 1 \*"/);
+ assert.match(reminderWorkflow,/secrets.MARKETING_CRON_SECRET/);
+ assert.match(reminderRoute,/timingSafeEqual/);
+});
