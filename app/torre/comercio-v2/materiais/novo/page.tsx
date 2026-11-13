@@ -69,10 +69,10 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
             </select>
           </label>
         </div>
-        <fieldset style={{border:"1px solid #dfe6ee",borderRadius:9,padding:18,display:"grid",gap:10}}>
+        <fieldset className={styles.choiceList}>
           <legend style={{fontWeight:750}}>Em quais produtos este material pode ser utilizado?</legend>
-          <p className={styles.note}>Marque todos os produtos correspondentes. O arquivo será cadastrado uma única vez. A liberação e a data serão definidas em Produtos → Materiais para entrega.</p>
-          {products.map(product=><label key={product.id} style={{display:"flex",alignItems:"center",gap:10,fontSize:14}}>
+          <p className={styles.note}>Selecione os produtos que utilizarão este material. O arquivo será cadastrado uma única vez; a data da entrega é configurada no produto.</p>
+          {products.map(product=><label key={product.id} className={styles.choiceRow}>
             <input type="checkbox" name="eligible_product_ids" value={product.id}
               defaultChecked={material ? eligibilityIds.has(product.id) : product.id === selectedProduct}/>
             <span>{product.code} — {product.name}</span>
@@ -88,7 +88,7 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
             defaultValue={material?.description ?? ""}
             placeholder="Descreva a finalidade e o conteúdo do arquivo." />
         </label>
-        <label className={styles.note} style={{display:"flex",alignItems:"center",gap:10}}>
+        <label className={styles.choiceRow}>
           <input type="checkbox" name="available_to_student" value="yes" defaultChecked={material?.available_to_student ?? false}/>
           Disponível para aluno — permite selecionar o material para entrega em Produtos. Não publica automaticamente.
         </label>
