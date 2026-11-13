@@ -28,19 +28,39 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
   await requireAdmin();
   const query = await searchParams;
   const db = getSupabaseAdmin();
-  const [productsResult, materialsResult, eligibilityResult] = await Promise.all([
+  const [productsResult, initialMaterialsResult, eligibilityResult] = await Promise.all([
     db.from("commerce_v2_products").select("id,code,name").order("name").limit(500),
     db.from("commerce_v2_materials")
       .select("id,product_id,title,description,category,original_filename,file_mime,file_size,storage_path,is_archived,available_to_student,created_at,updated_at")
       .order("created_at", { ascending: false }).limit(500),
     db.from("commerce_v2_material_product_eligibility").select("material_id,product_id").limit(5000),
   ]);
+
+  // Em ambientes ainda sem a coluna opcional de liberação, manter a Biblioteca
+  // consultável. Não esconder erros de leitura dos materiais ou dos produtos.
+  let materialsResult = initialMaterialsResult;
+  if (initialMaterialsResult.error?.code === "42703" ||
+      initialMaterialsResult.error?.code === "PGRST204") {
+    console.warn("Biblioteca V2: coluna opcional ausente:", initialMaterialsResult.error.message);
+    const fallback = await db.from("commerce_v2_materials")
+      .select("id,product_id,title,description,category,original_filename,file_mime,file_size,storage_path,is_archived,created_at,updated_at")
+      .order("created_at", { ascending: false }).limit(500);
+    materialsResult = fallback as typeof initialMaterialsResult;
+  }
+  if (productsResult.error) console.error("Biblioteca V2 products:", productsResult.error.message);
+  if (materialsResult.error) console.error("Biblioteca V2 materials:", materialsResult.error.message);
+  if (eligibilityResult.error) console.warn("Biblioteca V2 eligibility:", eligibilityResult.error.message);
   const products = (productsResult.data ?? []) as ProductOption[];
-  const links = eligibilityResult.data ?? [];
+  const eligibilityAvailable = !eligibilityResult.error;
+  const links = eligibilityAvailable ? (eligibilityResult.data ?? []) : [];
+  // Quando a tabela auxiliar não responder, preservar o vínculo principal antigo
+  // por product_id como fallback de leitura, sem criar nem excluir vínculos.
   const materials = (materialsResult.data ?? []).map(material => ({
     ...material,
-    eligible_product_ids: links.filter(link => link.material_id === material.id)
-      .map(link => link.product_id),
+    available_to_student: "available_to_student" in material ? material.available_to_student : false,
+    eligible_product_ids: eligibilityAvailable
+      ? links.filter(link => link.material_id === material.id).map(link => link.product_id)
+      : [material.product_id],
   })) as MaterialRow[];
   const chosenProduct = products.some(p => p.id === query.produto) ? query.produto : "";
   const newUrl = "/torre/comercio-v2/materiais/novo" + (chosenProduct ? "?produto=" + encodeURIComponent(chosenProduct) : "");
@@ -62,10 +82,11 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
     {query.erro && <p className={styles.error} role="alert">{errors[query.erro] ?? "Não foi possível concluir."}</p>}
     <section className={styles.section}>
       <h2>Materiais cadastrados</h2>
-      {(productsResult.error || materialsResult.error || eligibilityResult.error)
+      {!eligibilityAvailable && <p className={styles.note} role="status">Os vínculos adicionais entre materiais e produtos não puderam ser consultados. Exibindo o produto principal de cada cadastro até a regularização da consulta.</p>}
+      {(productsResult.error || materialsResult.error)
         ? <p className={styles.error} role="alert">Não foi possível consultar a Biblioteca de Materiais.</p>
         : <MaterialsTable materials={materials} products={products} initialProduct={chosenProduct ?? ""} />}
-      {!productsResult.error && !materialsResult.error && !eligibilityResult.error && materials.length === 500 &&
+      {!productsResult.error && !materialsResult.error && materials.length === 500 &&
         <p className={styles.note}>Mostrando os 500 registros mais recentes. A paginação será incluída antes de ultrapassar esse limite.</p>}
     </section>
   </main>;
