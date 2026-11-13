@@ -8,7 +8,9 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 const listing = "/torre/comercio-v2/paginas";
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
-const fail = (code: string): never => redirect(listing + "?erro=" + encodeURIComponent(code));
+function fail(code: string): never {
+  redirect(listing + "?erro=" + encodeURIComponent(code));
+}
 
 export async function changeCommercialPagePublication(form: FormData) {
   await requireAdmin();
@@ -23,7 +25,9 @@ export async function changeCommercialPagePublication(form: FormData) {
   const { data: page, error: pageError } = await db.from("commerce_v2_pages")
     .select("id,product_id,offer_id,title,headline,slug,status,version")
     .eq("id", id).eq("version", expectedVersion).maybeSingle();
-  if (pageError || !page) fail("conflito");
+  if (pageError || !page) {
+    fail("conflito");
+  }
 
   if (operation === "publish") {
     if (page.status !== "draft" || !page.headline?.trim() || !page.title?.trim()) fail("publicacao");
