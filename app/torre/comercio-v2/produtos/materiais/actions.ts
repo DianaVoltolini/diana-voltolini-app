@@ -58,3 +58,58 @@ export async function removeStudentDelivery(form:FormData){
   revalidatePath(base);
   go(productId,"removido=1");
 }
+
+/**
+ * Vincula o produto V2 a um produto da tabela real de vendas.
+ * A entrega segue desligada até ativação explícita em outra operação.
+ */
+export async function linkSalesProduct(form:FormData) {
+  await requireAdmin();
+  const productId=String(form.get("productId")??"");
+  const salesProductId=String(form.get("salesProductId")??"");
+  if(!uuid.test(productId) || (salesProductId && !uuid.test(salesProductId)))
+    go(productId,"erro=validacao");
+  const db=getSupabaseAdmin();
+  const {data:adminProduct,error:adminError}=await db.from("commerce_v2_products")
+    .select("id,code,student_delivery_active").eq("id",productId).maybeSingle();
+  if(adminError||!adminProduct)go(productId,"erro=produto");
+  if(adminProduct.student_delivery_active)go(productId,"erro=desativar");
+  if(salesProductId){
+    const {data:live,error:liveError}=await db.from("products")
+      .select("id,code").eq("id",salesProductId).maybeSingle();
+    // O mesmo código deve existir em ambos os catálogos para impedir
+    // a entrega dos materiais de um produto em outra compra.
+    if(liveError||!live||live.code!==adminProduct.code)go(productId,"erro=codigo");
+  }
+  const {error}=await db.from("commerce_v2_products")
+    .update({sales_product_id:salesProductId||null,student_delivery_active:false})
+    .eq("id",productId);
+  if(error){console.error("[commerce-v2-sales-link]",error.code);go(productId,"erro=vinculo");}
+  revalidatePath(base);
+  go(productId,"vinculado=1");
+}
+
+export async function setStudentDeliveryActive(form:FormData){
+  await requireAdmin();
+  const productId=String(form.get("productId")??"");
+  const activate=String(form.get("active")??"")==="true";
+  if(!uuid.test(productId))go(productId,"erro=validacao");
+  const db=getSupabaseAdmin();
+  const {data:product,error:productError}=await db.from("commerce_v2_products")
+    .select("code,sales_product_id").eq("id",productId).maybeSingle();
+  if(productError||!product)go(productId,"erro=produto");
+  if(activate){
+    if(!product.sales_product_id)go(productId,"erro=vinculo");
+    const {data:live,error:liveError}=await db.from("products")
+      .select("code").eq("id",product.sales_product_id).maybeSingle();
+    if(liveError||live?.code!==product.code)go(productId,"erro=codigo");
+    const {count,error:countError}=await db.from("commerce_v2_product_materials")
+      .select("material_id",{head:true,count:"exact"}).eq("product_id",productId);
+    if(countError||!count)go(productId,"erro=material");
+  }
+  const {error}=await db.from("commerce_v2_products")
+    .update({student_delivery_active:activate}).eq("id",productId);
+  if(error){console.error("[commerce-v2-enable]",error.code);go(productId,"erro=salvar");}
+  revalidatePath(base);
+  go(productId,activate?"ativado=1":"desativado=1");
+}
