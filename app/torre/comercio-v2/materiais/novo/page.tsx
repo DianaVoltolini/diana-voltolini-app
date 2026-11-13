@@ -7,7 +7,7 @@ import { materialCategories } from "../categories";
 import styles from "../materials.module.css";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Novo conteúdo | Biblioteca V2" };
+export const metadata: Metadata = { title: "Novo conteúdo | Biblioteca de Materiais" };
 type Query = { produto?: string; editar?: string };
 type Product = { id: string; code: string; name: string };
 type Material = {
@@ -37,7 +37,7 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
     <div className={styles.editor}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>COMÉRCIO V2 · BIBLIOTECA DE MATERIAIS</p>
+          <p className={styles.eyebrow}>ÁREA COMERCIAL · BIBLIOTECA DE MATERIAIS</p>
           <h1>{material ? "Editar conteúdo" : "Novo conteúdo"}</h1>
           <p>Cadastre o material e o associe ao produto correspondente.</p>
         </div>

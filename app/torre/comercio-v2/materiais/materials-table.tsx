@@ -93,25 +93,33 @@ export default function MaterialsTable({
               <td className={styles.description}>{m.description || "—"}</td>
               <td>{materialCategories[m.category] ?? m.category}</td>
               <td>{m.is_archived ? "Arquivado" : "Ativo"}</td>
-              <td><div className={css.actions}>
+              <td><div className={styles.actions}>
                 {!m.is_archived && <>
-                  <Link className={css.edit} title={"Editar " + m.title} aria-label={"Editar " + m.title}
+                  <Link className={styles.iconButton} title={"Editar " + m.title} aria-label={"Editar " + m.title}
                     href={"/torre/comercio-v2/materiais/novo?editar=" + encodeURIComponent(m.id)}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M12 20h9M4 17l-1 4 4-1L19 8l-3-3L4 17ZM14 7l3 3" /></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m16 5 3 3M4 20l4.2-.8L20 7.4 16.6 4 4.8 15.8 4 20Z"/></svg>
                   </Link>
                   {m.storage_path && <>
-                    {previewable.has(m.file_mime ?? "") && <a className={styles.actionText} href={"/torre/comercio-v2/materiais/arquivo/" + m.id + "?modo=visualizar"} target="_blank" rel="noopener noreferrer">Visualizar</a>}
-                    <a className={styles.actionText} href={"/torre/comercio-v2/materiais/arquivo/" + m.id}>Baixar</a>
+                    {previewable.has(m.file_mime ?? "") && <a className={styles.iconButton} title={"Visualizar " + m.title} aria-label={"Visualizar " + m.title} href={"/torre/comercio-v2/materiais/arquivo/" + m.id + "?modo=visualizar"} target="_blank" rel="noopener noreferrer">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </a>}
+                    <a className={styles.iconButton} title={"Baixar " + m.title} aria-label={"Baixar " + m.title} href={"/torre/comercio-v2/materiais/arquivo/" + m.id}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"/></svg>
+                    </a>
                   </>}
                   <form action={archiveCommerceV2Material}>
-                    <input type="hidden" name="id" value={m.id} />
-                    <input type="hidden" name="confirm" value="yes" />
-                    <button type="submit" title={"Arquivar " + m.title} className={styles.archive}>Arquivar</button>
+                    <input type="hidden" name="id" value={m.id}/>
+                    <input type="hidden" name="confirm" value="yes"/>
+                    <button type="submit" title={"Arquivar " + m.title} aria-label={"Arquivar " + m.title} className={styles.dangerIcon}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 4h18v4H3zM5 8v12h14V8M10 12h4"/></svg>
+                    </button>
                   </form>
                 </>}
                 {m.is_archived && <form action={restoreCommerceV2Material}>
-                  <input type="hidden" name="id" value={m.id} />
-                  <button type="submit" className={styles.restore}>Restaurar</button>
+                  <input type="hidden" name="id" value={m.id}/>
+                  <button type="submit" className={styles.iconButton} aria-label={"Restaurar " + m.title} title={"Restaurar " + m.title}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>
+                  </button>
                 </form>}
               </div></td>
             </tr>;

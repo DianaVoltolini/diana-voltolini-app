@@ -50,7 +50,7 @@ export default async function OfferEditor({ searchParams }: { searchParams: Prom
   return <main className={styles.page}>
     <header className={styles.header}>
       <div>
-        <p className={styles.eyebrow}>COMÉRCIO V2 · OFERTAS E PREÇOS</p>
+        <p className={styles.eyebrow}>ÁREA COMERCIAL · OFERTAS E PREÇOS</p>
         <h1>{offer ? "Editar oferta" : "Nova oferta"}</h1>
         <p>Valores de teste vinculados aos produtos V2. Nenhuma cobrança será gerada.</p>
       </div>

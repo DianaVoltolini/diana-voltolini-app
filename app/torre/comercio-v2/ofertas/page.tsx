@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import styles from "./offers.module.css";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Ofertas e Preços V2 | Torre" };
+export const metadata: Metadata = { title: "Ofertas e Preços | Torre" };
 
 type Product = { id: string; code: string; name: string };
 type Offer = {
@@ -44,7 +44,7 @@ export default async function OffersPage({ searchParams }: { searchParams: Promi
   return <main className={styles.page}>
     <header className={styles.header}>
       <div>
-        <p className={styles.eyebrow}>TORRE · COMÉRCIO V2</p>
+        <p className={styles.eyebrow}>TORRE · ÁREA COMERCIAL</p>
         <h1>Ofertas e Preços</h1>
         <p>Cadastre condições comerciais para produtos V2. Nenhuma oferta gera vendas nesta fase.</p>
       </div>
