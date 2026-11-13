@@ -61,15 +61,17 @@ export default async function OfferEditor({ searchParams }: { searchParams: Prom
       : <form action={saveCommerceV2Offer} className={styles.form}>
         <input type="hidden" name="id" value={offer?.id ?? ""}/>
         <input type="hidden" name="version" value={offer?.version ?? 1}/>
-        <label>Produto V2
-          <select name="product_id" required defaultValue={selected} key={selected}>
-            <option value="" disabled>Selecione um produto</option>
-            {products.map(p => <option value={p.id} key={p.id}>{p.code} — {p.name}</option>)}
-          </select>
-        </label>
-        <label>Nome da oferta
-          <input name="name" minLength={3} maxLength={160} required defaultValue={offer?.name ?? ""} placeholder="Ex.: Black November — Encontro Online"/>
-        </label>
+        <div className={styles.formProductRow}>
+          <label>Produto
+            <select name="product_id" required defaultValue={selected} key={selected}>
+              <option value="" disabled>Selecione um produto</option>
+              {products.map(p => <option value={p.id} key={p.id}>{p.code} — {p.name}</option>)}
+            </select>
+          </label>
+          <label>Nome da oferta
+            <input name="name" minLength={3} maxLength={160} required defaultValue={offer?.name ?? ""} placeholder="Ex.: Black November — Encontro Online"/>
+          </label>
+        </div>
         <label>Descrição da oferta
           <textarea name="description" rows={3} maxLength={2000} defaultValue={offer?.description ?? ""} placeholder="Descreva a campanha e suas condições."/>
         </label>
