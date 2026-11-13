@@ -31,7 +31,7 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
   const [productsResult, materialsResult] = await Promise.all([
     db.from("commerce_v2_products").select("id,code,name").order("name").limit(500),
     db.from("commerce_v2_materials")
-      .select("id,product_id,title,description,category,original_filename,file_mime,file_size,storage_path,is_archived,created_at,updated_at")
+      .select("id,product_id,title,description,category,original_filename,file_mime,file_size,storage_path,is_archived,available_to_student,created_at,updated_at")
       .order("created_at", { ascending: false }).limit(500),
   ]);
   const products = (productsResult.data ?? []) as ProductOption[];
