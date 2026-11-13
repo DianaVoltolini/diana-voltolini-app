@@ -10,6 +10,8 @@ const download=read("app/api/ebooks/ibs-cbs-na-pratica/download/route.ts");
 const access=read("lib/ebooks/purchase-access.ts");
 const sidebar=read("app/painel/layout.tsx");
 const migration=read("supabase/migrations/20261112_encounter_attendance_awareness_reminders.sql");
+const materialsSql=read("supabase/migrations/20261112_encounter_materials.sql");
+const materialsApi=read("app/api/encounters/materials/[id]/download/route.ts");
 
 test("e-books: cards por compra independente, sem conteúdo do encontro",()=>{
  assert.match(ebook,/\.like\("code","EBOOK-%"\)/);
@@ -42,4 +44,15 @@ test("download respeita a origem de compra e os prazos independentes",()=>{
  assert.match(download,/ebookAccessUntil\(encounterOrders/);
  assert.match(download,/access\.hasDirectEbookOrder/);
  assert.match(download,/access\.directEbookActive/);
+});
+
+test("materiais privados publicados são baixados apenas pelo respectivo comprador dentro dos 90 dias",()=>{
+ assert.match(materialsSql,/CREATE TABLE IF NOT EXISTS public\.encounter_materials/);
+ assert.match(materialsSql,/ENABLE ROW LEVEL SECURITY/);
+ assert.match(meeting,/publishedMaterials\.map\(material/);
+ assert.match(meeting,/\/api\/encounters\/materials\//);
+ assert.match(materialsApi,/\.eq\("user_id",verified\.user\.id\)/);
+ assert.match(materialsApi,/\.eq\("product_id",order\.product_id\)/);
+ assert.match(materialsApi,/ebookAccessActive\(until\)/);
+ assert.match(materialsApi,/createSignedUrl\(material\.storage_path,60/);
 });
