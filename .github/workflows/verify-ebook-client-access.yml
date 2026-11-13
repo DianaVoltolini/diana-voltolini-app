@@ -36,6 +36,8 @@ on:
       - "supabase/migrations/20261113_commerce_v2_customer_delivery_bridge.sql"
       - "tests/commerce-v2-customer-delivery.test.mjs"
       - "app/torre/produtos-entregas/**"
+      - "app/torre/auditoria/actions.ts"
+      - "app/torre/comercio-v2/paginas/publication-actions.ts"
       - "app/torre/sidebar.tsx"
       - "supabase/migrations/20261113_legacy_ebook_library_transfer.sql"
       - "tests/legacy-ebook-v2-consolidation.test.mjs"
