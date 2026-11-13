@@ -6,6 +6,7 @@ import {createClient} from "@/lib/supabase/server";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 import {ebookAccessActive,ebookAccessDateLabel,ebookAccessUntil} from "@/lib/ebooks/access";
 import {confirmEncounterAttendance} from "./actions";
+import {getStudentMaterialsForOrder} from "@/lib/commerce-v2/student-delivery";
 import ProductPage from "../product-page";
 import styles from "./encounter-page.module.css";
 
@@ -57,6 +58,9 @@ export default async function EncounterPage({searchParams}:Props){
       .order("display_order",{ascending:true})
     : {data:[],error:null};
   if(materialsError) throw new Error("Não foi possível consultar os materiais do encontro.");
+  const studentMaterialsByOrder=new Map(await Promise.all(purchases.map(async order=>
+    [order.id,await getStudentMaterialsForOrder(order)] as const
+  )));
   const search=await searchParams;
 
   return <ProductPage title="Meus Encontros Online" description="Suas inscrições, materiais e orientações, organizados por encontro.">
@@ -74,6 +78,8 @@ export default async function EncounterPage({searchParams}:Props){
       const inAccessPeriod=ebookAccessActive(expiresAt);
       const confirmation=confirmations.get(order.id);
       const publishedMaterials=(availableMaterials??[]).filter(item=>item.product_id===order.product_id);
+      const studentMaterials=studentMaterialsByOrder.get(order.id)??[];
+      const v2EbookReady=studentMaterials.some(item=>item.category==="ebook" && item.isReleased);
       const confirmed=Boolean(confirmation?.terms_acknowledged_at);
       return <section className={styles.encounterCard} key={order.id}>
         <div className={styles.cardHeading}>
@@ -94,12 +100,23 @@ export default async function EncounterPage({searchParams}:Props){
         <div className={styles.sectionBlock}>
           <span className={styles.sectionEyebrow}>MATERIAIS DESTE ENCONTRO</span>
           <h3 className={styles.sectionTitle}>Materiais incluídos</h3>
-          {isFirstEncounter&&<div className={styles.materialItem}>
+          {isFirstEncounter&&!v2EbookReady&&<div className={styles.materialItem}>
             <strong>E-book IBS e CBS na Prática</strong>
             <p>Disponível após a confirmação do pagamento, com atualizações durante o prazo de acesso.</p>
             {inAccessPeriod?
               <a className={styles.primaryButton} href="/api/ebooks/ibs-cbs-na-pratica/download?origem=encontro">Baixar e-book (PDF) ↓</a>:
               <p style={{fontWeight:750}}>Período de download encerrado.</p>}
+          </div>}
+          {studentMaterials.length>0&&<div className={styles.materialList} aria-label="Materiais da Biblioteca">
+            {studentMaterials.map(item=><div key={item.id} className={styles.materialItem}>
+              <strong>{item.title}</strong>
+              {item.isReleased?
+                <a className={styles.primaryButton}
+                  href={`/api/commerce-v2/materials/${item.id}/download?pedido=${order.id}`}>
+                  Baixar material ↓
+                </a>:<p>{!inAccessPeriod?"Prazo de acesso encerrado.":
+                  item.releaseDate?"Disponível a partir de "+item.releaseDate.split("-").reverse().join("/"):"Aguardando liberação."}</p>}
+            </div>)}
           </div>}
           {publishedMaterials.length>0&&<div className={styles.materialList}>
             {publishedMaterials.map(material=><div key={material.id}
@@ -113,7 +130,7 @@ export default async function EncounterPage({searchParams}:Props){
                 <p style={{marginTop:9}}>Prazo de download encerrado.</p>}
             </div>)}
           </div>}
-          {isFirstEncounter&&publishedMaterials.length===0&&<div className={styles.materialGrid}>
+          {isFirstEncounter&&publishedMaterials.length===0&&studentMaterials.length===0&&<div className={styles.materialGrid}>
             {materials.map(name=><div key={name} className={styles.materialItem}>
               <strong>{name}</strong>
               <p>Disponibilização prevista para janeiro de 2027.</p>
