@@ -160,3 +160,14 @@ O V2 só substitui o fluxo legado após homologação completa do piloto e migra
 - Nenhum checkout, pagamento, Bling, página pública ou entrega existente foi alterado.
 - Pendente: SQL no Supabase, build/lint, homologação de prévia, acessos, regras comerciais e regressão.
 - F3B de publicação pública será desenvolvido **separadamente**, após aprovação explícita do piloto.
+
+
+## Decisão de escopo — lançamento com turma única e automação futura (13/11/2026)
+
+**Lançamento imediato:** colocar à venda o Encontro Online de 21/01/2027, 19h30–21h, sem implementar a gestão automatizada de múltiplas turmas agora. Reutilizar o produto, a oferta e a página piloto somente após homologação específica de checkout, pagamento, inscrição e acesso ao material, sem mudar fluxos legados inadvertidamente.
+
+**Futuro, deliberadamente adiado:** programação de datas por produto, inscrição por turma, atualização automática da próxima turma e data de encerramento na página, encerramento das vendas quando não houver turmas, e liberação relativa à data da aula (após pagamento, N dias antes ou no dia). Proteger o vínculo histórico entre compra e turma e tratar compras próximas à aula. A tarefa será registrada na Auditoria da Torre pelo SQL idempotente `sql/auditoria_programacao_turmas_futuro_20261113.sql` — prioridade baixa, status pendente, sem prazo.
+
+**Critério de não bloqueio:** essa automação não é requisito para a primeira venda do encontro com data única. Não ativar compras pela página dinâmica V2 antes do checkout, integração de pagamento e entrega estarem testados ponta a ponta. Não confundir a existência de página pública com checkout funcional.
+
+**Checklist mínimo para lançar o encontro de 21/01/2027:** validar página e informações comerciais (data e preço), checkout da oferta, identificação e pagamento, registro da inscrição, e-book e demais materiais conforme direitos e prazo, confirmação por e-mail, testes de acesso de cliente e fluxo de cancelamento. Preservar checkouts e compradores existentes.
