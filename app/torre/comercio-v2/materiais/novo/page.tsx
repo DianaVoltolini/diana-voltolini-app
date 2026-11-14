@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { materialCategories } from "../categories";
 import styles from "../materials.module.css";
 
 export const dynamic = "force-dynamic";
@@ -20,15 +19,17 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
   await requireAdmin();
   const query = await searchParams;
   const db = getSupabaseAdmin();
-  const [productsResult, materialResult] = await Promise.all([
+  const [productsResult, materialResult, typesResult] = await Promise.all([
     db.from("commerce_v2_products").select("id,code,name").order("name").limit(500),
     query.editar
       ? db.from("commerce_v2_materials")
           .select("id,product_id,title,category,description,original_filename,is_archived,available_to_student")
           .eq("id", query.editar).eq("is_archived", false).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
+    db.from("commerce_v2_material_types").select("code,name,is_active").order("name").limit(500),
   ]);
   const products = (productsResult.data ?? []) as Product[];
+  const typeOptions=(typesResult.data??[]).filter(t=>t.is_active||t.code===materialResult.data?.category);
   const material = materialResult.data as Material | null;
   const eligibilityResult = material ? await db.from("commerce_v2_material_product_eligibility")
     .select("product_id").eq("material_id", material.id)
@@ -47,9 +48,9 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
         </div>
         <Link href={back}>Voltar à lista</Link>
       </header>
-      {(productsResult.error || materialResult.error || eligibilityResult.error) && <p className={styles.error} role="alert">Não foi possível consultar os dados do editor.</p>}
+      {(productsResult.error || materialResult.error || eligibilityResult.error || typesResult.error) && <p className={styles.error} role="alert">Não foi possível consultar os dados do editor.</p>}
       {invalidEdit && <p className={styles.error} role="alert">Material indisponível para edição. Volte à Biblioteca.</p>}
-      {!productsResult.error && !eligibilityResult.error && !invalidEdit && <form
+      {!productsResult.error && !eligibilityResult.error && !typesResult.error && !invalidEdit && <form
         className={styles.editorForm}
         action="/torre/comercio-v2/materiais/salvar"
         method="POST"
@@ -63,10 +64,11 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
           </label>
           <label>Tipo do material
             <select name="category" defaultValue={material?.category ?? "support"}>
-              {Object.entries(materialCategories).map(([key, name]) => <option value={key} key={key}>{name}</option>)}
+              {typeOptions.map(t=><option value={t.code} key={t.code}>{t.name}{t.is_active?"":" (inativo)"}</option>)}
             </select>
           </label>
         </div>
+        <p className={styles.note}>Precisa de outro tipo? <Link href="/torre/comercio-v2/materiais/tipos">Cadastrar ou editar tipos de material</Link>.</p>
         <fieldset className={styles.choiceList}>
           <legend style={{fontWeight:750}}>Em quais produtos este material será entregue?</legend>
           <p className={styles.note}>Selecione os produtos que utilizarão este material. O arquivo será cadastrado uma única vez; a data da entrega é configurada no produto.</p>
