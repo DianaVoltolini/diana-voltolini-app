@@ -41,6 +41,7 @@ export default async function OfferEditor({ searchParams }: { searchParams: Prom
   const products = (productsResult.data ?? []) as Product[];
   const selected = offer?.product_id ?? (products.some(p => p.id === query.produto) ? query.produto : "");
   const missing = Boolean(query.editar && !offer);
+  const isConnectedEbook=products.find(p=>p.id===selected)?.code==="EBOOK-IBSCBS-001";
   const historyResult = offer
     ? await db.from("commerce_v2_offer_revisions")
         .select("id,version,name,regular_price_cents,promotional_price_cents,saved_at")
@@ -52,7 +53,7 @@ export default async function OfferEditor({ searchParams }: { searchParams: Prom
       <div>
         <p className={styles.eyebrow}>ÁREA COMERCIAL · OFERTAS E PREÇOS</p>
         <h1>{offer ? "Editar oferta" : "Nova oferta"}</h1>
-        <p>Valores de teste vinculados aos produtos V2. Nenhuma cobrança será gerada.</p>
+        <p>Edite as condições comerciais do produto. Para o e-book IBS/CBS, o preço normal alimenta a página pública e o checkout único.</p>
       </div>
       <Link href="/torre/comercio-v2/ofertas">Voltar à lista</Link>
     </header>
@@ -91,8 +92,8 @@ export default async function OfferEditor({ searchParams }: { searchParams: Prom
             <input type="date" name="promo_ends_on" defaultValue={offer?.promo_ends_on ?? ""}/>
           </label>
         </div>
-        <p className={styles.note}>Para cadastrar promoção, informe o preço com desconto e as duas datas. O desconto deve ser inferior ao preço normal. As datas não ativam vendas automaticamente.</p>
-        <p className={styles.note}><strong>Situação: rascunho.</strong> Publicação, checkout e alteração de cobranças permanecem indisponíveis.</p>
+        <p className={styles.note}>{isConnectedEbook?"Para o e-book IBS/CBS, altere apenas o preço normal. Promoções agendadas ainda não estão disponíveis. Pedidos anteriores preservam o preço original.":"Para cadastrar promoção, informe o desconto e as duas datas. As datas não ativam vendas automaticamente."}</p>
+        <p className={styles.note}>{isConnectedEbook?"Preço normal conectado ao checkout publicado. O status técnico da oferta V2 continua como rascunho.":"Situação: rascunho. Esta oferta não ativa checkout."}</p>
         <footer><button type="submit" disabled={products.length === 0}>Salvar oferta</button><Link href="/torre/comercio-v2/ofertas">Cancelar</Link></footer>
       </form>}
     {offer && !historyResult.error && <section id="historico" className={styles.history}>

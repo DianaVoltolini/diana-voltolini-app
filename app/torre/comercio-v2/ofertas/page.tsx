@@ -27,6 +27,7 @@ const errorMessage: Record<string, string> = {
   produto: "O produto selecionado não está disponível na V2.",
   salvar: "Não foi possível salvar a oferta. Confira a migração SQL.",
   conflito: "A oferta foi alterada em outra sessão. Reabra o cadastro antes de editar.",
+  promocao: "Promoção com vigência ainda não disponível para o e-book com checkout ativo. Altere apenas o preço normal.",
 };
 export default async function OffersPage({ searchParams }: { searchParams: Promise<Params> }) {
   await requireAdmin();
@@ -46,7 +47,7 @@ export default async function OffersPage({ searchParams }: { searchParams: Promi
       <div>
         <p className={styles.eyebrow}>TORRE · ÁREA COMERCIAL</p>
         <h1>Ofertas e Preços</h1>
-        <p>Cadastre condições comerciais para produtos V2. Nenhuma oferta gera vendas nesta fase.</p>
+        <p>Gerencie preços e condições comerciais. Para o e-book IBS/CBS, salvar o preço normal atualiza o checkout e a página de vendas após a publicação da integração.</p>
       </div>
       <Link className={styles.add} href="/torre/comercio-v2/ofertas/novo">+ Nova oferta</Link>
     </header>
@@ -65,7 +66,7 @@ export default async function OffersPage({ searchParams }: { searchParams: Promi
             <td>{brl(o.regular_price_cents)}</td>
             <td>{o.promotional_price_cents === null ? "—" : brl(o.promotional_price_cents)}</td>
             <td>{o.promo_starts_on && o.promo_ends_on ? o.promo_starts_on.split("-").reverse().join("/") + " a " + o.promo_ends_on.split("-").reverse().join("/") : "—"}</td>
-            <td>Rascunho</td>
+            <td>{names.get(o.product_id)?.code === "EBOOK-IBSCBS-001" ? "Preço conectado ao checkout" : "Rascunho"}</td>
             <td>
               <div className={styles.actions}>
                 <Link

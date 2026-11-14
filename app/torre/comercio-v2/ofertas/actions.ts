@@ -46,8 +46,9 @@ export async function saveCommerceV2Offer(form: FormData) {
 
   const db = getSupabaseAdmin();
   const { data: product, error: productError } = await db.from("commerce_v2_products")
-    .select("id").eq("id", productId).eq("status", "draft").maybeSingle();
+    .select("id,code").eq("id", productId).eq("status", "draft").maybeSingle();
   if (productError || !product) fail("produto");
+  if (product.code === "EBOOK-IBSCBS-001" && promo !== null) fail("promocao");
 
   const fields = {
     product_id: productId, name, description: description || null,
