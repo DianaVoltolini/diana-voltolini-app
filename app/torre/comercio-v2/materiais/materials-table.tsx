@@ -5,8 +5,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { archiveCommerceV2Material, restoreCommerceV2Material } from "./actions";
 import styles from "./materials.module.css";
-import { materialCategories } from "./categories";
 
+export type MaterialTypeOption = { code:string; name:string; is_active:boolean };
 export type ProductOption = { id: string; code: string; name: string };
 export type MaterialRow = {
   id: string; product_id: string; eligible_product_ids: string[]; title: string; description: string;
@@ -19,14 +19,15 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_
 const previewable = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp", "text/plain"]);
 function size(bytes: number | null) { return bytes === null ? "" : (bytes / 1048576).toFixed(2).replace(".", ",") + " MB"; }
 export default function MaterialsTable({
-  materials, products, initialProduct = "",
+  materials, products, types, initialProduct = "",
 }: {
-  materials: MaterialRow[]; products: ProductOption[]; initialProduct?: string;
+  materials: MaterialRow[]; products: ProductOption[]; types: MaterialTypeOption[]; initialProduct?: string;
 }) {
   const [query, setQuery] = useState("");
   const [product, setProduct] = useState(initialProduct);
   const [category, setCategory] = useState("todos");
   const [status, setStatus] = useState("ativos");
+  const materialCategories=useMemo(()=>Object.fromEntries(types.map(t=>[t.code,t.name])),[types]);
   const productMap = useMemo(() => new Map(products.map(p => [p.id, p])), [products]);
   const filtered = useMemo(() => {
     const search = normalize(query.trim());
@@ -62,7 +63,7 @@ export default function MaterialsTable({
         <span>Tipo</span>
         <select value={category} onChange={e => setCategory(e.target.value)}>
           <option value="todos">Todos</option>
-          {Object.entries(materialCategories).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+          {types.map(t=><option key={t.code} value={t.code}>{t.name}{t.is_active?"":" (inativo)"}</option>)}
         </select>
       </label>
       <label className={styles.filterField}>
