@@ -17,7 +17,6 @@ const extensions: Record<string, string[]> = {
   webp: ["image/webp"], zip: ["application/zip", "application/x-zip-compressed"],
   txt: ["text/plain"],
 };
-const categories = new Set(["slides", "ebook", "worksheet", "checklist", "script", "image", "support", "exercises", "other"]);
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 function field(form: FormData, key: string, max: number) {
   return String(form.get(key) ?? "").trim().slice(0, max + 1);
@@ -64,7 +63,7 @@ export async function POST(request: NextRequest) {
   if ((id && !uuid.test(id)) ||
     eligibleProductIds.length === 0 || eligibleProductIds.length > 100 ||
     eligibleProductIds.some(value=>!uuid.test(value)) ||
-    title.length < 2 || title.length > 180 || description.length > 4000 || !categories.has(category)) {
+    title.length < 2 || title.length > 180 || description.length > 4000 || !/^[a-z][a-z0-9_]{1,29}$/.test(category)) {
     return back("erro", "validacao");
   }
   let ext = "";
@@ -77,6 +76,9 @@ export async function POST(request: NextRequest) {
   }
 
   const db = getSupabaseAdmin();
+  const {data:allowedType,error:typeError}=await db.from("commerce_v2_material_types")
+    .select("code,is_active").eq("code",category).maybeSingle();
+  if(typeError||!allowedType)return back("erro","tipo");
   const {data:allowedProducts,error:allowedError} = await db.from("commerce_v2_products")
     .select("id").in("id",eligibleProductIds).eq("status","draft");
   if(allowedError || (allowedProducts??[]).length!==eligibleProductIds.length)
@@ -84,6 +86,12 @@ export async function POST(request: NextRequest) {
 
   const existingResult = id ? await db.from("commerce_v2_materials")
     .select("id,product_id,storage_path").eq("id", id).eq("is_archived", false).maybeSingle() : null;
+  if(!allowedType.is_active){
+    if(!id)return back("erro","tipo");
+    const {data:existingType,error:existingTypeError}=await db.from("commerce_v2_materials")
+      .select("category").eq("id",id).maybeSingle();
+    if(existingTypeError||existingType?.category!==category)return back("erro","tipo");
+  }
   if (id && (existingResult?.error || !existingResult?.data))
     return back("erro", "material");
 

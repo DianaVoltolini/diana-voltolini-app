@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import MaterialsTable, { type MaterialRow, type ProductOption } from "./materials-table";
+import MaterialsTable, { type MaterialRow, type ProductOption, type MaterialTypeOption } from "./materials-table";
 import styles from "./materials.module.css";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +17,7 @@ const errors: Record<string, string> = {
   material: "Material não encontrado ou vinculado a outro produto.",
   upload: "Não foi possível enviar o arquivo.",
   salvar: "Não foi possível salvar o material.",
+  tipo: "O tipo de material selecionado não está disponível.",
   excluir: "Não foi possível arquivar o material.",
   restaurar: "Não foi possível restaurar o material.",
   csv: "CSV inválido, incompleto ou incompatível com o produto.",
@@ -28,12 +29,13 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
   await requireAdmin();
   const query = await searchParams;
   const db = getSupabaseAdmin();
-  const [productsResult, initialMaterialsResult, eligibilityResult] = await Promise.all([
+  const [productsResult, initialMaterialsResult, eligibilityResult, typesResult] = await Promise.all([
     db.from("commerce_v2_products").select("id,code,name").order("name").limit(500),
     db.from("commerce_v2_materials")
       .select("id,product_id,title,description,category,original_filename,file_mime,file_size,storage_path,is_archived,available_to_student,created_at,updated_at")
       .order("created_at", { ascending: false }).limit(500),
     db.from("commerce_v2_material_product_eligibility").select("material_id,product_id").limit(5000),
+    db.from("commerce_v2_material_types").select("code,name,is_active").order("name").limit(500),
   ]);
 
   // Em ambientes ainda sem a coluna opcional de liberação, manter a Biblioteca
@@ -51,6 +53,7 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
   if (materialsResult.error) console.error("Biblioteca V2 materials:", materialsResult.error.message);
   if (eligibilityResult.error) console.warn("Biblioteca V2 eligibility:", eligibilityResult.error.message);
   const products = (productsResult.data ?? []) as ProductOption[];
+  const types=(typesResult.data??[]) as MaterialTypeOption[];
   const eligibilityAvailable = !eligibilityResult.error;
   const links = eligibilityAvailable ? (eligibilityResult.data ?? []) : [];
   // Quando a tabela auxiliar não responder, preservar o vínculo principal antigo
@@ -72,6 +75,7 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
       </div>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <Link className={styles.button} href={newUrl}>+ Novo conteúdo</Link>
+        <Link className={styles.button} href="/torre/comercio-v2/materiais/tipos">Tipos de Material</Link>
         <Link className={styles.button} href="/torre/comercio-v2/materiais/limpeza-storage">Auditar arquivos órfãos</Link>
         <Link className={styles.button} href={"/torre/comercio-v2/materiais/importar" + (chosenProduct ? "?produto=" + encodeURIComponent(chosenProduct) : "")}>Importar em lote</Link>
         <Link className={styles.button} href={"/torre/comercio-v2/materiais/disponibilidade" + (chosenProduct ? "?produto=" + encodeURIComponent(chosenProduct) : "")}>Atualizar disponibilidade via CSV</Link>
@@ -85,9 +89,9 @@ export default async function MaterialsPage({ searchParams }: { searchParams: Pr
     <section className={styles.section}>
       <h2>Materiais cadastrados</h2>
       {!eligibilityAvailable && <p className={styles.note} role="status">Os vínculos adicionais entre materiais e produtos não puderam ser consultados. Exibindo o produto principal de cada cadastro até a regularização da consulta.</p>}
-      {(productsResult.error || materialsResult.error)
+      {(productsResult.error || materialsResult.error || typesResult.error)
         ? <p className={styles.error} role="alert">Não foi possível consultar a Biblioteca de Materiais.</p>
-        : <MaterialsTable materials={materials} products={products} initialProduct={chosenProduct ?? ""} />}
+        : <MaterialsTable materials={materials} products={products} types={types} initialProduct={chosenProduct ?? ""} />}
       {!productsResult.error && !materialsResult.error && materials.length === 500 &&
         <p className={styles.note}>Mostrando os 500 registros mais recentes. A paginação será incluída antes de ultrapassar esse limite.</p>}
     </section>
