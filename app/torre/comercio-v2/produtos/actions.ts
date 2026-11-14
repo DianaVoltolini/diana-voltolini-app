@@ -12,8 +12,13 @@ function read(form: FormData, key: string, max: number): string {
   return String(form.get(key) ?? "").trim().slice(0, max + 1);
 }
 function optional(value: string) { return value || null; }
-function destination(error: string): never {
-  redirect(route + "?erro=" + encodeURIComponent(error));
+function destination(error: string, id = ""): never {
+  const params = new URLSearchParams({ erro: error });
+  if (id) {
+    params.set("editar", id);
+    redirect(route + "/novo?" + params.toString());
+  }
+  redirect(route + "/novo?" + params.toString());
 }
 
 export async function saveCommerceV2Product(form: FormData) {
@@ -31,7 +36,7 @@ export async function saveCommerceV2Product(form: FormData) {
       name.length < 3 || name.length > 180 ||
       description.length > 8000 || deliveryDescription.length > 4000 ||
       !["ebook", "online_event", "course", "service", "other"].includes(productType)) {
-    destination("validacao");
+    destination("validacao", id);
   }
 
   if (salesPageUrl) {
@@ -43,7 +48,7 @@ export async function saveCommerceV2Product(form: FormData) {
     } catch {
       valid = false;
     }
-    if (!valid) destination("url");
+    if (!valid) destination("url", id);
   }
 
   const db = getSupabaseAdmin();
@@ -58,20 +63,25 @@ export async function saveCommerceV2Product(form: FormData) {
   if (id) {
     const { data: existing, error: lookupError } = await db
       .from("commerce_v2_products").select("id,code").eq("id", id).maybeSingle();
-    if (lookupError || !existing) destination("indisponivel");
-    if (existing.code !== code) destination("codigo");
+    if (lookupError || !existing) destination("indisponivel", id);
+    if (existing.code.toUpperCase() !== code) destination("codigo", id);
 
-    const { error } = await db.from("commerce_v2_products").update(common).eq("id", id);
-    if (error) { console.error("Commerce V2 update:", error.code); destination("salvar"); }
+    const { data: updated, error } = await db.from("commerce_v2_products")
+      .update(common).eq("id", id).select("id").maybeSingle();
+    if (error || !updated) {
+      console.error("Commerce V2 update:", error?.code ?? "no matching row");
+      destination("salvar", id);
+    }
   } else {
     const { error } = await db.from("commerce_v2_products").insert({
       ...common, code, status: "draft", created_by: userId,
     });
     if (error) {
       console.error("Commerce V2 insert:", error.code);
-      destination(error.code === "23505" ? "duplicado" : "salvar");
+      destination(error.code === "23505" ? "duplicado" : "salvar", id);
     }
   }
   revalidatePath(route);
+  if (id) revalidatePath(route + "/novo");
   redirect(route + "?salvo=1");
 }
