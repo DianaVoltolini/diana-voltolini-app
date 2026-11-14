@@ -29,11 +29,20 @@ ON CONFLICT (code) DO NOTHING;
 ALTER TABLE public.commerce_v2_materials
   DROP CONSTRAINT IF EXISTS commerce_v2_materials_category_check;
 
-ALTER TABLE public.commerce_v2_materials
-  ADD CONSTRAINT commerce_v2_materials_category_fk
-  FOREIGN KEY (category)
-  REFERENCES public.commerce_v2_material_types(code)
-  ON UPDATE RESTRICT ON DELETE RESTRICT;
+DO $
+BEGIN
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_constraint
+  WHERE conrelid='public.commerce_v2_materials'::regclass
+    AND conname='commerce_v2_materials_category_fk'
+ ) THEN
+  ALTER TABLE public.commerce_v2_materials
+   ADD CONSTRAINT commerce_v2_materials_category_fk
+   FOREIGN KEY (category)
+   REFERENCES public.commerce_v2_material_types(code)
+   ON UPDATE RESTRICT ON DELETE RESTRICT;
+ END IF;
+END $;
 
 ALTER TABLE public.commerce_v2_material_types ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.commerce_v2_material_types FROM PUBLIC, anon, authenticated;
