@@ -77,3 +77,13 @@
 .typeItem{border:1px solid #d6e0e8;border-radius:9px;background:#f8fafc;padding:15px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .typeItem>div{min-width:0}.typeItem strong{display:block;color:#102033}.typeItem small{display:block;color:#607184;margin-top:4px;overflow-wrap:anywhere}
 @media(max-width:760px){.typeList{grid-template-columns:1fr}}
+
+/* Tipos de material: apenas um campo e lista compacta. */
+.typeSimpleForm{display:flex;gap:12px;align-items:end;flex-wrap:wrap;max-width:700px}
+.typeSimpleForm label{display:grid;gap:7px;flex:1 1 320px;font-size:14px;font-weight:700}
+.typeSimpleForm input{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:12px;background:#fff;color:#102033;font:inherit;font-weight:400}
+.typeSimpleForm button{border:0;background:#173c71;color:#fff;border-radius:8px;padding:13px 22px;font-weight:800;cursor:pointer}
+.typeSimpleForm>a{padding:12px;color:#173c71;text-decoration:none;font-weight:700}
+.typeList{grid-template-columns:1fr;gap:7px;max-width:700px}
+.typeItem{background:#fff;padding:10px 14px}
+.typeItem strong{font-size:14px}
