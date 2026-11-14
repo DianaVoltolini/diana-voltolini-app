@@ -14,8 +14,9 @@ test("vínculo V2 e venda real é opcional e inativo até validação",()=>{
   assert.match(sql,/sales_product_id uuid REFERENCES public\.products\(id\)/);
   assert.match(sql,/student_delivery_active boolean NOT NULL DEFAULT false/);
   assert.match(sql,/commerce_v2_products_sales_product_unique/);
-  assert.match(admin,/live\.code!==adminProduct\.code/);
-  assert.match(admin,/live\?\.code!==product\.code/);
+  assert.match(admin,/isMatchingSalesCode\(adminProduct\.code,live\.code\)/);
+  assert.match(admin,/isMatchingSalesCode\(product\.code,live\.code\)/);
+  assert.match(admin,/v2Code==="DIAGNOSTICO-EXPRESSO-IBS-CBS" && salesCode==="diagnostico-expresso-ibs-cbs"/);
   assert.match(adminPage,/Ativar entrega aos clientes/);
 });
 test("regra de liberação exige produto ativado, material elegível e prazo",()=>{

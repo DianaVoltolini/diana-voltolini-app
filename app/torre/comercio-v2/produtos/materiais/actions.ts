@@ -8,6 +8,12 @@ import {getSupabaseAdmin} from "@/lib/supabase/admin";
 const base="/torre/comercio-v2/produtos/materiais";
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 const datePattern=/^\d{4}-\d{2}-\d{2}$/;
+/** Mapeia o único código legado do Diagnóstico sem alterar o checkout existente. */
+function isMatchingSalesCode(v2Code:string,salesCode:string):boolean {
+  return v2Code===salesCode ||
+    (v2Code==="DIAGNOSTICO-EXPRESSO-IBS-CBS" && salesCode==="diagnostico-expresso-ibs-cbs");
+}
+
 function go(productId:string,code:string):never{
   redirect(base+"?produto="+encodeURIComponent(productId)+"&"+code);
 }
@@ -79,7 +85,7 @@ export async function linkSalesProduct(form:FormData) {
       .select("id,code").eq("id",salesProductId).maybeSingle();
     // O mesmo código deve existir em ambos os catálogos para impedir
     // a entrega dos materiais de um produto em outra compra.
-    if(liveError||!live||live.code!==adminProduct.code)go(productId,"erro=codigo");
+    if(liveError||!live||!isMatchingSalesCode(adminProduct.code,live.code))go(productId,"erro=codigo");
   }
   const {error}=await db.from("commerce_v2_products")
     .update({sales_product_id:salesProductId||null,student_delivery_active:false})
@@ -102,7 +108,7 @@ export async function setStudentDeliveryActive(form:FormData){
     if(!product.sales_product_id)go(productId,"erro=vinculo");
     const {data:live,error:liveError}=await db.from("products")
       .select("code").eq("id",product.sales_product_id).maybeSingle();
-    if(liveError||live?.code!==product.code)go(productId,"erro=codigo");
+    if(liveError||!live||!isMatchingSalesCode(product.code,live.code))go(productId,"erro=codigo");
     const {count,error:countError}=await db.from("commerce_v2_product_materials")
       .select("material_id",{head:true,count:"exact"}).eq("product_id",productId);
     if(countError||!count)go(productId,"erro=material");
