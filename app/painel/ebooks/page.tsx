@@ -17,7 +17,8 @@ export const dynamic = "force-dynamic";
 type Book={id:string;code:string;name:string};
 type BookOrder={id:string;product_id:string;paid_at:string;created_at:string};
 
-export default async function EbooksPage() {
+export default async function EbooksPage({searchParams}:{searchParams:Promise<{consulta?:string}>}) {
+  const {consulta}=await searchParams;
   const auth = await createClient();
   const { data: claims, error: authError } = await auth.auth.getClaims();
   const userId = typeof claims?.claims?.sub === "string" ? claims.claims.sub : null;
@@ -25,12 +26,64 @@ export default async function EbooksPage() {
 
   // Reaproveita a verificação da identidade e o vínculo de compras sem dono.
   await getEbookPurchaseAccess(userId);
+
+  const {data:verified,error:identityError}=await auth.auth.getUser();
+  if(identityError||verified.user?.id!==userId||!verified.user.email)
+    redirect("/login?retorno=%2Fpainel%2Febooks");
+  const verifiedEmail=verified.user.email.trim().toLowerCase();
+
+  async function verifyPendingPayment(formData:FormData) {
+    "use server";
+    const orderId=String(formData.get("orderId")??"").trim();
+    if(!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(orderId))
+      redirect("/painel/ebooks?consulta=erro");
+    const client=await createClient();
+    const {data:identity,error:identityError}=await client.auth.getUser();
+    if(identityError||!identity.user?.email)redirect("/login?retorno=%2Fpainel%2Febooks");
+    const {data:session}=await client.auth.getSession();
+    const jwt=session.session?.access_token;
+    if(!jwt)redirect("/login?retorno=%2Fpainel%2Febooks");
+    const db=getSupabaseAdmin();
+    const {data:order,error:orderError}=await db.from("orders")
+      .select("id,customer_email,user_id,status,product_id").eq("id",orderId).maybeSingle();
+    const {data:product,error:productError}=await db.from("products")
+      .select("id").eq("code",EBOOK_PRODUCT_CODE).maybeSingle();
+    if(orderError||productError||!order||!product||order.product_id!==product.id
+      ||order.customer_email?.trim().toLowerCase()!==identity.user.email.trim().toLowerCase()
+      ||(order.user_id&&order.user_id!==identity.user.id))
+      redirect("/painel/ebooks?consulta=erro");
+    if(order.status==="paid")redirect("/painel/ebooks?consulta=pago");
+    if(order.status!=="pending")redirect("/painel/ebooks?consulta=erro");
+    let result="erro";
+    try {
+      const response=await fetch("https://dianavoltolini.com.br/api/cron/payments/sync",{
+        method:"PUT",
+        headers:{Authorization:"Bearer "+jwt,"Content-Type":"application/json"},
+        body:JSON.stringify({orderId}),cache:"no-store",signal:AbortSignal.timeout(16000),
+      });
+      const payload=await response.json() as {status?:string};
+      result=payload.status==="paid"?"pago":payload.status==="pending"?"pendente":response.status===429?"aguarde":"erro";
+    } catch(error) {
+      console.error("[ebook-payment-check] Falha",error instanceof Error?error.message:"Falha desconhecida");
+    }
+    redirect("/painel/ebooks?consulta="+result);
+  }
+
   const db=getSupabaseAdmin();
   const {data:products,error:productsError}=await db.from("products")
     .select("id,code,name").like("code","EBOOK-%");
   if(productsError) throw new Error("Não foi possível consultar o catálogo de e-books.");
   const catalog=(products??[]) as Book[];
   const productIds=catalog.map(item=>item.id);
+
+  const {data:pendingRows,error:pendingError}=productIds.length
+    ?await db.from("orders").select("id,product_id,amount_cents,created_at")
+      .in("product_id",productIds).ilike("customer_email",verifiedEmail)
+      .eq("status","pending").order("created_at",{ascending:false}).limit(10)
+    :{data:[],error:null};
+  if(pendingError)throw new Error("Não foi possível verificar seus pedidos.");
+  const pending=pendingRows??[];
+
   const {data:orders,error:ordersError}=productIds.length
     ? await db.from("orders")
       .select("id,product_id,paid_at,created_at").eq("user_id",userId)
@@ -45,20 +98,43 @@ export default async function EbooksPage() {
     return [book.id,order?await getStudentMaterialsForOrder(order):[]] as const;
   })));
 
+
+  const feedback=consulta==="pago"?"Pagamento confirmado. Seu e-book está disponível abaixo.":
+    consulta==="pendente"?"O Bling ainda não confirmou o pagamento. Consulte novamente mais tarde.":
+    consulta==="aguarde"?"Aguarde antes de consultar novamente.":consulta==="erro"?"Não foi possível consultar o pagamento neste momento.":null;
+  const pendingCard=pending.length>0?<section style={{border:"1px solid #e1e7ed",borderRadius:9,padding:24,background:"#fff",marginBottom:20}}>
+    <h2>Pagamento em conferência</h2>
+    <p>Você já pode utilizar sua Área do Cliente. O material será liberado após a confirmação do pagamento.</p>
+    {pending.map(order=><div key={order.id} style={{borderTop:"1px solid #e1e7ed",paddingTop:12,marginTop:12}}>
+      <p><strong>E-book IBS e CBS na Prática</strong> · R$ {(order.amount_cents/100).toFixed(2).replace(".",",")}</p>
+      <form action={verifyPendingPayment}>
+        <input type="hidden" name="orderId" value={order.id}/>
+        <button type="submit" style={{background:"#c9a227",border:0,borderRadius:6,padding:"12px 20px",fontWeight:800,cursor:"pointer"}}>
+          Já paguei — verificar pagamento
+        </button>
+      </form>
+      <p style={{fontSize:13}}>A confirmação será consultada diretamente no Bling. Este botão não cria cobranças.</p>
+    </div>)}
+  </section>:null;
+
   if(!ownedBooks.length) return (
     <ProductPage title="IBS e CBS na Prática" description="E-book digital para compreender a Reforma Tributária e aplicar o conhecimento ao faturamento.">
-      <ProductOffer eyebrow="GUIA PRÁTICO · REFORMA TRIBUTÁRIA"
+      {feedback&&<p role="status">{feedback}</p>}
+      {pendingCard}
+      {!pending.length&&<ProductOffer eyebrow="GUIA PRÁTICO · REFORMA TRIBUTÁRIA"
         headline="Entenda IBS e CBS na prática"
         lead="Compras, vendas, créditos e notas fiscais explicadas de forma simples e objetiva, com exemplos e roteiro para organizar sua preparação."
         price="R$ 29,90 · pagamento único"
         checkout="https://dianavoltolini.com.br/checkout/ibs-cbs-na-pratica"
         cta="Quero garantir meu e-book"
-        features={["E-book digital com 21 páginas","Compras, vendas e créditos","NF-e, CST e cClassTrib","Split payment e transição","Checklist e glossário para consulta","Exemplos práticos para rotinas fiscais"]}/>
+        features={["E-book digital com 21 páginas","Compras, vendas e créditos","NF-e, CST e cClassTrib","Split payment e transição","Checklist e glossário para consulta","Exemplos práticos para rotinas fiscais"]}/> }
     </ProductPage>
   );
 
   return (
     <ProductPage title="Meus E-books" description="Os e-books adquiridos, organizados individualmente para download durante o prazo de acesso.">
+      {feedback&&<p role="status">{feedback}</p>}
+      {pendingCard}
       <div style={{display:"grid",gap:22}}>
         {ownedBooks.map(book=>{
           const expiresAt=ebookAccessUntil(bought.filter(order=>order.product_id===book.id));
