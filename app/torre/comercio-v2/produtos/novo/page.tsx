@@ -8,7 +8,15 @@ import css from "../../commercial.module.css";
 export const dynamic="force-dynamic";
 export const metadata:Metadata={title:"Cadastrar Produto | Área Comercial"};
 const types: Record<string, string> = { ebook: "E-book", online_event: "Encontro online", course: "Curso", service: "Serviço", other: "Outro" };
-export default async function ProductEditor({searchParams}:{searchParams:Promise<{editar?:string}>}){
+const messages: Record<string,string> = {
+  validacao: "Verifique os campos obrigatórios e o tamanho dos textos.",
+  url: "O link da página deve usar HTTPS. Verifique o endereço informado.",
+  codigo: "O código interno do produto não pode ser alterado.",
+  indisponivel: "Não foi possível localizar este produto para edição.",
+  salvar: "Não foi possível salvar as alterações. Tente novamente.",
+  duplicado: "Já existe um produto cadastrado com esse código.",
+};
+export default async function ProductEditor({searchParams}:{searchParams:Promise<{editar?:string;erro?:string}>}){
   await requireAdmin();
   const q=await searchParams,db=getSupabaseAdmin();
   const result=q.editar?await db.from("commerce_v2_products")
@@ -20,7 +28,9 @@ export default async function ProductEditor({searchParams}:{searchParams:Promise
       <h1 className={css.title}>{product?"Editar produto":"Cadastrar Produto"}</h1>
       <p className={css.subtitle}>Primeiro cadastre o produto. Depois selecione os materiais na Biblioteca.</p>
     </div><Link className={css.secondary} href="/torre/comercio-v2/produtos">Voltar aos produtos</Link></header>
-    {q.editar&&!product&&<p className={css.error}>Produto não encontrado. Nenhuma alteração foi realizada.</p>}
+    {q.erro&&<p role="alert" className={css.error}>{messages[q.erro]??"Não foi possível salvar o produto."}</p>}
+    {result?.error&&<p role="alert" className={css.error}>Falha ao consultar o produto. Nenhuma alteração foi realizada.</p>}
+    {q.editar&&!product&&!result?.error&&<p className={css.error}>Produto não encontrado. Nenhuma alteração foi realizada.</p>}
     {(!q.editar||product)&&<section className={css.section}>
       <form action={saveCommerceV2Product} className={`${css.form} ${css.formWide}`}>
         <input type="hidden" name="id" value={product?.id??""}/>
