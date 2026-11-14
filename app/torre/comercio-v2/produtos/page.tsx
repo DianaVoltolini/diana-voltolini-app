@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import css from "../commercial.module.css";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Produtos | Área Comercial" };
-type Query = { salvo?: string; erro?: string };
+type Query = { salvo?: string; erro?: string; excluido?: string };
 type Product = { id:string; code:string; name:string; product_type:string; created_at:string };
 type Assignment = { product_id:string; material_id:string; release_mode:string; release_date:string|null };
 type Material = { id:string; title:string; available_to_student:boolean };
@@ -15,6 +15,11 @@ const errors:Record<string,string> = {
   validacao:"Confira os campos obrigatórios.", url:"Informe uma URL HTTPS válida.",
   duplicado:"Este código já está cadastrado.",codigo:"O código não pode ser alterado.",
   salvar:"Não foi possível salvar.", indisponivel:"Produto não encontrado.",
+  exclusao_confirmacao:"Confirme a exclusão antes de continuar.",
+  exclusao_indisponivel:"Produto não encontrado ou não é rascunho.",
+  exclusao_consulta:"Não foi possível conferir os vínculos do produto. Exclusão cancelada.",
+  exclusao_vinculos:"Este produto possui materiais, ofertas, páginas ou vínculos de vendas e não pode ser excluído.",
+  exclusao_falhou:"Não foi possível excluir o produto.",
 };
 export default async function ProductsV2({ searchParams }:{ searchParams:Promise<Query> }){
   await requireAdmin();
@@ -35,6 +40,7 @@ export default async function ProductsV2({ searchParams }:{ searchParams:Promise
       <Link className={css.button} href="/torre/comercio-v2/produtos/novo">+ Cadastrar Produto</Link>
     </header>
     {q.salvo==="1"&&<p className={css.message}>Produto salvo.</p>}
+    {q.excluido==="1"&&<p role="status" className={css.message}>Produto excluído.</p>}
     {q.erro&&<p className={css.error}>{errors[q.erro]??"Não foi possível salvar."}</p>}
     {(p.error||a.error||m.error||e.error)?<p className={css.error}>Não foi possível consultar o catálogo ou as entregas. Nenhum dado foi alterado.</p>:
     <section className={css.section}><h2>Produtos ({products.length})</h2>
@@ -58,6 +64,7 @@ export default async function ProductsV2({ searchParams }:{ searchParams:Promise
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 5 3 3M4 20l4.2-.8L20 7.4 16.6 4 4.8 15.8 4 20Z"/></svg>
               </Link>
               <Link className={css.secondary} href={"/torre/comercio-v2/produtos/materiais?produto="+encodeURIComponent(product.id)}>Configurar entregas</Link>
+              <Link className={css.secondary} href={"/torre/comercio-v2/produtos/excluir?produto="+encodeURIComponent(product.id)}>Excluir</Link>
             </div></td>
           </tr>;
         })}{!products.length&&<tr><td colSpan={5}>Nenhum produto cadastrado.</td></tr>}</tbody>
