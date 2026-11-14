@@ -62,9 +62,10 @@ export async function saveCommerceV2Product(form: FormData) {
 
   if (id) {
     const { data: existing, error: lookupError } = await db
-      .from("commerce_v2_products").select("id,code").eq("id", id).maybeSingle();
+      .from("commerce_v2_products").select("id,code,sales_product_id,student_delivery_active").eq("id", id).maybeSingle();
     if (lookupError || !existing) destination("indisponivel", id);
     if (existing.code.toUpperCase() !== code) {
+      if (existing.sales_product_id || existing.student_delivery_active) destination("codigo_vinculado", id);
       // O codigo e usado como vinculo com produtos comerciais anteriores.
       // Evitar romper esse vinculo silenciosamente quando houver correspondencia.
       const { data: legacyMatch, error: legacyError } = await db.from("products")
@@ -110,9 +111,12 @@ export async function deleteCommerceV2Product(form: FormData) {
   }
   const db = getSupabaseAdmin();
   const { data: product, error: productError } = await db
-    .from("commerce_v2_products").select("id,code,status").eq("id",id).maybeSingle();
+    .from("commerce_v2_products").select("id,code,status,sales_product_id,student_delivery_active").eq("id",id).maybeSingle();
   if (productError || !product || product.status !== "draft") {
     redirect(route + "?erro=exclusao_indisponivel");
+  }
+  if (product.sales_product_id || product.student_delivery_active) {
+    redirect(route + "?erro=exclusao_vinculos");
   }
   // Bloquear, nunca apagar em cascata, qualquer material, oferta, pagina,
   // vinculo de entrega ou relacionamento com o produto comercial anterior.
