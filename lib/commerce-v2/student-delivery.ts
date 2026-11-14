@@ -29,8 +29,8 @@ export async function getStudentMaterialsForOrder(order:PaidOrderForMaterials):P
   if(productError)throw productError;
   if(!product)return [];
   const {data:links,error:linksError}=await db.from("commerce_v2_product_materials")
-    .select("material_id,release_mode,release_date,display_order")
-    .eq("product_id",product.id).order("display_order",{ascending:true}).limit(200);
+    .select("material_id,release_mode,release_date,created_at")
+    .eq("product_id",product.id).order("created_at",{ascending:true}).limit(200);
   if(linksError)throw linksError;
   const ids=(links??[]).map(item=>item.material_id);
   if(!ids.length)return [];
