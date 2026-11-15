@@ -26,6 +26,7 @@ test("datas civis de vencimento não recuam um dia pelo fuso de São Paulo",()=>
  assert.match(s,/v\.length===10\?v\+"T12:00:00Z":v/);
 });
 test("dados de pagamento e mensalidade tipados sem null nos agrupamentos",()=>{
- assert.match(s,/new Map<string,NonNullable<typeof pendingPayments>>\(\)/);
+ assert.match(s,/new Map<string,PaymentLinkRow\[\]>\(\)/);
+ assert.match(s,/type PaymentLinkRow=\{/);
  assert.match(s,/new Map<string,NonNullable<typeof invoices>>\(\)/);
 });
