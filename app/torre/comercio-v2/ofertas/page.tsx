@@ -8,7 +8,8 @@ import styles from "./offers.module.css";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Ofertas e Preços | Torre" };
 
-type Product = { id: string; code: string; name: string };
+type Product = { id: string; code: string; name: string; sales_product_id: string | null };
+type LiveProduct = { id: string; active: boolean; checkout_enabled: boolean; bling_product_id: number | null };
 type Offer = {
   id: string; product_id: string; name: string; description: string | null;
   regular_price_cents: number; promotional_price_cents: number | null;
@@ -33,21 +34,32 @@ export default async function OffersPage({ searchParams }: { searchParams: Promi
   await requireAdmin();
   const query = await searchParams;
   const db = getSupabaseAdmin();
-  const [offersResult, productsResult] = await Promise.all([
+  const [offersResult, productsResult, liveResult] = await Promise.all([
     db.from("commerce_v2_offers").select(
       "id,product_id,name,description,regular_price_cents,promotional_price_cents,promo_starts_on,promo_ends_on,status,version,created_at",
     ).order("created_at", { ascending: false }).limit(500),
-    db.from("commerce_v2_products").select("id,code,name").order("name").limit(500),
+    db.from("commerce_v2_products").select("id,code,name,sales_product_id").order("name").limit(500),
+    db.from("products").select("id,active,checkout_enabled,bling_product_id").limit(500),
   ]);
   const offers = (offersResult.data ?? []) as Offer[];
   const products = (productsResult.data ?? []) as Product[];
   const names = new Map(products.map(p => [p.id, p]));
+  const liveProducts = new Map(((liveResult.data ?? []) as LiveProduct[]).map(p => [p.id, p]));
+  function offerStatus(offer: Offer): string {
+    const product = names.get(offer.product_id);
+    const live = product?.sales_product_id ? liveProducts.get(product.sales_product_id) : null;
+    const connected = Boolean(liveResult.error === null && live && live.active && live.checkout_enabled &&
+      Number.isSafeInteger(live.bling_product_id) && Number(live.bling_product_id) > 0);
+    if (connected && product?.code === "ENC-RT-2027-001") return "Oferta conectada ao checkout";
+    if (connected && product?.code === "EBOOK-IBSCBS-001") return "Preço conectado ao checkout";
+    return "Rascunho";
+  }
   return <main className={styles.page}>
     <header className={styles.header}>
       <div>
         <p className={styles.eyebrow}>TORRE · ÁREA COMERCIAL</p>
         <h1>Ofertas e Preços</h1>
-        <p>Gerencie preços e condições comerciais. Para o e-book IBS/CBS, salvar o preço normal atualiza o checkout e a página de vendas após a publicação da integração.</p>
+        <p>Gerencie preços e condições comerciais. Os produtos já conectados ao checkout são identificados separadamente dos cadastros ainda em implantação. O status técnico V2 continua como rascunho.</p>
       </div>
       <Link className={styles.add} href="/torre/comercio-v2/ofertas/novo">+ Nova oferta</Link>
     </header>
@@ -55,7 +67,7 @@ export default async function OffersPage({ searchParams }: { searchParams: Promi
     {query.erro && <p role="alert" className={styles.error}>{errorMessage[query.erro] ?? "Falha na operação."}</p>}
     <section className={styles.section}>
       <h2>Ofertas cadastradas</h2>
-      {(offersResult.error || productsResult.error)
+      {(offersResult.error || productsResult.error || liveResult.error)
         ? <p role="alert" className={styles.error}>Ofertas indisponíveis. Confirme a migração do F2 no Supabase.</p>
         : <div className={styles.scroll}><table className={styles.table}>
           <thead><tr><th>Data</th><th>Oferta</th><th>Produto</th><th>Preço normal</th><th>Promocional</th><th>Vigência</th><th>Situação</th><th>Ações</th></tr></thead>
@@ -66,7 +78,7 @@ export default async function OffersPage({ searchParams }: { searchParams: Promi
             <td>{brl(o.regular_price_cents)}</td>
             <td>{o.promotional_price_cents === null ? "—" : brl(o.promotional_price_cents)}</td>
             <td>{o.promo_starts_on && o.promo_ends_on ? o.promo_starts_on.split("-").reverse().join("/") + " a " + o.promo_ends_on.split("-").reverse().join("/") : "—"}</td>
-            <td>{names.get(o.product_id)?.code === "EBOOK-IBSCBS-001" ? "Preço conectado ao checkout" : "Rascunho"}</td>
+            <td>{offerStatus(o)}</td>
             <td>
               <div className={styles.actions}>
                 <Link
