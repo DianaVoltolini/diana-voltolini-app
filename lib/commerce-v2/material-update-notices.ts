@@ -43,27 +43,26 @@ export async function getV2MaterialNoticesForUser(userId:string):Promise<V2Mater
     if(!product)continue;
     const ids=released.map(m=>m.id);
     const {data:materials,error:materialsError}=await db.from("commerce_v2_materials")
-      .select("id,updated_at,created_at,storage_path")
+      .select("id,file_updated_at,storage_path")
       .in("id",ids).eq("is_archived",false).eq("available_to_student",true)
       .not("storage_path","is",null);
     if(materialsError)throw materialsError;
     const seenAt=seenById.get(order.product_id);
     for(const item of materials??[]){
-      const when=Date.parse(item.updated_at);
+      const when=item.file_updated_at?Date.parse(item.file_updated_at):NaN;
       if(!Number.isFinite(when))continue;
-      // Não avisa sobre arquivo já existente antes da compra, nem
-      // sobre o cadastro inicial: somente atualização posterior.
-      if(when<=Date.parse(item.created_at)||when<=Date.parse(order.paid_at!))continue;
+      // Apenas substituição real do arquivo após a compra.
+      if(when<=Date.parse(order.paid_at!))continue;
       if(seenAt&&when<=Date.parse(seenAt))continue;
       let entry=grouped.get(order.product_id);
       if(!entry){
         entry={product_id:order.product_id,name:product.name,
-          href:destination(product.code),latestUpdate:item.updated_at,
+          href:destination(product.code),latestUpdate:item.file_updated_at!,
           count:0,materialIds:new Set<string>()};
         grouped.set(order.product_id,entry);
       }
       entry.materialIds.add(item.id);
-      if(when>Date.parse(entry.latestUpdate))entry.latestUpdate=item.updated_at;
+      if(when>Date.parse(entry.latestUpdate))entry.latestUpdate=item.file_updated_at!;
       entry.count=entry.materialIds.size;
     }
   }
