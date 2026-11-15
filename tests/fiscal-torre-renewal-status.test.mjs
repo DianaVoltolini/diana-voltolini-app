@@ -21,3 +21,11 @@ test("tela da Torre não emite cobranças nem sinaliza renovação automática",
  assert.match(s,/O módulo não gera renovações/);
  assert.match(s,/await requireAdmin\(\)/);
 });
+
+test("datas civis de vencimento não recuam um dia pelo fuso de São Paulo",()=>{
+ assert.match(s,/v\.length===10\?v\+"T12:00:00Z":v/);
+});
+test("dados de pagamento e mensalidade tipados sem null nos agrupamentos",()=>{
+ assert.match(s,/new Map<string,NonNullable<typeof pendingPayments>>\(\)/);
+ assert.match(s,/new Map<string,NonNullable<typeof invoices>>\(\)/);
+});
