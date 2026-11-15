@@ -68,10 +68,14 @@ export default async function AssinaturasPage(){
  };
  // Auditoria em tempo real, sem atualizar pedidos, cobranças ou assinaturas.
  // Uma mensalidade só passa a ser exigível na data civil do vencimento (São Paulo).
- const today=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"})
-  .format(new Date());
- const dueISO=(value:string)=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"})
-  .format(new Date(value));
+ const saoDate=(value:string|Date)=>{
+  const parts=new Intl.DateTimeFormat("en-US",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"})
+   .formatToParts(typeof value==="string"?new Date(value):value);
+  const get=(type:string)=>parts.find(x=>x.type===type)?.value??"";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+ };
+ const today=saoDate(new Date());
+ const dueISO=(value:string)=>saoDate(value);
  type Alert={id:string;label:string;description:string;severity:"failure"|"open"};
  const renewalAlerts:Alert[]=[];
  if(!error&&!invoiceError&&!ordersError&&!paymentsError){
