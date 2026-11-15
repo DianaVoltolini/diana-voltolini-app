@@ -113,6 +113,8 @@ export async function POST(request: NextRequest) {
     fileFields = {
       storage_path: path, original_filename: file.name,
       file_mime: file.type, file_size: file.size,
+      // Uma substituição do PDF deve gerar aviso; editar título ou descrição não.
+      ...(id ? {file_updated_at:new Date().toISOString()} : {}),
     };
   }
 
