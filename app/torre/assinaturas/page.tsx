@@ -5,7 +5,7 @@ import {getSupabaseAdmin} from "@/lib/supabase/admin";
 import styles from "../painel.module.css";
 export const metadata:Metadata={title:"Assinatura Recorrente | Torre"};
 export const dynamic="force-dynamic";
-const date=(v:string|null)=>v?new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo"}).format(new Date(v)):"—";
+const date=(v:string|null)=>v?new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo"}).format(new Date(v.length===10?v+"T12:00:00Z":v)):"—";
 export default async function AssinaturasPage(){
  await requireAdmin();
  const db=getSupabaseAdmin();
@@ -16,7 +16,7 @@ export default async function AssinaturasPage(){
  db.from("products").select("price_cents,currency,active").eq("code","ASSINATURA-FISCAL-001").maybeSingle(),
  ]);
  const items=rows??[],users=new Map((profiles??[]).map(u=>[u.id,u]));
- const invoicesBySubscription=new Map<string,typeof invoices>();
+ const invoicesBySubscription=new Map<string,NonNullable<typeof invoices>>();
  for(const invoice of invoices??[]){
   const id=String(invoice.subscription_id??"");
   const group=invoicesBySubscription.get(id)??[];
@@ -30,7 +30,7 @@ export default async function AssinaturasPage(){
    db.from("payments").select("order_id,status,provider_payment_id,provider").in("order_id",pendingOrderIds).eq("provider","bling"),
  ]):[{data:[],error:null},{data:[],error:null}];
  const ordersById=new Map((pendingOrders??[]).map(o=>[o.id,o]));
- const paymentsByOrder=new Map<string,typeof pendingPayments>();
+ const paymentsByOrder=new Map<string,NonNullable<typeof pendingPayments>>();
  for(const payment of pendingPayments??[]){
    const group=paymentsByOrder.get(payment.order_id)??[];
    group.push(payment);
@@ -74,7 +74,7 @@ export default async function AssinaturasPage(){
  {error?<p className={styles.errorMessage}>Não foi possível consultar assinaturas.</p>:<>
  <section className={styles.summaryGrid}><article><span>Assinaturas</span><strong>{items.length}</strong><small>Registros consultados</small></article><article><span>Ativas que permitem renovação</span><strong>{active.length}</strong><small>Não significa cobrança automática</small></article><article><span>Renovação desativada</span><strong>{canceled.length}</strong><small>Não gerar novas cobranças</small></article><article><span>Valor mensal por assinatura</span><strong style={{fontSize:28}}>{priceLabel}</strong><small>Preço atual do produto</small></article></section>
  <section className={styles.diagnosticsSection}><header className={styles.sectionHeader}><div><p className={styles.eyebrow}>ACOMPANHAMENTO</p><h2>Assinaturas cadastradas</h2></div></header><div className={styles.tableWrapper}><table className={styles.table}><thead><tr><th>Cliente</th><th>Cliente desde</th><th>Status</th><th>Próximo vencimento</th><th>Cobrança</th><th>Dia de cobrança</th><th>Renovação</th></tr></thead><tbody>
- {items.map(x=><tr key={x.id}><td><strong>{users.get(x.user_id)?.full_name||"Cliente"}</strong><small>{users.get(x.user_id)?.email||"E-mail não localizado"}</small></td><td>{date(x.created_at)}</td><td>{x.status==="active"?"Ativa":x.status==="canceled"?"Cancelada":x.status==="pending"?"Pendente":x.status}</td><td>{nextDue(x)}<small>{nextPending(x.id)?"Vencimento da cobrança":"Previsão pelo período pago"}</small></td><td>{charge(x)}</td><td>{x.billing_day??"—"}</td><td>{x.renewal_enabled?"Habilitada":"Desabilitada"}</td></tr>)}
+ {items.map(x=><tr key={x.id}><td><strong>{users.get(x.user_id)?.full_name||"Cliente"}</strong><small>{users.get(x.user_id)?.email||"E-mail não localizado"}</small></td><td>{date(x.created_at)}</td><td>{x.status==="active"?"Ativa":x.status==="canceled"?"Cancelada":x.status==="pending"?"Pendente":x.status}</td><td>{nextDue(x)}<small>{nextPending(x.id)?"Vencimento da cobrança":"Previsão pelo período pago"}</small></td><td>{charge(x)}</td><td>{x.billing_day??"—"}</td><td>{x.renewal_enabled?"Permitida (manual)":"Desabilitada"}</td></tr>)}
  {!items.length&&<tr><td colSpan={7}>Nenhuma assinatura cadastrada.</td></tr>}</tbody></table></div><p style={{fontSize:12,color:"#657386"}}>Cliente desde corresponde à criação do registro da assinatura, não ao primeiro pagamento. Próximo vencimento usa a cobrança pendente mais próxima quando existe; caso contrário, mostra a previsão pelo fim do período pago. “Apenas reserva local” não significa cobrança emitida; “Pedido no Bling” não significa Pix ou boleto disponível. O módulo não gera renovações nem verifica pagamentos diretamente no Bling.</p></section></>}
  </div></section></main>;
 }
