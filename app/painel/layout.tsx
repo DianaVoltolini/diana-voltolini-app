@@ -10,7 +10,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import CustomerSidebar from "./customer-sidebar";
-import MaterialUpdatesBell, {type MaterialNotice} from "./material-updates-bell";
+import MaterialUpdatesBell from "./material-updates-bell";
+import {getV2MaterialNoticesForUser} from "@/lib/commerce-v2/material-update-notices";
 import { ensureClientAccess } from "@/lib/supabase/client-access";
 import { getFiscalAccess } from "@/lib/fiscal/subscription-access";
 import styles from "./customer-sidebar.module.css";
@@ -85,27 +86,12 @@ export default async function PainelLayout({
   const hasEbook=Boolean(ebookProductResult.data?.some(p=>p.code.startsWith("EBOOK-")&&ownedProductIds.has(p.id)));
   const hasSubscription = subscriptionAccess.allowed;
   const hasFiscalHistory = Boolean(subscriptionHistory.data?.length);
-  const purchasedProductIds=[...new Set((ordersResult.data??[]).map(o=>o.product_id).filter((id):id is string=>typeof id==="string"))];
-  let notices:MaterialNotice[]=[];
-  if(purchasedProductIds.length) {
-    const [{data:deliveries,error:deliveryError},{data:seen,error:seenError},{data:products,error:productsError}]=await Promise.all([
-      admin.from("product_deliveries").select("product_id,version,published_at,page_path").in("product_id",purchasedProductIds).gt("version",0),
-      admin.from("product_delivery_reads").select("product_id,seen_version").eq("user_id",userId).in("product_id",purchasedProductIds),
-      admin.from("products").select("id,name,code").in("id",purchasedProductIds),
-    ]);
-    if(deliveryError||seenError||productsError) {
-      console.error("Não foi possível consultar atualizações de materiais:",{deliveryError,seenError,productsError});
-    } else {
-      const lastSeen=new Map((seen??[]).map(x=>[x.product_id,x.seen_version]));
-      const productsById=new Map((products??[]).map(x=>[x.id,x]));
-      notices=(deliveries??[]).filter(d=>d.version>(lastSeen.get(d.product_id)??0)).map(d=>({
-        product_id:d.product_id,
-        name:productsById.get(d.product_id)?.name??"Material adquirido",
-        version:d.version,published_at:d.published_at,
-        href:productsById.get(d.product_id)?.code==="EBOOK-IBSCBS-001"?"/painel/ebooks":"/painel/minhas-compras",
-      }));
-    }
-  }
+  // Notificações derivadas dos materiais V2 realmente liberados ao comprador.
+  // A consulta não revela materiais de produtos não pagos ou acesso expirado.
+  const notices=await getV2MaterialNoticesForUser(userId).catch(error=>{
+    console.error("[material-update-notices] Leitura indisponível",error);
+    return [];
+  });
   return <div className={styles.shell}>
     <header className={styles.topbar}>
       <a className={styles.brand} href="https://dianavoltolini.com.br" aria-label="Diana Voltolini — voltar ao site"><Image src="/brand/logo-light.png" alt="Diana Voltolini" width={1535} height={538} priority /></a>

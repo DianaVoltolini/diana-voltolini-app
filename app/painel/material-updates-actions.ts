@@ -1,26 +1,33 @@
+// app/painel/material-updates-actions.ts
 "use server";
 import {revalidatePath} from "next/cache";
 import {createClient} from "@/lib/supabase/server";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
-export async function markMaterialUpdateRead(form:FormData) {
- const auth=await createClient();
- const {data:claims,error}=await auth.auth.getClaims();
- const userId=typeof claims?.claims?.sub==="string"?claims.claims.sub:null;
- if(error||!userId)throw new Error("Sessão inválida.");
- const productId=String(form.get("product_id")??"");
- if(!/^[0-9a-f-]{36}$/i.test(productId))throw new Error("Produto inválido.");
- const db=getSupabaseAdmin();
- const [{data:orders,error:orderError},{data:delivery,error:deliveryError}]=await Promise.all([
-  db.from("orders").select("id").eq("user_id",userId).eq("product_id",productId).eq("status","paid").limit(1),
-  db.from("product_deliveries").select("version").eq("product_id",productId).maybeSingle()
- ]);
- if(orderError||deliveryError||!orders?.length||!delivery||delivery.version<1)
-   throw new Error("Atualização não disponível para este comprador.");
- // Only mark as read after checking ownership. Never accept a version sent by client.
- const {error:saveError}=await db.from("product_delivery_reads").upsert({
-   user_id:userId,product_id:productId,seen_version:delivery.version,seen_at:new Date().toISOString()
- },{onConflict:"user_id,product_id"});
- if(saveError)throw saveError;
- revalidatePath("/painel");
- revalidatePath("/painel/ebooks");
+import {getV2MaterialNoticesForUser} from "@/lib/commerce-v2/material-update-notices";
+
+export async function markMaterialUpdateRead(form:FormData){
+  const auth=await createClient();
+  const {data:claims,error}=await auth.auth.getUser();
+  const userId=!error?claims.user?.id:null;
+  if(!userId)throw new Error("Sessão inválida.");
+  const productId=String(form.get("product_id")??"");
+  if(!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(productId))
+    throw new Error("Produto inválido.");
+
+  // Confirma novamente a compra, liberação e prazo antes de marcar como lido.
+  const notices=await getV2MaterialNoticesForUser(userId);
+  const notice=notices.find(n=>n.product_id===productId);
+  if(!notice)throw new Error("Nenhuma atualização disponível para este comprador.");
+
+  const db=getSupabaseAdmin();
+  // A data da última atualização observada é o marco, não now():
+  // uma edição concorrente posterior continua aparecendo como nova.
+  const {error:saveError}=await db.from("product_delivery_reads").upsert({
+    user_id:userId,product_id:productId,
+    seen_version:0,seen_at:notice.latestUpdate
+  },{onConflict:"user_id,product_id"});
+  if(saveError)throw saveError;
+  revalidatePath("/painel");
+  revalidatePath("/painel/ebooks");
+  revalidatePath("/painel/encontro-online");
 }
