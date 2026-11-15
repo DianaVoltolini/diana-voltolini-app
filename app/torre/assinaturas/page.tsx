@@ -30,7 +30,8 @@ export default async function AssinaturasPage(){
    db.from("payments").select("order_id,status,provider_payment_id,provider").in("order_id",pendingOrderIds).eq("provider","bling"),
  ]):[{data:[],error:null},{data:[],error:null}];
  const ordersById=new Map((pendingOrders??[]).map(o=>[o.id,o]));
- const paymentsByOrder=new Map<string,NonNullable<typeof pendingPayments>>();
+ type PaymentLinkRow={order_id:string;status:string;provider_payment_id:string|null;provider:string};
+ const paymentsByOrder=new Map<string,PaymentLinkRow[]>();
  for(const payment of pendingPayments??[]){
    const group=paymentsByOrder.get(payment.order_id)??[];
    group.push(payment);
