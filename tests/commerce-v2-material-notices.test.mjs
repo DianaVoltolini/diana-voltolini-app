@@ -21,7 +21,9 @@ test("somente pedidos pagos, arquivos liberados, acesso vigente e atualizacoes p
   assert.match(notices,/filter\(m=>m\.isReleased\)/);
   assert.match(notices,/\.eq\("available_to_student",true\)/);
   assert.match(notices,/when<=Date\.parse\(order\.paid_at!\)/);
-  assert.match(notices,/when<=Date\.parse\(item\.created_at\)/);
+  assert.match(notices,/file_updated_at/);
+  assert.doesNotMatch(notices,/item\.updated_at/);
+  assert.doesNotMatch(notices,/item\.created_at/);
 });
 test("marcar como lido exige identidade e valida novamente aviso disponível",()=>{
   assert.match(action,/auth\.auth\.getUser\(\)/);
@@ -29,4 +31,11 @@ test("marcar como lido exige identidade e valida novamente aviso disponível",()
   assert.match(action,/notice\.latestUpdate/);
   assert.match(action,/product_delivery_reads/);
   assert.match(bell,/Marcar como lido/);
+});
+
+test("só upload substituto atualiza file_updated_at",()=>{
+  const save=read("app/torre/comercio-v2/materiais/salvar/route.ts");
+  assert.match(save,/\.\.\.\(id \? \{file_updated_at:new Date\(\)\.toISOString\(\)\} : \{\}\)/);
+  assert.match(save,/if \(file\) \{/);
+  assert.match(notices,/item\.file_updated_at\?Date\.parse\(item\.file_updated_at\):NaN/);
 });
