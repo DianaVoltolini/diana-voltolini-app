@@ -22,6 +22,13 @@ export default async function SubscriptionPage({searchParams}:{searchParams:Prom
  getFiscalAccess(uid),
  db.from("fiscal_articles").select("id,slug,title,summary,category,published_at,visibility,delivery_type").eq("status","published").order("published_at",{ascending:false}).limit(100)
  ]);
+ const {data:planProduct,error:planError}=await db.from("products")
+  .select("price_cents,currency,active").eq("code","ASSINATURA-FISCAL-001").maybeSingle();
+ const priceLabel=!planError&&planProduct?.active===true&&planProduct.currency==="BRL"&&
+  Number.isSafeInteger(planProduct.price_cents)&&planProduct.price_cents>0
+  ? new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"})
+    .format(planProduct.price_cents/100)+"/mês"
+  : "Consulte o valor no checkout";
  const active=access.allowed;
  const selected=(await searchParams).entrega??"todos";
  const {data:nextInvoices}=access.subscriptionId?await db.from("fiscal_subscription_invoices")
@@ -40,7 +47,10 @@ export default async function SubscriptionPage({searchParams}:{searchParams:Prom
  const todaySaoPaulo=dateInSaoPaulo(new Date());
  const renewalStartIso=access.paidUntil?dateMinusDays(dateInSaoPaulo(new Date(access.paidUntil)),10):null;
  const renewalStartDate=renewalStartIso?displayCivilDate(renewalStartIso):null;
- const isRenewalPeriod=renewalStartIso!==null&&todaySaoPaulo>=renewalStartIso;
+ const renewalEndIso=access.paidUntil
+  ?dateMinusDays(dateInSaoPaulo(new Date(access.paidUntil)),-3):null;
+ const isRenewalPeriod=renewalStartIso!==null&&renewalEndIso!==null&&
+  todaySaoPaulo>=renewalStartIso&&todaySaoPaulo<=renewalEndIso;
  // Não exibir a solicitação enquanto a emissão e conciliação não estiverem homologadas.
  const renewalRequestEnabled=process.env.FISCAL_RENEWAL_PANEL_ENABLED==="1";
  const formatDate=(value:string)=>new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo"}).format(new Date(value.length===10?value+"T12:00:00Z":value));
@@ -48,7 +58,7 @@ export default async function SubscriptionPage({searchParams}:{searchParams:Prom
  return <ProductPage title="Fiscal na Prática" description="Análises fiscais, materiais e orientações para aplicar na rotina de faturamento.">
 
  <section className={styles.sections}>
- {!active?<ProductOffer eyebrow="FISCAL NA PRÁTICA · ASSINATURA MENSAL" headline="Informação fiscal que vira ação" lead="Acompanhe as mudanças que impactam notas fiscais, impostos e processos da empresa, com orientações aplicadas à rotina do faturamento." price="R$ 39,90/mês" checkout="https://dianavoltolini.com.br/checkout/assinatura-fiscal" cta="Assinar Fiscal na Prática" features={["Uma análise prática aprofundada por semana","Alertas sobre mudanças fiscais relevantes","Checklists, roteiros e exemplos","Biblioteca exclusiva para assinantes","IBS, CBS, NF-e, ICMS e DIFAL","Material educativo aplicado ao faturamento"]}/>:<div className={styles.subscriptionCard}>
+ {!active?<ProductOffer eyebrow="FISCAL NA PRÁTICA · ASSINATURA MENSAL" headline="Informação fiscal que vira ação" lead="Acompanhe as mudanças que impactam notas fiscais, impostos e processos da empresa, com orientações aplicadas à rotina do faturamento." price={priceLabel} checkout="https://dianavoltolini.com.br/checkout/assinatura-fiscal" cta="Assinar Fiscal na Prática" features={["Uma análise prática aprofundada por semana","Alertas sobre mudanças fiscais relevantes","Checklists, roteiros e exemplos","Biblioteca exclusiva para assinantes","IBS, CBS, NF-e, ICMS e DIFAL","Material educativo aplicado ao faturamento"]}/>:<div className={styles.subscriptionCard}>
  <div className={styles.subscriptionGrid}>
  <div>
  <p style={{margin:"0 0 6px",color:"#65758a",fontSize:12,fontWeight:750}}>SEU ACESSO</p>
@@ -61,7 +71,7 @@ export default async function SubscriptionPage({searchParams}:{searchParams:Prom
  <p style={{fontSize:12,color:"#748497",margin:"5px 0 0"}}>{nextInvoice?"Cobrança pendente · "+new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(nextInvoice.amount_cents/100):access.cancellationRequested?"Não serão geradas novas renovações":"Previsão conforme o período pago; cobrança ainda não gerada."}</p>
  {!access.cancellationRequested&&nextInvoice&&pendingPayment?.payment_url&&pendingPayment.payment_url.startsWith("https://")&&<p style={{margin:"12px 0 0"}}><a href={pendingPayment.payment_url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",background:"#c9a227",color:"#102033",padding:"10px 15px",borderRadius:8,fontWeight:750,textDecoration:"none"}}>Acessar cobrança existente</a></p>}
  {!access.cancellationRequested&&isRenewalPeriod&&renewalRequestEnabled&&(!nextInvoice||(!pendingPayment?.payment_url&&nextInvoice.id))&&<RenewalRequest existingInvoiceId={nextInvoice?.id??null} existingOrderState={typeof pendingOrder?.metadata?.checkout_state==="string"?pendingOrder.metadata.checkout_state:null} issuanceEnabled={process.env.FISCAL_RENEWAL_PANEL_ISSUANCE_ENABLED==="1"} financialEnabled={process.env.FISCAL_RENEWAL_PANEL_FINANCIAL_ENABLED==="1"}/>}
- {!access.cancellationRequested&&!nextInvoice&&renewalStartDate&&<p style={{fontSize:12,color:"#65758a",margin:"12px 0 0"}}>{isRenewalPeriod?"A renovação ainda não está disponível para pagamento. Nenhuma cobrança foi gerada.":"A renovação poderá ser solicitada a partir de "+renewalStartDate+". Nenhuma cobrança foi gerada."}</p>}
+ {!access.cancellationRequested&&!nextInvoice&&renewalStartDate&&<p style={{fontSize:12,color:"#65758a",margin:"12px 0 0"}}>{!renewalRequestEnabled?"A solicitação de renovação ainda está em preparação. Nenhuma cobrança foi gerada.":isRenewalPeriod?"A renovação está disponível para solicitação. Nenhuma cobrança foi gerada.":todaySaoPaulo<renewalStartIso!?"A renovação poderá ser solicitada a partir de "+renewalStartDate+". Nenhuma cobrança foi gerada.":"O prazo de solicitação automática terminou. Entre em contato para regularizar sua assinatura."}</p>}
  {!access.cancellationRequested&&access.paidUntil&&access.subscriptionId&&<div className={styles.cancelArea}><CancelSubscriptionConfirm paidUntil={access.paidUntil} subscriptionId={access.subscriptionId}/></div>}
  </div></details>
  </div>
