@@ -490,8 +490,18 @@ export default async function DiagnosticosPage() {
     )[0] ||
     "Cliente";
 
+  const {data:diagnosticProduct,error:diagnosticProductError}=await admin.from("products")
+    .select("active,checkout_enabled,bling_product_id,price_cents,currency")
+    .eq("code","diagnostico-expresso-ibs-cbs").maybeSingle();
+  const diagnosticCheckoutReady=!diagnosticProductError && diagnosticProduct?.active===true &&
+    diagnosticProduct.checkout_enabled===true && diagnosticProduct.currency==="BRL" &&
+    Number.isSafeInteger(diagnosticProduct.bling_product_id) && diagnosticProduct.bling_product_id>0 &&
+    Number.isSafeInteger(diagnosticProduct.price_cents) && diagnosticProduct.price_cents>0;
+  const diagnosticPrice=diagnosticProduct?.price_cents && Number.isSafeInteger(diagnosticProduct.price_cents)
+    ? new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(diagnosticProduct.price_cents/100)
+    : "Valor indisponível";
   if(diagnostics.length===0) return <ProductPage title="Diagnóstico Expresso IBS/CBS" description="Uma análise técnica para verificar a preparação do faturamento para IBS e CBS.">
-    <ProductOffer eyebrow="DIAGNÓSTICO EXPRESSO IBS/CBS" headline="Descubra se seu faturamento está preparado para IBS e CBS" lead="Identifique inconsistências e pontos de atenção nos documentos fiscais selecionados, com recomendações e plano de ação." price="R$ 169,90 · pagamento único" checkout="https://dianavoltolini.com.br/checkout/diagnostico-ibs-cbs" cta="Quero meu diagnóstico" features={["Análise de até cinco documentos fiscais (XMLs)","Conferência individual dos XMLs selecionados","Avaliação das informações sobre ERP e operações","Riscos, pontos positivos e providências","Plano de ação e parecer final","Entrega em até cinco dias úteis após receber todos os documentos necessários"]}>
+    <ProductOffer eyebrow="DIAGNÓSTICO EXPRESSO IBS/CBS" headline="Descubra se seu faturamento está preparado para IBS e CBS" lead="Identifique inconsistências e pontos de atenção nos documentos fiscais selecionados, com recomendações e plano de ação." price={diagnosticPrice+" · pagamento único"} checkout={diagnosticCheckoutReady?"https://dianavoltolini.com.br/checkout/diagnostico-expresso-ibs-cbs":null} cta="Quero meu diagnóstico" features={["Análise de até cinco documentos fiscais (XMLs)","Conferência individual dos XMLs selecionados","Avaliação das informações sobre ERP e operações","Riscos, pontos positivos e providências","Plano de ação e parecer final","Entrega em até cinco dias úteis após receber todos os documentos necessários"]}>
       <section style={{background:"#fff",border:"1px solid #e0e7ed",borderRadius:14,padding:30}}>
         <p style={{color:"#987318",fontWeight:850,fontSize:12}}>COMO FUNCIONA</p><h2>Do questionário à entrega</h2>
         <p style={{lineHeight:1.9,color:"#536678"}}>1. Contratação e confirmação do pagamento. 2. Questionário com informações da empresa. 3. Envio de um a cinco XMLs. 4. Análise técnica. 5. Entrega do relatório com riscos, recomendações e plano de ação na Área do Cliente.</p>
