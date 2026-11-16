@@ -66,7 +66,9 @@ export default async function SubscriptionPage({searchParams}:{searchParams:Prom
  const formatDate=(value:string)=>new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo"}).format(new Date(value.length===10?value+"T12:00:00Z":value));
  const nextDate=nextInvoice?.due_date?formatDate(nextInvoice.due_date):access.paidUntil?formatDate(access.paidUntil):null;
  const showRenewalNotice=!access.cancellationRequested&&!!access.paidUntil&&isRenewalPeriod;
- const renewalActionReady=renewalRequestEnabled&&process.env.FISCAL_RENEWAL_RESERVATION_ENABLED==="1";
+ const renewalActionReady=renewalRequestEnabled&&process.env.FISCAL_RENEWAL_RESERVATION_ENABLED==="1"&&
+  process.env.FISCAL_RENEWAL_PANEL_ISSUANCE_ENABLED==="1"&&
+  process.env.FISCAL_RENEWAL_PANEL_FINANCIAL_ENABLED==="1";
  const canRequestPix=renewalMethod==="pix"&&showRenewalNotice&&renewalActionReady&&
   (!nextInvoice||(!pendingPayment?.payment_url&&!!nextInvoice.id));
  return <ProductPage title="Fiscal na Prática" description="Análises fiscais, materiais e orientações para aplicar na rotina de faturamento.">
