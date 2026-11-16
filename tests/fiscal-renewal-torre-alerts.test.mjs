@@ -10,6 +10,9 @@ test("Torre expõe alertas de cobrança faltante e falhas após vencimento",()=>
  assert.match(page,/Cobrança não concluída no Bling/);
  assert.match(page,/Cobrança emitida e vinculada ao Bling/);
  assert.match(page,/cancellation_requested_at!==null/);
+ assert.match(page,/Boleto automático não registrado/);
+ assert.match(page,/PIX ainda não solicitado/);
+ assert.match(page,/PIX aguardando solicitação/);
 });
 test("somente leitura e sem marcar cobranças como pagas",()=>{
  assert.doesNotMatch(page,/\.update\(|\.insert\(|\.rpc\(|\.delete\(/);
