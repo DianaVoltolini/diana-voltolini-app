@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function RenewalRequest({ issuanceEnabled = false, financialEnabled = false, existingInvoiceId = null, existingOrderState = null }: { issuanceEnabled?: boolean; financialEnabled?: boolean; existingInvoiceId?: string | null; existingOrderState?: string | null }) {
+export default function RenewalRequest({ issuanceEnabled = false, financialEnabled = false, existingInvoiceId = null, existingOrderState = null, actionLabel = "Solicitar renovação" }: { issuanceEnabled?: boolean; financialEnabled?: boolean; existingInvoiceId?: string | null; existingOrderState?: string | null; actionLabel?: string }) {
   const router = useRouter();
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -93,7 +93,7 @@ export default function RenewalRequest({ issuanceEnabled = false, financialEnabl
     <button type="button" onClick={prepare} disabled={working}
       style={{display:"inline-block",background:"#102033",color:"#fff",padding:"11px 16px",
         border:0,borderRadius:8,fontWeight:750,cursor:working?"wait":"pointer"}}>
-      {working ? "Verificando..." : existingInvoiceId ? "Consultar renovação" : "Solicitar renovação"}
+      {working ? "Verificando..." : existingInvoiceId ? "Consultar renovação" : actionLabel}
     </button>
     {message && <p role="status" style={{fontSize:12,color:"#65758a",margin:"8px 0 0"}}>{message}</p>}
   </div>;
