@@ -123,3 +123,19 @@ input {
     );
   }
 }
+/* Impressão exclusiva do Gerador de E-books: ocultar a interface da Torre. */
+@media print {
+  body:has(#dv-ebook-print) [data-ebook-chrome] {
+    display: none !important;
+  }
+
+  body:has(#dv-ebook-print) [data-ebook-shell] {
+    min-height: 0 !important;
+    background: #fff !important;
+  }
+
+  body:has(#dv-ebook-print) [data-ebook-body] {
+    display: block !important;
+    min-height: 0 !important;
+  }
+}
