@@ -121,7 +121,7 @@ export default function EbookStudio() {
     window.print();
   }
 
-  return <main className={styles.root}>
+  return <main className={styles.root} id="dv-ebook-print">
     <header className={styles.toolbar}>
       <div><p className={styles.eyebrow}>MARKETING · FERRAMENTAS</p><h1>Gerador de E-books</h1><p>Modelo Diana Voltolini · PDF A4</p></div>
       <button type="button" disabled={!canPrint} onClick={printPdf} className={styles.primary}>Gerar PDF</button>
