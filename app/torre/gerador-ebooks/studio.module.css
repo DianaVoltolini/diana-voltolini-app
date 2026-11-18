@@ -152,3 +152,103 @@
  .article .tableScroll th,.article .tableScroll td{padding:7pt}
  .chapterWrap,.article .lead,.article .note,.article .noteBlue,.article .orderedList li:before,.article .bulletList li:before,.article .tableScroll th,.article .tableScroll tbody tr,.article .checklist,.checked{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+/* PADRÃO EDITORIAL DV — referência aprovada: e-book PGDAS-D (13 páginas) */
+.cover,.article,.endPage {border-top:7px solid #0d1b2a}
+.cover{position:relative;padding:76px 74px 58px}
+.coverLogo{max-width:420px;max-height:120px;width:70%;margin-bottom:92px}
+.cover h2{font-size:44px;line-height:1.12;max-width:590px;margin-bottom:22px}
+.coverSubtitle{font-size:19px;line-height:1.48;margin-top:0}
+.coverTopics{margin-top:auto;background:#f2f5fa;border-radius:6px;padding:20px 22px;margin-bottom:22px}
+.coverTopics span{display:block;color:#a38521;font:bold 11px Arial,sans-serif;letter-spacing:.15em;margin-bottom:8px}
+.coverTopics p{color:#233953;font-size:14px;line-height:1.55;margin:0}
+.cover .edition{margin:0;font-size:12px}
+.article{padding:48px 58px 62px;min-height:950px;font-size:16px;line-height:1.58}
+.article .runningHead{font-size:10px!important;letter-spacing:.105em;margin-bottom:53px!important;color:#36598d!important}
+.article .chapterWrap{background:transparent;border-left:0;padding:0;margin:7px 0 20px}
+.article .chapterEyebrow{color:#ad8a25!important;font-size:11px!important;letter-spacing:.12em!important;margin:0 0 15px!important}
+.article .chapterWrap .chapter{font:700 32px/1.17 Georgia,serif;display:block;color:#0d1b2a}
+.article .chapterWrap .chapter:after{display:block;background:#c9a227;width:65px;height:4px;margin:17px 0 0}
+.article .chapterNumber{display:inline-block;vertical-align:middle;margin-right:13px;background:transparent;color:#b08b27;border-radius:0;font:700 15px Arial;min-width:auto;height:auto}
+.article .lead{background:transparent;border:0;padding:0;font-size:17px;font-weight:400;line-height:1.55;margin:12px 0 32px;color:#34485c}
+.article .section{font:700 20px/1.25 Georgia,serif;margin:31px 0 19px;border:0;padding:0}
+.article .section:after{display:block;width:48px;height:3px;margin-top:9px;background:#c9a227}
+.article .subsection{font-size:15px;letter-spacing:.015em}
+.article .editorialCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:24px 0 27px;break-inside:avoid-page}
+.article .editorialCard{border:1px solid #dce5ef;background:#fff;border-radius:7px;padding:18px;min-width:0;break-inside:avoid}
+.editorialCard>span{display:block;font:bold 10px Arial;color:#ad8b29;letter-spacing:.08em;margin-bottom:14px}
+.editorialCard>strong{display:block;font:bold 25px/1.14 Georgia,serif;color:#0d1b2a;margin-bottom:6px;overflow-wrap:anywhere}
+.editorialCard>small{display:block;font-size:11px;color:#637184;line-height:1.4}
+.article .panelNavy,.article .panelBlue,.article .panelGold{padding:18px 22px;margin:24px 0 28px;break-inside:avoid-page;border-radius:5px;font-size:14px}
+.article .panelNavy{background:#0d1b2a;color:#fff}
+.article .panelBlue{background:#eef3fa;color:#172f4a;border-left:4px solid #3b65a4}
+.article .panelGold{background:#faf7ef;color:#2c3440;border-left:4px solid #c9a227}
+.article .panelNavy>span,.article .panelBlue>span,.article .panelGold>span{display:block;font:bold 10px Arial;letter-spacing:.08em;margin-bottom:10px}
+.article .panelNavy>span{color:#dec37b}
+.article .panelBlue>span{color:#285594}
+.article .panelGold>span{color:#947220}
+.article .panelNavy p,.article .panelBlue p,.article .panelGold p{margin:0!important;font-size:14px;line-height:1.55}
+.article .panelNavy p{font:700 19px/1.35 Georgia,serif;color:#fff}
+.article .orderedList li{border-bottom:0;background:#f1f4f8;border-radius:5px;margin-bottom:9px;padding:13px 16px 13px 54px}
+.article .orderedList li:before{top:12px;left:14px}
+.article .bulletList li{border-bottom:0;margin-bottom:3px}
+.article .tableScroll{border:none;border-radius:0;margin:22px 0}
+.article .tableScroll table{font-size:12px}
+.article .tableScroll th{padding:12px 10px}
+.article .tableScroll td{padding:13px 10px;border:0}
+.article .checklist{background:#f2f5fa;border:0;border-radius:6px;padding:18px 22px!important}
+.article .checklist li{min-height:38px;align-items:center}
+.article .checklist li:last-child{border:0}
+.endPage{padding:75px 74px 60px}
+.endPage>div{margin:auto 0;max-width:540px}
+.endPage h2{font-size:38px}
+@media(max-width:600px){
+ .cover,.article,.endPage{padding:30px 24px}
+ .coverLogo{width:75%;margin-bottom:42px}
+ .cover h2{font-size:34px}
+ .article .editorialCards{grid-template-columns:1fr}
+ .article .chapterWrap .chapter{font-size:26px}
+}
+@media print {
+ .cover,.article,.endPage{border-top:0;box-shadow:none}
+ .cover{height:259mm;min-height:0;padding:0;border:0;position:relative}
+ .cover:before{content:"";position:fixed;top:-16mm;left:-16mm;width:210mm;height:2mm;background:#0d1b2a}
+ .coverLogo{width:106mm;max-width:106mm;max-height:34mm;margin-bottom:42mm}
+ .cover h2{font-size:32pt;max-width:155mm;margin-bottom:12mm}
+ .coverSubtitle{font-size:13pt;max-width:140mm;line-height:1.5}
+ .coverTopics{padding:13pt 15pt;margin-bottom:9mm}
+ .coverTopics p{font-size:10pt}
+ .coverTopics span{font-size:7.5pt}
+ .cover .edition{font-size:9pt}
+ .article{height:auto;min-height:259mm;padding:0;border:0;break-after:page;page-break-after:always;font-size:10.5pt;line-height:1.58}
+ .article .runningHead{margin:0 0 17mm!important;padding-top:4mm;font-size:7.5pt!important}
+ .article .chapterWrap{margin:0 0 13pt}
+ .article .chapterEyebrow{font-size:8pt!important;margin-bottom:9pt!important}
+ .article .chapterWrap .chapter{font-size:23pt;line-height:1.2}
+ .article .chapterWrap .chapter:after{margin-top:10pt;width:45pt;height:2pt}
+ .article .chapterNumber{font-size:10pt}
+ .article .lead{font-size:11pt;margin:8pt 0 20pt;line-height:1.5}
+ .article .section{font-size:15pt;margin:18pt 0 11pt}
+ .article .section:after{height:2pt;width:33pt;margin-top:7pt}
+ .article .subsection{font-size:11pt}
+ .article .editorialCards{gap:9pt;margin:16pt 0 18pt}
+ .article .editorialCard{padding:12pt}
+ .editorialCard>span{font-size:7pt;margin-bottom:9pt}
+ .editorialCard>strong{font-size:20pt;margin-bottom:5pt}
+ .editorialCard>small{font-size:8pt}
+ .article .panelNavy,.article .panelBlue,.article .panelGold{padding:12pt 13pt;margin:15pt 0 17pt;break-inside:avoid-page}
+ .article .panelNavy>span,.article .panelBlue>span,.article .panelGold>span{font-size:7.5pt}
+ .article .panelNavy p{font-size:15pt}
+ .article .panelBlue p,.article .panelGold p{font-size:10pt}
+ .article .orderedList li{padding:9pt 11pt 9pt 36pt;margin-bottom:7pt}
+ .article .orderedList li:before{top:7pt;left:10pt}
+ .article .tableScroll{margin:14pt 0 16pt}
+ .article .tableScroll table{font-size:9pt}
+ .article .tableScroll th{padding:8pt 7pt}
+ .article .tableScroll td{padding:9pt 7pt}
+ .article .checklist{padding:11pt 12pt!important}
+ .article .checklist li{min-height:24pt}
+ .endPage{height:259mm;min-height:0;padding:0;border:0}
+ .endPage h2{font-size:30pt}
+ .cover,.article,.endPage,.editorialCard,.editorialCards,.coverTopics,.panelNavy,.panelBlue,.panelGold{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
