@@ -40,10 +40,10 @@ function parseMarkdown(source: string): Block[] {
       }
       blocks.push({kind:"table",rows}); continue;
     }
-    if (/^[-*]\\s+\\[[ xX]\\]\\s+/.test(line)) {
+    if (/^[-*]\s+\[[ xX]\]\s+/.test(line)) {
       const items: { checked: boolean; text: string }[] = [];
-      while (index < lines.length && /^[-*]\\s+\\[[ xX]\\]\\s+/.test(lines[index].trim())) {
-        const match = /^[-*]\\s+\\[([ xX])\\]\\s+(.+)$/.exec(lines[index].trim());
+      while (index < lines.length && /^[-*]\s+\[[ xX]\]\s+/.test(lines[index].trim())) {
+        const match = /^[-*]\s+\[([ xX])\]\s+(.+)$/.exec(lines[index].trim());
         if (match) items.push({checked:match[1].toLowerCase()==="x", text:match[2]});
         index++;
       }
