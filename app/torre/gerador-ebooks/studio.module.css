@@ -46,9 +46,10 @@
 @media(max-width:600px){.root{padding:16px}.toolbar{align-items:flex-start;flex-direction:column}.editor{padding:16px}.cover,.article,.endPage{padding:32px;min-height:unset}.coverLogo{margin-bottom:45px}.cover h2{font-size:30px}.runningHead{margin-bottom:30px!important}}
 @page{size:A4;margin:16mm}
 @media print{
- :global(body) {background:#fff!important}
- :global(body *) {visibility:hidden}
- .printDocument,.printDocument *{visibility:visible}
+ .root{background:#fff;padding:0;max-width:none}
+ .toolbar,.editor,.previewLabel{display:none!important}
+ .workspace{display:block}
+ .previewArea{width:100%}
  .printDocument{position:absolute;top:0;left:0;width:100%;max-width:none;margin:0}
  .cover,.article,.endPage{box-shadow:none;margin:0;width:100%;padding:0}
  .cover,.endPage{height:265mm;min-height:0;break-after:page;page-break-after:always}
