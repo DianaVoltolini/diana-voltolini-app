@@ -11,6 +11,7 @@ type Block =
   | { kind: "list"; items: string[]; ordered: boolean }
   | { kind: "table"; rows: string[][] }
   | { kind: "note"; text: string }
+  | { kind: "checklist"; items: { checked: boolean; text: string }[] }
   | { kind: "rule" };
 
 function parseMarkdown(source: string): Block[] {
@@ -38,6 +39,15 @@ function parseMarkdown(source: string): Block[] {
         rows.push(row(lines[index])); index++;
       }
       blocks.push({kind:"table",rows}); continue;
+    }
+    if (/^[-*]\\s+\\[[ xX]\\]\\s+/.test(line)) {
+      const items: { checked: boolean; text: string }[] = [];
+      while (index < lines.length && /^[-*]\\s+\\[[ xX]\\]\\s+/.test(lines[index].trim())) {
+        const match = /^[-*]\\s+\\[([ xX])\\]\\s+(.+)$/.exec(lines[index].trim());
+        if (match) items.push({checked:match[1].toLowerCase()==="x", text:match[2]});
+        index++;
+      }
+      blocks.push({kind:"checklist",items}); continue;
     }
     const listMatch = /^(?:[-*]\s+|\d+\.\s+)/.exec(line);
     if (listMatch) {
@@ -71,18 +81,28 @@ function inline(text: string): ReactNode[] {
   });
 }
 
-function RenderBlock({ block }: { block: Block }) {
+function RenderBlock({ block, lead = false }: { block: Block; lead?: boolean }) {
   if (block.kind === "heading") {
-    if (block.level === 1) return <h2 className={styles.chapter}>{inline(block.text)}</h2>;
+    if (block.level === 1) {
+      const numbered = /^(\\d+)[.)]\\s*(.+)$/.exec(block.text);
+      return <div className={styles.chapterWrap}>
+        <p className={styles.chapterEyebrow}>CONTEÚDO · DIANA VOLTOLINI</p>
+        <h2 className={styles.chapter}>{numbered ? <><span className={styles.chapterNumber}>{numbered[1].padStart(2,"0")}</span>{inline(numbered[2])}</> : inline(block.text)}</h2>
+      </div>;
+    }
     if (block.level === 2) return <h3 className={styles.section}>{inline(block.text)}</h3>;
     return <h4 className={styles.subsection}>{inline(block.text)}</h4>;
   }
-  if (block.kind === "paragraph") return <p>{inline(block.text)}</p>;
-  if (block.kind === "note") return <aside className={styles.note}>{inline(block.text)}</aside>;
+  if (block.kind === "paragraph") return <p className={lead ? styles.lead : undefined}>{inline(block.text)}</p>;
+  if (block.kind === "note") {
+    const important = /^(atenção|importante|cuidado|alerta|nota|regra)/i.test(block.text);
+    return <aside className={important ? styles.note : styles.noteBlue}>{inline(block.text)}</aside>;
+  }
   if (block.kind === "rule") return <hr className={styles.rule}/>;
+  if (block.kind === "checklist") return <ul className={styles.checklist}>{block.items.map((item,i)=><li key={i}><span className={item.checked ? styles.checked : styles.checkIcon} aria-hidden="true">{item.checked?"✓":""}</span><span>{inline(item.text)}</span></li>)}</ul>;
   if (block.kind === "list") {
     const items = block.items.map((item,i)=><li key={i}>{inline(item)}</li>);
-    return block.ordered ? <ol>{items}</ol> : <ul>{items}</ul>;
+    return block.ordered ? <ol className={styles.orderedList}>{items}</ol> : <ul className={styles.bulletList}>{items}</ul>;
   }
   return <div className={styles.tableScroll}><table><thead><tr>{block.rows[0]?.map((x,i)=><th key={i}>{inline(x)}</th>)}</tr></thead><tbody>{block.rows.slice(1).map((r,i)=><tr key={i}>{r.map((x,j)=><td key={j}>{inline(x)}</td>)}</tr>)}</tbody></table></div>;
 }
@@ -138,7 +158,7 @@ export default function EbookStudio() {
         <input id="ebook-edition" value={edition} onChange={e=>setEdition(e.target.value)}/>
         <label htmlFor="ebook-content">Conteúdo em Markdown</label>
         <textarea id="ebook-content" spellCheck value={markdown} onChange={e=>setMarkdown(e.target.value)} rows={19}/>
-        <p className={styles.help}>Aceita títulos (#, ##, ###), negrito, listas, tabelas, links e caixas de destaque (&gt;). Confira a prévia antes de exportar.</p>
+        <p className={styles.help}>Aceita títulos (#, ##, ###), negrito, listas, checklists (- [ ]), tabelas, links e destaques (&gt;). Confira a prévia antes de exportar.</p>
         <label htmlFor="ebook-cta">Chamada final</label>
         <input id="ebook-cta" value={cta} onChange={e=>setCta(e.target.value)}/>
         <label htmlFor="ebook-url">Link da chamada</label>
@@ -158,7 +178,7 @@ export default function EbookStudio() {
           </section>
           <article className={styles.article}>
             <p className={styles.runningHead}>DIANA VOLTOLINI / CONHECIMENTO FISCAL NA PRÁTICA</p>
-            {blocks.map((block,i)=><RenderBlock block={block} key={i}/>)}
+            {blocks.map((block,i)=><RenderBlock block={block} lead={block.kind==="paragraph" && blocks.slice(0,i).every(previous=>previous.kind==="heading")} key={i}/>)}
             <footer className={styles.articleFooter}>DIANA VOLTOLINI • FATURAMENTO FISCAL NA PRÁTICA</footer>
           </article>
           <section className={styles.endPage}>
