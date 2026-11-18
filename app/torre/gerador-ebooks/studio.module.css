@@ -44,26 +44,49 @@
 .endPage .coverFooter{margin:0}
 @media(max-width:1050px){.workspace{grid-template-columns:1fr}.printDocument{max-width:794px}.cover,.endPage{min-height:900px}}
 @media(max-width:600px){.root{padding:16px}.toolbar{align-items:flex-start;flex-direction:column}.editor{padding:16px}.cover,.article,.endPage{padding:32px;min-height:unset}.coverLogo{margin-bottom:45px}.cover h2{font-size:30px}.runningHead{margin-bottom:30px!important}}
-@page{size:A4;margin:16mm}
+/* Chrome/Edge 131+: numeracao verdadeira, inclusive em paginas continuadas. */
+@page {
+ size:A4;
+ margin:16mm 16mm 19mm;
+ @bottom-left {
+   content:"DIANA VOLTOLINI • FATURAMENTO FISCAL NA PRÁTICA";
+   font:7pt Arial, sans-serif;
+   color:#708090;
+ }
+ @bottom-right {
+   content:counter(page, decimal-leading-zero) " / " counter(pages, decimal-leading-zero);
+   font:7pt Arial, sans-serif;
+   color:#708090;
+ }
+}
+@page :first {
+ @bottom-left { content:none; }
+ @bottom-right { content:none; }
+}
 @media print{
  .root{background:#fff;padding:0;max-width:none}
  .toolbar,.editor,.previewLabel{display:none!important}
  .workspace{display:block}
  .previewArea{width:100%}
- .printDocument{position:absolute;top:0;left:0;width:100%;max-width:none;margin:0}
+ .printDocument{position:static;width:100%;max-width:none;margin:0}
  .cover,.article,.endPage{box-shadow:none;margin:0;width:100%;padding:0}
- .cover,.endPage{height:265mm;min-height:0;break-after:page;page-break-after:always}
- .coverLogo{max-width:160mm;max-height:43mm;margin-bottom:35mm}
- .cover h2{font-size:30pt}.coverSubtitle{font-size:14pt}
- .article{min-height:0;font-size:11pt;line-height:1.55}
- .runningHead{margin-bottom:15mm!important}
- .chapter{font-size:21pt}.section{font-size:17pt}
+ .cover{height:262mm;min-height:0;break-after:page;page-break-after:always}
+ .endPage{height:262mm;min-height:0;break-after:auto;page-break-after:auto}
+ .coverLogo{width:115mm;max-width:115mm;height:auto;max-height:35mm;margin-bottom:25mm}
+ .cover h2{font-size:27pt;line-height:1.12;margin-bottom:25mm}.coverSubtitle{font-size:12pt;line-height:1.55}
+ .article{min-height:0;font-size:10pt;line-height:1.55}
+ .runningHead{margin-bottom:10mm!important}
+ .chapter{font-size:19pt;break-after:avoid-page}.section{font-size:15pt;break-after:avoid-page}
  .article p{orphans:3;widows:3}
- .tableScroll{overflow:visible}
- .tableScroll table{font-size:9pt}
+ .tableScroll{overflow:visible;break-inside:auto}
+ .tableScroll table{font-size:9pt;break-inside:auto}
+ .tableScroll thead{display:table-header-group}
+ .tableScroll tbody{display:table-row-group}
  .tableScroll tr{break-inside:avoid}
  .tableScroll th,.tableScroll td{padding:6pt}
- .articleFooter{margin-top:12mm}
+ .articleFooter,.endPage .coverFooter{display:none}
  .endPage{break-before:page;page-break-before:always}
+ .note{break-inside:avoid-page}
+ .article li{break-inside:avoid-page}
  .note,.tableScroll,.endPage,.cover{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
