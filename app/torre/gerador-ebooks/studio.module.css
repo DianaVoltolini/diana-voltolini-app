@@ -90,3 +90,65 @@
  .article li{break-inside:avoid-page}
  .note,.tableScroll,.endPage,.cover{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+/* Sistema editorial DV: hierarquia, respiros e blocos de leitura. */
+.article{color:#273747;line-height:1.66}
+.article > p{max-width:65ch}
+.article p{margin-bottom:20px}
+.chapterWrap{margin:42px 0 24px;padding:18px 21px 17px;border-left:5px solid #c9a227;background:#f5f7fb;break-inside:avoid-page;break-after:avoid-page}
+.chapterEyebrow{font-size:10px!important;letter-spacing:.2em!important;color:#365da0!important;font-weight:800;margin:0 0 9px!important}
+.chapterWrap .chapter{margin:0;font-size:29px;line-height:1.25;display:flex;align-items:flex-start;gap:14px;break-after:avoid}
+.chapterWrap .chapter:after{display:none}
+.chapterNumber{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;background:#0d1b2a;color:#fff;font:800 12px Arial,sans-serif;min-width:35px;height:35px;border-radius:50%}
+.article .lead{font-size:17px;line-height:1.65;color:#304a65;font-weight:500;margin:14px 0 28px;padding:15px 20px;border-left:3px solid #3562aa;background:#f1f5fb}
+.article .section{margin:34px 0 19px;padding:0 0 11px;border-bottom:1px solid #e2e8f0;font-size:23px}
+.article .section:after{width:42px;height:3px;margin:11px 0 -13px}
+.article .subsection{font-weight:800;font-size:17px;color:#1b3551;margin-top:28px;margin-bottom:13px}
+.article .note,.article .noteBlue{margin:25px 0;padding:18px 20px 18px 24px;border-radius:0 7px 7px 0;break-inside:avoid-page;font-size:14px;line-height:1.58;box-shadow:0 1px 0 #dfe6ed}
+.article .note{background:#fbf8f0;border-left:4px solid #c9a227}
+.article .noteBlue{background:#edf3fb;border-left:4px solid #3562aa}
+.article .orderedList{list-style:none;counter-reset:step;padding:0;margin:24px 0 28px}
+.article .orderedList li{counter-increment:step;position:relative;min-height:37px;padding:10px 12px 12px 50px;border-bottom:1px solid #e4eaf0}
+.article .orderedList li:before{content:counter(step);position:absolute;top:8px;left:4px;width:29px;height:29px;background:#0d1b2a;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font:bold 12px Arial}
+.article .bulletList{list-style:none;padding:0;margin:19px 0 27px}
+.article .bulletList li{position:relative;padding:8px 8px 9px 22px;border-bottom:1px solid #edf0f4}
+.article .bulletList li:before{content:"";position:absolute;top:18px;left:3px;width:7px;height:7px;border-radius:50%;background:#c9a227}
+.article .checklist{list-style:none;padding:10px 18px!important;margin:22px 0 28px;background:#f6f8fb;border:1px solid #dfe6ee;border-radius:9px}
+.article .checklist li{display:flex;align-items:flex-start;gap:13px;padding:10px 0;border-bottom:1px solid #dfe5ed}
+.article .checklist li:last-child{border-bottom:none}
+.checkIcon,.checked{flex:0 0 20px;width:20px;height:20px;border:2px solid #c9a227;border-radius:4px;display:inline-flex;justify-content:center;align-items:center;font-size:13px;font-weight:800}
+.checked{color:#fff;background:#0d1b2a;border-color:#0d1b2a}
+.article .tableScroll{border:1px solid #d9e2ec;border-radius:7px;margin:25px 0 29px}
+.article .tableScroll table{font-size:13px}
+.article .tableScroll th{padding:13px 12px;background:#102338;letter-spacing:.015em}
+.article .tableScroll td{padding:12px;vertical-align:top}
+.article .tableScroll tbody tr:nth-child(even){background:#edf2f8}
+.article .tableScroll tbody tr:last-child{font-weight:600}
+.endPage>div{max-width:530px}
+.endPage h2{font-size:39px}
+@media print {
+ .article{font-size:10pt;line-height:1.53}
+ .article > p{max-width:none}
+ .article p{margin-bottom:12pt}
+ .chapterWrap{margin:17pt 0 14pt;padding:11pt 12pt;background:#f5f7fb;break-inside:avoid-page}
+ .chapterEyebrow{font-size:7pt!important;letter-spacing:.15em!important;margin-bottom:7pt!important}
+ .chapterWrap .chapter{font-size:18pt;line-height:1.15;gap:8pt}
+ .chapterNumber{min-width:24pt;width:24pt;height:24pt;font-size:8pt}
+ .article .lead{font-size:10.2pt;line-height:1.5;padding:10pt 11pt;margin:9pt 0 15pt}
+ .article .section{font-size:14.5pt;margin:19pt 0 13pt;padding-bottom:8pt}
+ .article .section:after{margin:8pt 0 -10pt}
+ .article .subsection{font-size:11pt;margin:16pt 0 7pt}
+ .article .note,.article .noteBlue{margin:13pt 0;padding:10pt 11pt;font-size:9pt;line-height:1.45}
+ .article .orderedList{margin:12pt 0 17pt}
+ .article .orderedList li{min-height:0;padding:6pt 7pt 6pt 32pt}
+ .article .orderedList li:before{top:5pt;width:20pt;height:20pt;font-size:8pt}
+ .article .bulletList{margin:10pt 0 15pt}
+ .article .bulletList li{padding:5pt 5pt 5pt 17pt}
+ .article .bulletList li:before{top:12pt;left:2pt;width:5pt;height:5pt}
+ .article .checklist{padding:6pt 11pt!important;margin:13pt 0 15pt}
+ .article .checklist li{padding:7pt 0;gap:9pt}
+ .checkIcon,.checked{flex-basis:14pt;width:14pt;height:14pt;font-size:9pt;border-width:1.4pt}
+ .article .tableScroll{margin:13pt 0 17pt;border-radius:0}
+ .article .tableScroll th,.article .tableScroll td{padding:7pt}
+ .chapterWrap,.article .lead,.article .note,.article .noteBlue,.article .orderedList li:before,.article .bulletList li:before,.article .tableScroll th,.article .tableScroll tbody tr,.article .checklist,.checked{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
