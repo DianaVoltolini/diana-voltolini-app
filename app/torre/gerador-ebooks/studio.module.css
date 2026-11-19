@@ -49,24 +49,28 @@
  size:A4;
  margin:16mm 16mm 22mm;
  @bottom-left {
-   content:"DIANA VOLTOLINI • ESPECIALISTA EM FATURAMENTO E INTELIGÊNCIA FISCAL\\A www.dianavoltolini.com.br";
-   white-space:pre;
-   width:143mm;
+   content:"DIANA VOLTOLINI • ESPECIALISTA EM FATURAMENTO E INTELIGÊNCIA FISCAL";
+   width:112mm;
    text-align:left;
    vertical-align:top;
    padding-top:3mm;
    border-top:0.65pt solid #C9A227;
-   font:6.5pt/1.65 Arial, sans-serif;
+   font:6pt Arial, sans-serif;
    color:#17283a;
  }
  @bottom-center {
-   content:"";
-   border-top:0.65pt solid #C9A227;
+   content:"www.dianavoltolini.com.br";
+   width:44mm;
+   text-align:center;
    vertical-align:top;
+   padding-top:3mm;
+   border-top:0.65pt solid #C9A227;
+   font:6.5pt Arial, sans-serif;
+   color:#17283a;
  }
  @bottom-right {
    content:counter(page, decimal-leading-zero) " / " counter(pages, decimal-leading-zero);
-   width:24mm;
+   width:22mm;
    text-align:right;
    vertical-align:top;
    padding-top:3mm;
@@ -393,4 +397,11 @@
   .approved .pageContent{break-inside:auto;overflow:visible}
   .approved .article .chapterWrap{break-after:avoid-page}
   .approved .editorialStep,.approved .editorialCard,.approved .panelNavy,.approved .panelGold{break-inside:avoid-page}
+}
+
+/* Correção de transbordamento da capa: altura útil A4 e rodapé somente nas páginas internas. */
+@media print {
+ .approved .cover{height:255mm!important;min-height:0!important;max-height:255mm!important;box-sizing:border-box!important;break-after:page!important;overflow:hidden!important}
+ .approved .cover .coverFooter{display:none!important}
+ .approved .cover .coverTopics{margin-top:auto!important}
 }
