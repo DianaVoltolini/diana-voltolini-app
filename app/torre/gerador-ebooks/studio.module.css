@@ -353,3 +353,13 @@
  .approved .editorialStep p{font-size:8.7pt!important;line-height:1.4}
  .approved .cover,.approved .coverTopics,.approved .article .panelNavy,.approved .article .panelGold,.approved .article .editorialCard,.approved .editorialStep,.approved .tableScroll th,.approved .tableScroll tr{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+/* Paginação protegida: a capa não repete a faixa em páginas internas. */
+.approved .pageContent{display:block}
+@media print {
+ .approved .cover{position:relative}
+ .approved .cover:before{position:absolute;top:-16mm;left:-16mm;width:210mm;height:3.5mm;max-width:none;background:#102039}
+ .approved .article{position:relative}
+ .approved .article:before{content:"";position:absolute;left:-16mm;top:-16mm;width:210mm;height:3.5mm;background:#102039}
+ .approved .editorialCards,.approved .editorialSteps{break-inside:avoid-page}
+}
