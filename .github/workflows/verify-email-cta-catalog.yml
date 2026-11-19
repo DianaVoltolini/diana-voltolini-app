@@ -7,6 +7,7 @@ on:
       - "app/torre/modelos-email/template-editor.tsx"
       - "app/torre/modelos-email/actions.ts"
       - "tests/email-template-cta-catalog.test.mjs"
+      - "tests/email-cta-label-and-send-parity.test.mjs"
       - ".github/workflows/verify-email-cta-catalog.yml"
 permissions:
   contents: read
@@ -22,4 +23,5 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: node --test tests/email-template-cta-catalog.test.mjs
+      - run: node --test tests/email-cta-label-and-send-parity.test.mjs
       - run: npm run build

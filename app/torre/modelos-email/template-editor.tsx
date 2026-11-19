@@ -19,25 +19,30 @@ const starter="Olá, {{nome}}!\n\nQue bom ter você por aqui!\n\nMeu objetivo é
 const buttonPattern=/\[BOTAO:\s*([^\]\n|]+?)\s*\|\s*(https:\/\/[^\]\s]+)\]/g;
 export default function TemplateEditor({selected,interests,landings,ctas,defaultAudience="leads"}:{selected:Template|null;interests:string[];landings:Landing[];ctas:CatalogCta[];defaultAudience?:string}){
  const transactional=selected?.kind==="transactional";
- // CTAs administrados na Torre são compartilhados com Blog e campanhas de e-mail.
- // Manter destinos legados para não quebrar modelos antigos; remover duplicatas por URL.
- const destinations=[...new Map([
-  ...links.map(([label,url])=>[url,{label,url,buttonLabel:"Acessar "+label}] as const),
-  ...ctas.filter(c=>c.active).map(c=>[c.url,{
-   label:"CTA — "+c.name,url:c.url,buttonLabel:c.button_label
-  }] as const)
- ]).values()];
+ // O identificador do CTA (não apenas a URL) mantém nome, botão e destino juntos.
+ // URLs podem existir tanto no catálogo quanto na lista de destinos tradicionais.
+ const destinations=[
+  ...links.map(([label,url])=>({key:"legacy:"+url,label,url,buttonLabel:"Acessar "+label,ctaId:""})),
+  ...ctas.filter(c=>c.active).map(c=>({key:"cta:"+c.id,label:c.name.startsWith("CTA — ")?
+   c.name:"CTA — "+c.name,url:c.url,buttonLabel:c.button_label,ctaId:c.id}))
+ ];
  const savedUrl=selected?.cta_url??"";
- if(savedUrl&&!destinations.some(x=>x.url===savedUrl))
-  destinations.push({label:"Destino deste modelo (anterior)",url:savedUrl,buttonLabel:selected?.cta_label??"Acessar"});
+ const matchingCta=ctas.find(c=>c.active&&c.url===savedUrl&&c.button_label===selected?.cta_label);
+ const matchingLegacy=destinations.find(d=>!d.ctaId&&d.url===savedUrl);
+ const startingKey=matchingCta?"cta:"+matchingCta.id:matchingLegacy?.key??(savedUrl?"saved":"legacy:"+links[0][1]);
+ if(savedUrl&&!matchingCta&&!matchingLegacy)
+  destinations.push({key:"saved",label:"Destino salvo neste modelo",url:savedUrl,buttonLabel:selected?.cta_label??"Acessar",ctaId:""});
 
  const [audience,setAudience]=useState(selected?.audience_kind??defaultAudience);
  const [name,setName]=useState(selected?.name??"");
  const [description,setDescription]=useState(selected?.description??"");
  const [subject,setSubject]=useState(selected?.subject??"");
  const [body,setBody]=useState((selected?.body??starter).replace(buttonPattern,"").trim());
- const [url,setUrl]=useState(selected?.cta_url??links[0][1]);
- const [cta,setCta]=useState(selected?.cta_label??"Conhecer o Blog Fiscal");
+ const [destinationKey,setDestinationKey]=useState(startingKey);
+ const [url,setUrl]=useState(matchingCta?.url??selected?.cta_url??links[0][1]);
+ const [cta,setCta]=useState(matchingCta?.button_label??selected?.cta_label??"Conhecer o Blog Fiscal");
+ const selectedDestination=destinations.find(d=>d.key===destinationKey);
+ const catalogCtaId=selectedDestination?.ctaId??"";
  const [interest,setInterest]=useState(selected?.interest??"");
  const [landing,setLanding]=useState(selected?.landing_id??"");
  const [active,setActive]=useState(selected?.active??false);
@@ -120,12 +125,19 @@ export default function TemplateEditor({selected,interests,landings,ctas,default
    {!transactional&&<div className={css.cta}>
     <strong>CTA — Botão de acesso</strong>
     <div className={css.duo}>
-     <label>Destino<select name="cta_url" value={url} onChange={e=>{
-      const chosen=destinations.find(d=>d.url===e.target.value);
-      setUrl(e.target.value);
-      if(chosen)setCta(chosen.buttonLabel);
-     }}>{destinations.map(d=><option key={d.url} value={d.url}>{d.label}</option>)}</select></label>
-     <label>Texto do botão<input name="cta_label" required maxLength={80} value={cta} onChange={e=>setCta(e.target.value)}/></label>
+     <input type="hidden" name="cta_id" value={catalogCtaId}/>
+     <input type="hidden" name="cta_url" value={url}/>
+     <label>Destino<select value={destinationKey} onChange={e=>{
+      const chosen=destinations.find(d=>d.key===e.target.value);
+      if(!chosen)return;
+      setDestinationKey(chosen.key);
+      setUrl(chosen.url);
+      setCta(chosen.buttonLabel);
+     }}>{destinations.map(d=><option key={d.key} value={d.key}>{d.label}</option>)}</select></label>
+     <label>Texto do botão<input name="cta_label" required maxLength={80} value={cta}
+       readOnly={Boolean(catalogCtaId)} onChange={e=>setCta(e.target.value)}/>
+       {catalogCtaId&&<small>Texto definido no cadastro do CTA. Para alterá-lo, edite o CTA na Torre.</small>}
+     </label>
     </div>
    </div>}
    {transactional?<p style={{fontSize:13,color:"#607184"}}>O link de cobrança e o link de acesso são incluídos pelo sistema conforme o produto. Variáveis disponíveis: {"{{produto}}"}, {"{{nome}}"}, {"{{valor}}"}, {"{{forma_pagamento}}"} e {"{{situacao_encontro}}"}.</p>:<label className={css.checkbox}><input type="checkbox" checked={active} onChange={e=>setActive(e.target.checked)}/> Modelo disponível para seleção</label>}
