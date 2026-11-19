@@ -47,21 +47,38 @@
 /* Chrome/Edge 131+: numeracao verdadeira, inclusive em paginas continuadas. */
 @page {
  size:A4;
- margin:16mm 16mm 19mm;
+ margin:16mm 16mm 22mm;
  @bottom-left {
-   content:"DIANA VOLTOLINI • FATURAMENTO FISCAL NA PRÁTICA";
-   font:7pt Arial, sans-serif;
-   color:#708090;
+   content:"DIANA VOLTOLINI • ESPECIALISTA EM FATURAMENTO E INTELIGÊNCIA FISCAL\\A www.dianavoltolini.com.br";
+   white-space:pre;
+   width:143mm;
+   text-align:left;
+   vertical-align:top;
+   padding-top:3mm;
+   border-top:0.65pt solid #C9A227;
+   font:6.5pt/1.65 Arial, sans-serif;
+   color:#17283a;
+ }
+ @bottom-center {
+   content:"";
+   border-top:0.65pt solid #C9A227;
+   vertical-align:top;
  }
  @bottom-right {
    content:counter(page, decimal-leading-zero) " / " counter(pages, decimal-leading-zero);
-   font:7pt Arial, sans-serif;
-   color:#708090;
+   width:24mm;
+   text-align:right;
+   vertical-align:top;
+   padding-top:3mm;
+   border-top:0.65pt solid #C9A227;
+   font:7.5pt Arial, sans-serif;
+   color:#17283a;
  }
 }
 @page :first {
- @bottom-left { content:none; }
- @bottom-right { content:none; }
+ @bottom-left { content:none; border:0; }
+ @bottom-center { content:none; border:0; }
+ @bottom-right { content:none; border:0; }
 }
 @media print{
  .root{background:#fff;padding:0;max-width:none}
