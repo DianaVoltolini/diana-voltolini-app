@@ -9,27 +9,40 @@ export async function saveEmailTemplate(f:FormData){
  const id=value(f,"id",50),name=value(f,"name",120),subject=value(f,"subject",180),body=value(f,"body",14000);
  const kind=value(f,"kind",20)==="welcome"?"welcome":"manual";
  const audience_kind=value(f,"audience_kind",20)==="buyers"?"buyers":"leads";
- const description=value(f,"description",500),interest=value(f,"interest",120),landing_id=value(f,"landing_id",50),cta_label=value(f,"cta_label",80),cta_url=value(f,"cta_url",300);
+ const description=value(f,"description",500),interest=value(f,"interest",120),
+  landing_id=value(f,"landing_id",50);
+ let cta_label=value(f,"cta_label",80),cta_url=value(f,"cta_url",300);
+ const selectedCtaId=value(f,"cta_id",40);
  const legacyDestinations=["https://dianavoltolini.com.br/blog","https://dianavoltolini.com.br/ibs-cbs-na-pratica","https://dianavoltolini.com.br/diagnostico-ibs-cbs","https://dianavoltolini.com.br/fiscal-na-pratica","https://dianavoltolini.com.br/produtos","https://dianavoltolini.com.br"];
- // A mesma origem de dados usada no editor valida destinos adicionados na Torre.
- // Validar no servidor: o usuário não pode enviar uma URL arbitrária no POST.
  const db=getSupabaseAdmin();
- const {data:enabledCta,error:ctaLookupError}=await db.from("fiscal_ctas")
-  .select("id").eq("active",true).eq("url",cta_url).limit(1).maybeSingle();
- if(ctaLookupError)redirect("/torre/modelos-email/editor?erro=cta");
- let previouslySaved=false;
- if(id&&!legacyDestinations.includes(cta_url)&&!enabledCta){
-  const {data:existing,error:existingError}=await db.from("marketing_email_templates")
-   .select("cta_url").eq("id",id).maybeSingle();
-  if(existingError)redirect("/torre/modelos-email/editor?erro=cta");
-  previouslySaved=existing?.cta_url===cta_url;
+ if(selectedCtaId){
+  // A seleção de catálogo é validada e resolvida no servidor.
+  // Nunca confiar no texto ou URL enviada pelo navegador.
+  if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(selectedCtaId))
+   redirect("/torre/modelos-email/editor?erro=cta");
+  const {data:source,error:sourceError}=await db.from("fiscal_ctas")
+   .select("id,button_label,url").eq("id",selectedCtaId).eq("active",true).maybeSingle();
+  if(sourceError||!source)redirect("/torre/modelos-email/editor?erro=cta");
+  cta_label=source.button_label;
+  cta_url=source.url;
+ }else{
+  // Manter os destinos tradicionais e modelos salvos anteriormente.
+  let previouslySaved=false;
+  if(id&&!legacyDestinations.includes(cta_url)){
+   const {data:existing,error:existingError}=await db.from("marketing_email_templates")
+    .select("cta_url").eq("id",id).maybeSingle();
+   if(existingError)redirect("/torre/modelos-email/editor?erro=cta");
+   previouslySaved=existing?.cta_url===cta_url;
+  }
+  if(!legacyDestinations.includes(cta_url)&&!previouslySaved)
+   redirect("/torre/modelos-email/editor?erro=cta");
  }
  const safeDestination=(()=>{
   try{const u=new URL(cta_url);return u.protocol==="https:"&&
    ["dianavoltolini.com.br","app.dianavoltolini.com.br"].includes(u.hostname);}
   catch{return false;}
  })();
- if(!safeDestination||(!legacyDestinations.includes(cta_url)&&!enabledCta&&!previouslySaved)||!cta_label)
+ if(!safeDestination||!cta_label||cta_label.length>80)
   redirect("/torre/modelos-email/editor?erro=cta");
  if(!name||!subject||!body)redirect("/torre/modelos-email/editor?erro=campos");
  const auto_enabled=f.get("auto_enabled")==="yes",auto_include_existing=f.get("auto_include_existing")==="yes";
