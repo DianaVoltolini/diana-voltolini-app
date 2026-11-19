@@ -212,7 +212,6 @@
 @media print {
  .cover,.article,.endPage{border-top:0;box-shadow:none}
  .cover{height:259mm;min-height:0;padding:0;border:0;position:relative}
- .cover:before{content:"";position:fixed;top:-16mm;left:-16mm;width:210mm;height:2mm;background:#0d1b2a}
  .coverLogo{width:106mm;max-width:106mm;max-height:34mm;margin-bottom:42mm}
  .cover h2{font-size:32pt;max-width:155mm;margin-bottom:12mm}
  .coverSubtitle{font-size:13pt;max-width:140mm;line-height:1.5}
@@ -358,8 +357,23 @@
 .approved .pageContent{display:block}
 @media print {
  .approved .cover{position:relative}
- .approved .cover:before{position:absolute;top:-16mm;left:-16mm;width:210mm;height:3.5mm;max-width:none;background:#102039}
  .approved .article{position:relative}
- .approved .article:before{content:"";position:absolute;left:-16mm;top:-16mm;width:210mm;height:3.5mm;background:#102039}
  .approved .editorialCards,.approved .editorialSteps{break-inside:avoid-page}
+}
+
+/* Capa: elimina o retângulo claro embutido na versão disponível da logo, sem alterar a identidade. */
+.approved .coverLogo{
+  display:block;
+  background:transparent;
+  mix-blend-mode:multiply;
+  filter:contrast(1.06);
+}
+/* O documento já possui rodapé pelo @page: sem barras inseridas por pseudo-elementos. */
+@media print{
+  .approved .cover::before,
+  .approved .article::before{content:none!important;display:none!important}
+  .approved .coverLogo{mix-blend-mode:multiply;filter:contrast(1.06)}
+  .approved .pageContent{break-inside:auto;overflow:visible}
+  .approved .article .chapterWrap{break-after:avoid-page}
+  .approved .editorialStep,.approved .editorialCard,.approved .panelNavy,.approved .panelGold{break-inside:avoid-page}
 }
