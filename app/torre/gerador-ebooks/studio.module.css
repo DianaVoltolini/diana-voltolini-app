@@ -56,7 +56,8 @@
    vertical-align:top;
    padding-top:3mm;
    border-top:0.6pt solid #C9A227;
-   font:6.6pt/1.8 Arial, sans-serif;
+   font:600 7.4pt/1.65 "Segoe UI", Arial, Helvetica, sans-serif;
+   letter-spacing:0.05pt;
    color:#17283a;
  }
  @bottom-center {
@@ -64,13 +65,13 @@
    border:0;
  }
  @bottom-right {
-   content:counter(page, decimal-leading-zero) " / " counter(pages, decimal-leading-zero);
+   content:counter(page, decimal-leading-zero);
    width:28mm;
    text-align:right;
    vertical-align:top;
    padding-top:3mm;
    border-top:0.6pt solid #C9A227;
-   font:7.5pt Arial, sans-serif;
+   font:700 9pt "Segoe UI", Arial, Helvetica, sans-serif;
    color:#17283a;
  }
 }
