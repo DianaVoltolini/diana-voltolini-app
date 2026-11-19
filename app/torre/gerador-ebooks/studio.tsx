@@ -119,7 +119,7 @@ function RenderBlock({ block, lead = false }: { block: Block; lead?: boolean }) 
     if (block.level === 1) {
       const numbered = /^(\d+)[.)]\s*(.+)$/.exec(block.text);
       return <div className={styles.chapterWrap}>
-        <p className={styles.chapterEyebrow}>CONTEÚDO · DIANA VOLTOLINI</p>
+        
         <h2 className={styles.chapter}>{numbered ? <><span className={styles.chapterNumber}>{numbered[1].padStart(2,"0")}</span>{inline(numbered[2])}</> : inline(block.text)}</h2>
       </div>;
     }
@@ -280,7 +280,7 @@ export default function EbookStudio() {
               <span className={styles.goldLine}/>
               {/^https?:\/\//.test(ctaUrl) && <a href={ctaUrl} target="_blank" rel="noopener noreferrer">{ctaUrl}</a>}
             </div>
-            <p className={styles.coverFooter}>DIANA VOLTOLINI • FATURAMENTO FISCAL NA PRÁTICA</p>
+            <p className={styles.coverFooter}>DIANA VOLTOLINI • ESPECIALISTA EM FATURAMENTO E INTELIGÊNCIA FISCAL</p>
           </section>}
         </div>
       </section>
