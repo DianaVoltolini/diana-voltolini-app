@@ -1,0 +1,25 @@
+# .github/workflows/verify-email-cta-catalog.yml
+name: Verify email CTA catalog
+on:
+  pull_request:
+    paths:
+      - "app/torre/modelos-email/editor/page.tsx"
+      - "app/torre/modelos-email/template-editor.tsx"
+      - "app/torre/modelos-email/actions.ts"
+      - "tests/email-template-cta-catalog.test.mjs"
+      - ".github/workflows/verify-email-cta-catalog.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: node --test tests/email-template-cta-catalog.test.mjs
+      - run: npm run build
