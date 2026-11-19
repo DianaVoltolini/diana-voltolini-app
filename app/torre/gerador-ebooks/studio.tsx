@@ -15,7 +15,8 @@ type Block =
   | { kind: "rule" }
   | { kind: "pagebreak" }
   | { kind: "cards"; items: { label: string; value: string; detail: string }[] }
-  | { kind: "panel"; tone: "navy" | "blue" | "gold"; label: string; text: string };
+  | { kind: "panel"; tone: "navy" | "blue" | "gold"; label: string; text: string }
+  | { kind: "steps"; items: { label: string; title: string; detail: string }[] };
 
 function parseMarkdown(source: string): Block[] {
   const lines = source.replace(/\r\n?/g, "\n").split("\n");
@@ -25,7 +26,7 @@ function parseMarkdown(source: string): Block[] {
     const line = lines[index].trim();
     if (!line) { index++; continue; }
     if (/^<!--\s*page\s*-->$/i.test(line)) { blocks.push({kind:"pagebreak"}); index++; continue; }
-    const directive = /^:::(cards|navy|blue|gold)\s*$/i.exec(line);
+    const directive = /^:::(cards|steps|navy|blue|gold)\s*$/i.exec(line);
     if (directive) {
       const type = directive[1].toLowerCase();
       index++;
@@ -41,6 +42,12 @@ function parseMarkdown(source: string): Block[] {
           return {label,value,detail};
         }).filter(item => item.label && item.value);
         if (cards.length) blocks.push({kind:"cards",items:cards});
+      } else if (type === "steps") {
+        const steps = items.map(s => {
+          const [label="",title="",detail=""] = s.replace(/^[-*]\s*/,"").split("|").map(v=>v.trim());
+          return {label,title,detail};
+        }).filter(item=>item.title);
+        if (steps.length) blocks.push({kind:"steps",items:steps});
       } else if (items.length) {
         const [label,...rest] = items;
         blocks.push({kind:"panel",tone:type as "navy"|"blue"|"gold",label,text:rest.join(" ")});
@@ -122,6 +129,7 @@ function RenderBlock({ block, lead = false }: { block: Block; lead?: boolean }) 
   if (block.kind === "paragraph") return <p className={lead ? styles.lead : undefined}>{inline(block.text)}</p>;
   if (block.kind === "pagebreak") return null;
   if (block.kind === "cards") return <div className={styles.editorialCards}>{block.items.map((item,i)=><div className={styles.editorialCard} key={i}><span>{inline(item.label)}</span><strong>{inline(item.value)}</strong>{item.detail && <small>{inline(item.detail)}</small>}</div>)}</div>;
+  if (block.kind === "steps") return <div className={styles.editorialSteps}>{block.items.map((item,i)=><div className={styles.editorialStep} key={i}><span className={styles.stepNumber}>{item.label || String(i+1).padStart(2,"0")}</span><div><strong>{inline(item.title)}</strong><p>{inline(item.detail)}</p></div></div>)}</div>;
   if (block.kind === "panel") return <aside className={block.tone==="navy"?styles.panelNavy:block.tone==="gold"?styles.panelGold:styles.panelBlue}><span>{inline(block.label)}</span><p>{inline(block.text)}</p></aside>;
   if (block.kind === "note") {
     const important = /^(atenção|importante|cuidado|alerta|nota|regra)/i.test(block.text);
@@ -136,76 +144,75 @@ function RenderBlock({ block, lead = false }: { block: Block; lead?: boolean }) 
   return <div className={styles.tableScroll}><table><thead><tr>{block.rows[0]?.map((x,i)=><th key={i}>{inline(x)}</th>)}</tr></thead><tbody>{block.rows.slice(1).map((r,i)=><tr key={i}>{r.map((x,j)=><td key={j}>{inline(x)}</td>)}</tr>)}</tbody></table></div>;
 }
 
-const sample = `# A informação certa antes da apuração
+const sample = `# 01. Seu negócio pode vender bem e ainda faltar dinheiro
 
-Uma atualização do PGDAS-D divulgada em 13 de novembro de 2026 trouxe novas exigências de informação e prepara o sistema para a transição tributária.
+Uma das situações mais comuns entre pequenos empreendedores é trabalhar o mês inteiro e, no final, não saber quanto realmente ganhou.
 
-:::cards
-- PERÍODO ANALISADO | 10 a 16/11 | Radar Fiscal da semana
-- ALTERAÇÃO SELECIONADA | PGDAS-D | Uma atualização operacional
-:::
-
-## O que isso significa no dia a dia
-
-1. Conferir se receita, atividade e documentos fiscais correspondem aos dados usados pela contabilidade.
-2. Verificar as informações relacionadas à folha de salários dos últimos 12 meses (FS12).
-3. Acompanhar os próximos atos e documentos sobre IBS e CBS.
-
-:::blue
-PONTO DE PARTIDA
-O comunicado apresenta mudanças operacionais e preparação de sistemas. Ele não deve ser confundido com uma nova resolução do Comitê Gestor.
-:::
-
-<!-- page -->
-
-# 01. Duas mudanças que exigem atenção
-
-Para os períodos de apuração de novembro e dezembro de 2026, o comunicado destacou alterações no preenchimento do PGDAS-D.
-
-## Regime de caixa e competência
-
-Deixa de ser necessária a escolha entre esses regimes no sistema, considerando a adoção do regime de competência nas apurações a partir de 2027.
-
-## Folha de salários acumulada
-
-Passa a ser exigida a informação da folha de salários dos últimos 12 meses, denominada FS12, para todas as atividades do Simples Nacional.
-
-:::gold
-NÃO CONFUNDIR
-A atualização do PGDAS-D em novembro de 2026 não significa que todas as regras de IBS/CBS do Simples Nacional já estejam produzindo efeitos nesse mês.
-:::
-
-<!-- page -->
-
-# 02. Quais datas precisam ser observadas?
-
-Separe o que já foi divulgado dos procedimentos que ainda dependem da implementação e das normas correspondentes.
-
-| Marco | Referência | Leitura operacional |
-| --- | --- | --- |
-| Divulgação da atualização | 13/11/2026 | Comunicação oficial |
-| Novas informações no PGDAS-D | 11 e 12/2026 | Períodos de apuração abrangidos |
-| Apurações de 2027 | A partir de 01/01/2027 | Regime de competência, conforme comunicado |
+Isso acontece quando o dinheiro das vendas se mistura às despesas da casa e aos pagamentos da empresa.
 
 :::navy
-ORIENTAÇÃO PRÁTICA
-Conferir documentos fiscais, a segregação das receitas e os relatórios usados na apuração antes de transmitir as informações.
+A IDEIA PRINCIPAL
+Vender não é lucrar. O dinheiro que entra não é, necessariamente, dinheiro disponível.
 :::
 
-## Checklist operacional
+### O QUE VOCÊ VAI CONSEGUIR FAZER
 
-- [ ] Conferir a receita do período.
-- [ ] Identificar documentos cancelados.
-- [ ] Validar a segregação por atividade.
-- [ ] Solicitar os dados da folha de salários dos últimos 12 meses.`;
+:::cards
+- 01 | Separar o dinheiro | Diferenciar recursos pessoais e os da atividade.
+- 02 | Entender os números | Reconhecer faturamento, custos, despesas e lucro.
+- 03 | Organizar a rotina | Registrar entradas e saídas sem complicação.
+- 04 | Planejar sua retirada | Decidir com base no resultado e nas obrigações.
+:::
+
+<!-- page -->
+
+# 02. Cinco palavras que você precisa conhecer
+
+Antes de decidir quanto retirar, é importante reconhecer a diferença entre o dinheiro que entrou e o resultado que a atividade realmente produziu.
+
+| Conceito | O que significa na prática |
+| --- | --- |
+| **Faturamento** | Valor das vendas e serviços realizados; não é sinônimo de dinheiro disponível. |
+| **Recebimento** | Dinheiro que efetivamente entrou na conta ou no caixa. |
+| **Custo** | Gasto diretamente ligado ao produto ou ao serviço vendido. |
+| **Despesa** | Gasto para manter o negócio funcionando. |
+| **Lucro** | Resultado que resta depois de considerar custos e despesas pertinentes. |
+
+:::gold
+EXEMPLO: UMA MANICURE ATENDE UMA CLIENTE
+Ela cobra R$ 100 pelo serviço e usa R$ 18 em materiais. A venda foi de R$ 100, mas isso não significa que ganhou R$ 100. Ainda existem outras despesas, como aluguel, energia, taxas de cartão e DAS.
+:::
+
+<!-- page -->
+
+# 03. O dinheiro da empresa não é o dinheiro da casa
+
+O MEI é uma pessoa física que exerce uma atividade empresarial, mas a organização do dinheiro do negócio precisa ser tratada de maneira separada.
+
+Uma conta específica para a atividade facilita acompanhar receitas, custos, despesas e retiradas. Não é necessário criar uma administração complicada.
+
+### QUATRO REGRAS QUE AJUDAM IMEDIATAMENTE
+
+:::steps
+- 01 | Receba as vendas em um lugar identificado | Conta dedicada, carteira digital ou controle de caixa.
+- 02 | Pague as despesas do negócio com esse dinheiro | Mercadorias, materiais, internet e outras contas da atividade.
+- 03 | Transfira sua retirada com registro | Anote data, valor e destino; evite pagamentos pessoais espalhados.
+- 04 | Concilie semanalmente | Compare o que registrou com extratos, recebimentos e comprovantes.
+:::
+
+:::gold
+CONTA BANCÁRIA
+Manter uma conta separada é uma recomendação de organização, não uma exigência geral de abertura de conta PJ para todo MEI.
+:::`;
 
 export default function EbookStudio() {
-  const [title,setTitle] = useState("Título do e-book");
-  const [subtitle,setSubtitle] = useState("Subtítulo do material");
+  const [title,setTitle] = useState("O dinheiro do MEI");
+  const [subtitle,setSubtitle] = useState("Como organizar o negócio, descobrir quanto realmente sobra e planejar sua retirada mensal.");
   const [label,setLabel] = useState("GUIA PRÁTICO · CONHECIMENTO FISCAL");
   const [edition,setEdition] = useState("Edição novembro de 2026");
-  const [topics,setTopics] = useState("PGDAS-D • Preparação para IBS/CBS • Rotinas de conferência");
+  const [topics,setTopics] = useState("Faturamento e lucro • Controle de caixa • Retirada mensal • DAS e IRPF • Reserva financeira • Exercícios práticos");
   const [markdown,setMarkdown] = useState(sample);
+  const [includeClosing,setIncludeClosing] = useState(false);
   const [cta,setCta] = useState("Conheça o Blog Fiscal");
   const [ctaUrl,setCtaUrl] = useState("https://dianavoltolini.com.br/blog");
   const blocks = parseMarkdown(markdown);
@@ -241,7 +248,8 @@ export default function EbookStudio() {
         <input id="ebook-topics" value={topics} onChange={e=>setTopics(e.target.value)}/>
         <label htmlFor="ebook-content">Conteúdo em Markdown</label>
         <textarea id="ebook-content" spellCheck value={markdown} onChange={e=>setMarkdown(e.target.value)} rows={19}/>
-        <p className={styles.help}>Aceita Markdown normal e blocos editoriais: :::cards, :::navy, :::blue, :::gold. Para iniciar outra página: &lt;!-- page --&gt;. Confira a prévia antes de exportar.</p>
+        <p className={styles.help}>Aceita Markdown normal e blocos editoriais: :::cards, :::steps, :::navy, :::blue, :::gold. Para iniciar outra página: &lt;!-- page --&gt;. Confira a prévia antes de exportar.</p>
+        <label className={styles.closingToggle}><input type="checkbox" checked={includeClosing} onChange={e=>setIncludeClosing(e.target.checked)}/> Incluir página final com chamada</label>
         <label htmlFor="ebook-cta">Chamada final</label>
         <input id="ebook-cta" value={cta} onChange={e=>setCta(e.target.value)}/>
         <label htmlFor="ebook-url">Link da chamada</label>
@@ -249,7 +257,7 @@ export default function EbookStudio() {
       </section>
       <section className={styles.previewArea} aria-label="Prévia do e-book">
         <p className={styles.previewLabel}>PRÉ-VISUALIZAÇÃO · O conteúdo é paginado na impressão</p>
-        <div className={styles.printDocument}>
+        <div className={`${styles.printDocument} ${styles.approved}`}>
           <section className={styles.cover}>
             <Image src="/brand/logo-light.png" alt="Diana Voltolini" width={1535} height={538} className={styles.coverLogo} unoptimized/>
             <p className={styles.coverLabel}>{label}</p>
@@ -264,7 +272,7 @@ export default function EbookStudio() {
             <p className={styles.runningHead}>DIANA VOLTOLINI / CONHECIMENTO FISCAL NA PRÁTICA</p>
             <div className={styles.pageContent}>{page.map((block,i)=><RenderBlock block={block} lead={block.kind==="paragraph" && i===1 && page[0]?.kind==="heading"} key={i}/>)}</div>
           </article>)}
-          <section className={styles.endPage}>
+          {includeClosing && <section className={styles.endPage}>
             <p className={styles.runningHead}>DIANA VOLTOLINI / CONHECIMENTO FISCAL NA PRÁTICA</p>
             <div>
               <p className={styles.coverLabel}>PARA CONTINUAR APRENDENDO</p>
@@ -273,7 +281,7 @@ export default function EbookStudio() {
               {/^https?:\/\//.test(ctaUrl) && <a href={ctaUrl} target="_blank" rel="noopener noreferrer">{ctaUrl}</a>}
             </div>
             <p className={styles.coverFooter}>DIANA VOLTOLINI • FATURAMENTO FISCAL NA PRÁTICA</p>
-          </section>
+          </section>}
         </div>
       </section>
     </div>
