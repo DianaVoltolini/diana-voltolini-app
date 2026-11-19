@@ -30,6 +30,9 @@ on:
       - "tests/ebook-civil-expiry.test.mjs"
       - "app/torre/comercio-v2/produtos/**"
       - "app/torre/comercio-v2/materiais/**"
+      - "app/torre/sidebar.tsx"
+      - "supabase/migrations/20261118_commerce_v2_material_subjects_independent_library.sql"
+      - "tests/commerce-v2-material-library-categories.test.mjs"
       - "supabase/migrations/20261112_commerce_v2_student_delivery_planning.sql"
       - "tests/commerce-v2-student-materials.test.mjs"
       - "tests/commerce-v2-material-eligibility.test.mjs"
@@ -52,6 +55,7 @@ jobs:
       - run: node --test tests/encounter-page-visual-parity.test.mjs
       - run: node --test tests/commerce-v2-student-materials.test.mjs
       - run: node --test tests/commerce-v2-material-eligibility.test.mjs
+      - run: node --test tests/commerce-v2-material-library-categories.test.mjs
       - run: node --test tests/ebook-civil-expiry.test.mjs
       - run: node --test tests/commerce-v2-customer-delivery.test.mjs
       - run: npm run lint
