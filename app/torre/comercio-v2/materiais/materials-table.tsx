@@ -7,10 +7,11 @@ import { archiveCommerceV2Material, restoreCommerceV2Material } from "./actions"
 import styles from "./materials.module.css";
 
 export type MaterialTypeOption = { code:string; name:string; is_active:boolean };
+export type SubjectOption = { code:string; name:string; is_active:boolean };
 export type ProductOption = { id: string; code: string; name: string };
 export type MaterialRow = {
-  id: string; product_id: string; eligible_product_ids: string[]; title: string; description: string;
-  category: string; original_filename: string | null; file_mime: string | null;
+  id: string; product_id: string | null; eligible_product_ids: string[]; title: string; description: string;
+  category: string; subject_code:string; original_filename: string | null; file_mime: string | null;
   file_size: number | null; storage_path: string | null;
   is_archived: boolean; available_to_student: boolean; created_at: string; updated_at: string;
 };
@@ -19,33 +20,36 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_
 const previewable = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp", "text/plain"]);
 function size(bytes: number | null) { return bytes === null ? "" : (bytes / 1048576).toFixed(2).replace(".", ",") + " MB"; }
 export default function MaterialsTable({
-  materials, products, types, initialProduct = "",
+  materials, products, types, subjects, initialProduct = "",
 }: {
-  materials: MaterialRow[]; products: ProductOption[]; types: MaterialTypeOption[]; initialProduct?: string;
+  materials: MaterialRow[]; products: ProductOption[]; types: MaterialTypeOption[]; subjects: SubjectOption[]; initialProduct?: string;
 }) {
   const [query, setQuery] = useState("");
   const [product, setProduct] = useState(initialProduct);
   const [category, setCategory] = useState("todos");
+  const [subject, setSubject] = useState("todos");
   const [status, setStatus] = useState("ativos");
   const materialCategories=useMemo(()=>Object.fromEntries(types.map(t=>[t.code,t.name])),[types]);
+  const subjectsMap=useMemo(()=>Object.fromEntries(subjects.map(s=>[s.code,s.name])),[subjects]);
   const productMap = useMemo(() => new Map(products.map(p => [p.id, p])), [products]);
   const filtered = useMemo(() => {
     const search = normalize(query.trim());
     return materials.filter(item => {
       if (product && !item.eligible_product_ids.includes(product)) return false;
       if (category !== "todos" && item.category !== category) return false;
+      if (subject !== "todos" && item.subject_code !== subject) return false;
       if (status === "ativos" && item.is_archived) return false;
       if (status === "arquivados" && !item.is_archived) return false;
       const relatedProducts = item.eligible_product_ids.map(id=>productMap.get(id)).filter(Boolean);
-      const parent = productMap.get(item.product_id);
+
       return !search || normalize([
-        item.title, item.description, item.original_filename ?? "",
+        item.title, item.description, item.original_filename ?? "",subjectsMap[item.subject_code]??"",
         ...relatedProducts.flatMap(p => [p?.name ?? "",p?.code ?? ""]),
       ].join(" ")).includes(search);
     });
-  }, [materials, productMap, query, product, category, status]);
-  const clear = () => { setQuery(""); setProduct(""); setCategory("todos"); setStatus("ativos"); };
-  const filtering = Boolean(query.trim()) || Boolean(product) || category !== "todos" || status !== "ativos";
+  }, [materials, productMap, query, product, category, subject, status, subjectsMap]);
+  const clear = () => { setQuery(""); setProduct(""); setCategory("todos"); setSubject("todos"); setStatus("ativos"); };
+  const filtering = Boolean(query.trim()) || Boolean(product) || category !== "todos" || subject !== "todos" || status !== "ativos";
   return <>
     <div className={styles.filterPanel}>
       <label className={styles.filterField}>
@@ -64,6 +68,13 @@ export default function MaterialsTable({
         <select value={category} onChange={e => setCategory(e.target.value)}>
           <option value="todos">Todos</option>
           {types.map(t=><option key={t.code} value={t.code}>{t.name}{t.is_active?"":" (inativo)"}</option>)}
+        </select>
+      </label>
+      <label className={styles.filterField}>
+        <span>Categoria</span>
+        <select value={subject} onChange={e => setSubject(e.target.value)}>
+          <option value="todos">Todas as categorias</option>
+          {subjects.map(s=><option key={s.code} value={s.code}>{s.name}</option>)}
         </select>
       </label>
       <label className={styles.filterField}>
@@ -86,7 +97,7 @@ export default function MaterialsTable({
         return <article key={m.id} className={styles.materialCard}>
           <div className={styles.materialCardTop}>
             <div>
-              <p className={styles.materialCategory}>{materialCategories[m.category]??m.category} · {m.is_archived?"Arquivado":"Ativo"}</p>
+              <p className={styles.materialCategory}>{materialCategories[m.category]??m.category} · {subjectsMap[m.subject_code]??m.subject_code} · {m.is_archived?"Arquivado":"Ativo"}</p>
               <h3>{m.title}</h3>
               <p className={styles.note}>{m.description||"Sem descrição"}</p>
               <p className={styles.note}>{m.original_filename??"Sem arquivo"}{m.file_size!==null?" · "+size(m.file_size):""} · {dateFormatter.format(new Date(m.created_at))}</p>
