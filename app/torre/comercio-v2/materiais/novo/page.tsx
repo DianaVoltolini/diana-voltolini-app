@@ -59,10 +59,26 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
         encType="multipart/form-data"
       >
         <input type="hidden" name="id" value={material?.id ?? ""} />
-        <label>Título do material
-          <input type="text" name="title" maxLength={180} minLength={2} required
-            defaultValue={material?.title ?? ""} placeholder="Ex.: Guia Prático do Simples Nacional" />
-        </label>
+        <div className={styles.editorRow}>
+          <label>Título do material
+            <input type="text" name="title" maxLength={180} minLength={2} required
+              defaultValue={material?.title ?? ""} placeholder="Ex.: Guia Prático do Simples Nacional" />
+          </label>
+          <label>Tipo do material
+            <select name="category" defaultValue={material?.category ?? "support"} required>
+              {typeOptions.map(t=><option value={t.code} key={t.code}>{t.name}{t.is_active?"":" (inativo)"}</option>)}
+            </select>
+          </label>
+          <label>Classificação
+            <select name="subject_code" defaultValue={material?.subject_code ?? "geral"} required>
+              {subjectOptions.map(t=><option value={t.code} key={t.code}>{t.name}{t.is_active?"":" (inativa)"}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className={styles.editorShortcuts}>
+          <Link href="/torre/comercio-v2/materiais/tipos">+ Tipos de Material</Link>
+          <Link href="/torre/comercio-v2/materiais/categorias">+ Categoria</Link>
+        </div>
         <label>Descrição — o que contém este material
           <textarea name="description" maxLength={4000} rows={4}
             defaultValue={material?.description ?? ""}
@@ -76,23 +92,6 @@ export default async function MaterialEditor({ searchParams }: { searchParams: P
           Arquivo atual: <strong>{material.original_filename}</strong>. Envie outro somente para substituir.
         </p>}
         <p className={styles.note}>Arquivo obrigatório no cadastro, com até 25 MB. Os materiais permanecem privados na Torre.</p>
-        <div className={styles.editorRow}>
-          <label>Tipo do material
-            <select name="category" defaultValue={material?.category ?? "support"} required>
-              {typeOptions.map(t=><option value={t.code} key={t.code}>{t.name}{t.is_active?"":" (inativo)"}</option>)}
-            </select>
-          </label>
-          <label>Classificação
-            <select name="subject_code" defaultValue={material?.subject_code ?? "geral"} required>
-              {subjectOptions.map(t=><option value={t.code} key={t.code}>{t.name}{t.is_active?"":" (inativa)"}</option>)}
-            </select>
-          </label>
-          <div className={styles.editorAux}>
-            <span>Cadastros</span>
-            <Link href="/torre/comercio-v2/materiais/tipos">+ Tipos de Material</Link>
-            <Link href="/torre/comercio-v2/materiais/categorias">+ Categoria</Link>
-          </div>
-        </div>
         <label className={styles.choiceRow}>
           <input type="checkbox" name="available_to_student" value="yes" defaultChecked={material?.available_to_student ?? false}/>
           Disponível para aluno — permite selecionar o material para entrega em Produtos. Não publica automaticamente.
