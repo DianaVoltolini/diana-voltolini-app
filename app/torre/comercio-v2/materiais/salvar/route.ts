@@ -56,14 +56,16 @@ export async function POST(request: NextRequest) {
   const title = field(form, "title", 180);
   const description = field(form, "description", 4000);
   const category = field(form, "category", 30);
+  const subjectCode = field(form, "subject_code", 40);
   const availableToStudent = form.get("available_to_student") === "yes";
   const eligibleProductIds = [...new Set(form.getAll("eligible_product_ids").map(value=>String(value)))];
   const uploaded = form.get("file");
   const file = uploaded instanceof File && uploaded.size > 0 ? uploaded : null;
   if ((id && !uuid.test(id)) ||
-    eligibleProductIds.length === 0 || eligibleProductIds.length > 100 ||
+    eligibleProductIds.length > 100 ||
     eligibleProductIds.some(value=>!uuid.test(value)) ||
-    title.length < 2 || title.length > 180 || description.length > 4000 || !/^[a-z][a-z0-9_]{1,29}$/.test(category)) {
+    title.length < 2 || title.length > 180 || description.length > 4000 ||
+    !/^[a-z][a-z0-9_]{1,29}$/.test(category) || !/^[a-z][a-z0-9_]{1,39}$/.test(subjectCode)) {
     return back("erro", "validacao");
   }
   let ext = "";
@@ -79,13 +81,18 @@ export async function POST(request: NextRequest) {
   const {data:allowedType,error:typeError}=await db.from("commerce_v2_material_types")
     .select("code,is_active").eq("code",category).maybeSingle();
   if(typeError||!allowedType)return back("erro","tipo");
-  const {data:allowedProducts,error:allowedError} = await db.from("commerce_v2_products")
-    .select("id").in("id",eligibleProductIds).eq("status","draft");
-  if(allowedError || (allowedProducts??[]).length!==eligibleProductIds.length)
-    return back("erro","produto");
+  const {data:subject,error:subjectError}=await db.from("commerce_v2_material_subjects")
+    .select("code,is_active").eq("code",subjectCode).maybeSingle();
+  if(subjectError||!subject)return back("erro","categoria");
+  if(eligibleProductIds.length){
+    const {data:allowedProducts,error:allowedError}=await db.from("commerce_v2_products")
+      .select("id").in("id",eligibleProductIds);
+    if(allowedError || (allowedProducts??[]).length!==eligibleProductIds.length)
+      return back("erro","produto");
+  }
 
   const existingResult = id ? await db.from("commerce_v2_materials")
-    .select("id,product_id,storage_path").eq("id", id).eq("is_archived", false).maybeSingle() : null;
+    .select("id,product_id,storage_path,original_filename,subject_code").eq("id", id).eq("is_archived", false).maybeSingle() : null;
   if(!allowedType.is_active){
     if(!id)return back("erro","tipo");
     const {data:existingType,error:existingTypeError}=await db.from("commerce_v2_materials")
@@ -94,16 +101,22 @@ export async function POST(request: NextRequest) {
   }
   if (id && (existingResult?.error || !existingResult?.data))
     return back("erro", "material");
+  if(!subject.is_active && (!id || existingResult?.data?.subject_code!==subjectCode))
+    return back("erro","categoria");
+  // Um novo cadastro sempre tem arquivo; na edição, conservar o anexo existente.
+  if(!file && !existingResult?.data?.original_filename)
+    return back("erro","arquivo");
 
-  // O campo product_id permanece no banco por compatibilidade com o acervo existente.
-  // Na criação, é derivado de um produto selecionado. Na edição, preserva-se o valor
-  // original, sem exigir um segundo vínculo visível e redundante no formulário.
-  const productId = existingResult?.data?.product_id ?? eligibleProductIds[0];
+  // Produto principal legado é opcional. Arquivos sem curso vivem na Biblioteca.
+  // Se o produto antigo foi desvinculado, remover também esta referência antiga.
+  const previousProductId=existingResult?.data?.product_id??null;
+  const productId=previousProductId && eligibleProductIds.includes(previousProductId)
+    ?previousProductId:(eligibleProductIds[0]??null);
 
   let path: string | null = null;
   let fileFields: Record<string, string | number> = {};
   if (file) {
-    path = productId + "/" + crypto.randomUUID() + "." + ext;
+    path = (productId ?? "biblioteca") + "/" + crypto.randomUUID() + "." + ext;
     const { error } = await db.storage.from(bucket)
       .upload(path, await file.arrayBuffer(), { contentType: file.type, upsert: false });
     if (error) {
@@ -119,14 +132,15 @@ export async function POST(request: NextRequest) {
   }
 
   const values = {
-    title, description, category, available_to_student: availableToStudent, updated_by: userId,
+    title, description, category, subject_code:subjectCode, product_id:productId,
+    available_to_student: availableToStudent, updated_by: userId,
     updated_at: new Date().toISOString(), ...fileFields,
   };
   const result = id
     ? await db.from("commerce_v2_materials").update(values).eq("id", id)
-       .eq("product_id", productId).eq("is_archived", false).select("id").maybeSingle()
+       .eq("is_archived", false).select("id").maybeSingle()
     : await db.from("commerce_v2_materials").insert({
-        ...values, product_id: productId, created_by: userId,
+        ...values, created_by: userId,
       }).select("id").maybeSingle();
   if (result.error || !result.data) {
     if (path) await db.storage.from(bucket).remove([path]);
@@ -137,12 +151,14 @@ export async function POST(request: NextRequest) {
   const materialId = result.data.id as string;
   // Atualizar os produtos permitidos sem duplicar o material ou o arquivo.
   // Gravar novos vínculos primeiro; manter os anteriores em caso de erro.
-  const {error:eligibleError}=await db.from("commerce_v2_material_product_eligibility")
-    .upsert(eligibleProductIds.map(linkedId=>({material_id:materialId,product_id:linkedId})),
-      {onConflict:"material_id,product_id",ignoreDuplicates:true});
-  if(eligibleError){
-    console.error("Commerce V2 eligibility:",eligibleError.code);
-    return back("erro","salvar");
+  if(eligibleProductIds.length){
+    const {error:eligibleError}=await db.from("commerce_v2_material_product_eligibility")
+      .upsert(eligibleProductIds.map(linkedId=>({material_id:materialId,product_id:linkedId})),
+        {onConflict:"material_id,product_id",ignoreDuplicates:true});
+    if(eligibleError){
+      console.error("Commerce V2 eligibility:",eligibleError.code);
+      return back("erro","salvar");
+    }
   }
   const {data:previousLinks,error:previousLinksError}=await db.from("commerce_v2_material_product_eligibility")
     .select("product_id").eq("material_id",materialId);
@@ -168,6 +184,6 @@ export async function POST(request: NextRequest) {
     if (error) console.error("Commerce V2 cleanup:", error.message);
   }
 
-  const params = new URLSearchParams({ produto: productId, salvo: "1" });
+  const params = new URLSearchParams({ salvo: "1", ...(productId?{produto:productId}:{}) });
   return new NextResponse(null, { status: 303, headers: { Location: base + "?" + params.toString(), "Cache-Control": "no-store" } });
 }
