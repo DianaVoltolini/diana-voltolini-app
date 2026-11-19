@@ -54,3 +54,70 @@
 .conclusao .reader strong{color:#fff}
 .conclusao .reader>.paragraph{margin-bottom:12px;line-height:1.7}
 .conclusao .reader>.paragraph:last-child{margin-bottom:0}
+
+
+/* Estúdio Editorial v1: leitura confortável, hierarquia e responsividade.
+   Escopo apenas visual; não altera artigos armazenados nem cálculos fiscais. */
+.reader{
+  width:100%;
+  max-width:800px;
+  margin-inline:auto;
+  font-size:16px;
+  line-height:1.8;
+  letter-spacing:.003em;
+}
+.reader>.paragraph{
+  font-size:16px;
+  line-height:1.84;
+  margin-bottom:21px;
+  color:#34465b;
+}
+.reader>.heading{
+  margin-top:42px;
+  margin-bottom:17px;
+  padding-bottom:10px;
+  border-bottom:1px solid #e4eaf0;
+  letter-spacing:-.018em;
+}
+.reader h4.heading{border-bottom:0;padding-bottom:0}
+.reader a{
+  color:#163e7a;
+  text-decoration:underline;
+  text-decoration-color:#c9a227;
+  text-underline-offset:3px;
+  overflow-wrap:anywhere;
+}
+.reader a:hover{color:#0b2955}
+.reader a:focus-visible{outline:2px solid #a47e16;outline-offset:3px;border-radius:2px}
+.reader code{
+  padding:.1em .35em;
+  border-radius:4px;
+  color:#21364b;
+  background:#f0f4f8;
+  font-size:.9em;
+}
+.reader .tableWrap{
+  margin-block:26px 32px;
+  box-shadow:0 6px 20px rgba(16,32,51,.035);
+}
+.reader .table th{
+  white-space:normal;
+  overflow-wrap:normal;
+}
+.reader .table td{
+  overflow-wrap:break-word;
+}
+.reader .block{
+  margin-block:30px;
+  border-radius:10px;
+}
+.reader .checkItem{
+  min-width:0;
+}
+@media(max-width:640px){
+  .reader{font-size:15px;line-height:1.77}
+  .reader>.paragraph{font-size:15px;line-height:1.8;margin-bottom:18px}
+  .reader>.heading{margin-top:31px;margin-bottom:14px}
+  .reader .block{margin-block:22px}
+  .reader .tableWrap{margin-inline:-4px}
+}
