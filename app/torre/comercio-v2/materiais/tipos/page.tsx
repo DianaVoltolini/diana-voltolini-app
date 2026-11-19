@@ -32,7 +32,7 @@ export default async function MaterialTypes({ searchParams }: { searchParams: Pr
         <h1>Tipos de Material</h1>
         <p>Cadastre um tipo ou edite o nome de um já existente.</p>
       </div>
-      <Link className={styles.button} href="/torre/comercio-v2/materiais">Voltar à Biblioteca</Link>
+      <Link href="/torre/comercio-v2/materiais/novo">Voltar ao cadastro</Link>
     </header>
     {q.salvo && <p className={styles.message} role="status">Tipo salvo com sucesso.</p>}
     {q.erro && <p className={styles.error} role="alert">{messages[q.erro] ?? "Erro ao salvar."}</p>}
