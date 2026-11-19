@@ -6,6 +6,7 @@ import {saveTransactionalEmail} from "./transacionais/actions";
 import css from "./template-editor.module.css";
 type Template={audience_kind?:string|null;id:string;name:string;subject:string;body:string;kind:string;active:boolean;description:string|null;interest:string|null;landing_id:string|null;cta_label:string|null;cta_url:string|null;auto_enabled?:boolean;auto_include_existing?:boolean};
 type Landing={id:string;title:string};
+type CatalogCta={id:string;name:string;button_label:string;url:string;active:boolean};
 const links=[
  ["Blog Fiscal","https://dianavoltolini.com.br/blog"],
  ["E-book IBS e CBS na Prática","https://dianavoltolini.com.br/ibs-cbs-na-pratica"],
@@ -16,8 +17,20 @@ const links=[
 ];
 const starter="Olá, {{nome}}!\n\nQue bom ter você por aqui!\n\nMeu objetivo é ajudar profissionais e empresas a compreender as mudanças fiscais e aplicá-las com mais segurança na rotina.\n\nObrigada pelo interesse!\nDiana Voltolini";
 const buttonPattern=/\[BOTAO:\s*([^\]\n|]+?)\s*\|\s*(https:\/\/[^\]\s]+)\]/g;
-export default function TemplateEditor({selected,interests,landings,defaultAudience="leads"}:{selected:Template|null;interests:string[];landings:Landing[];defaultAudience?:string}){
+export default function TemplateEditor({selected,interests,landings,ctas,defaultAudience="leads"}:{selected:Template|null;interests:string[];landings:Landing[];ctas:CatalogCta[];defaultAudience?:string}){
  const transactional=selected?.kind==="transactional";
+ // CTAs administrados na Torre são compartilhados com Blog e campanhas de e-mail.
+ // Manter destinos legados para não quebrar modelos antigos; remover duplicatas por URL.
+ const destinations=[...new Map([
+  ...links.map(([label,url])=>[url,{label,url,buttonLabel:"Acessar "+label}] as const),
+  ...ctas.filter(c=>c.active).map(c=>[c.url,{
+   label:"CTA — "+c.name,url:c.url,buttonLabel:c.button_label
+  }] as const)
+ ]).values()];
+ const savedUrl=selected?.cta_url??"";
+ if(savedUrl&&!destinations.some(x=>x.url===savedUrl))
+  destinations.push({label:"Destino deste modelo (anterior)",url:savedUrl,buttonLabel:selected?.cta_label??"Acessar"});
+
  const [audience,setAudience]=useState(selected?.audience_kind??defaultAudience);
  const [name,setName]=useState(selected?.name??"");
  const [description,setDescription]=useState(selected?.description??"");
@@ -107,7 +120,11 @@ export default function TemplateEditor({selected,interests,landings,defaultAudie
    {!transactional&&<div className={css.cta}>
     <strong>CTA — Botão de acesso</strong>
     <div className={css.duo}>
-     <label>Destino<select name="cta_url" value={url} onChange={e=>{setUrl(e.target.value);setCta("Acessar "+(links.find(x=>x[1]===e.target.value)?.[0]??"site"));}}>{links.map(x=><option key={x[1]} value={x[1]}>{x[0]}</option>)}</select></label>
+     <label>Destino<select name="cta_url" value={url} onChange={e=>{
+      const chosen=destinations.find(d=>d.url===e.target.value);
+      setUrl(e.target.value);
+      if(chosen)setCta(chosen.buttonLabel);
+     }}>{destinations.map(d=><option key={d.url} value={d.url}>{d.label}</option>)}</select></label>
      <label>Texto do botão<input name="cta_label" required maxLength={80} value={cta} onChange={e=>setCta(e.target.value)}/></label>
     </div>
    </div>}
