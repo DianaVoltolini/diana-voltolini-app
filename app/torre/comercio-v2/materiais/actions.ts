@@ -23,7 +23,7 @@ export async function archiveCommerceV2Material(form: FormData) {
     .eq("id", id).eq("is_archived", false).select("product_id").maybeSingle();
   if (error || !data) navigate("excluir");
   revalidatePath(base);
-  redirect(base + "?produto=" + encodeURIComponent(data.product_id) + "&excluido=1");
+  redirect(base + (data.product_id?"?produto="+encodeURIComponent(data.product_id)+"&excluido=1":"?excluido=1"));
 }
 
 export async function restoreCommerceV2Material(form: FormData) {
@@ -36,5 +36,5 @@ export async function restoreCommerceV2Material(form: FormData) {
     .eq("id", id).eq("is_archived", true).select("product_id").maybeSingle();
   if (error || !data) navigate("restaurar");
   revalidatePath(base);
-  redirect(base + "?produto=" + encodeURIComponent(data.product_id) + "&restaurado=1");
+  redirect(base + (data.product_id?"?produto="+encodeURIComponent(data.product_id)+"&restaurado=1":"?restaurado=1"));
 }
