@@ -10,10 +10,28 @@ export async function saveEmailTemplate(f:FormData){
  const kind=value(f,"kind",20)==="welcome"?"welcome":"manual";
  const audience_kind=value(f,"audience_kind",20)==="buyers"?"buyers":"leads";
  const description=value(f,"description",500),interest=value(f,"interest",120),landing_id=value(f,"landing_id",50),cta_label=value(f,"cta_label",80),cta_url=value(f,"cta_url",300);
- const allowed=["https://dianavoltolini.com.br/blog","https://dianavoltolini.com.br/ibs-cbs-na-pratica","https://dianavoltolini.com.br/diagnostico-ibs-cbs","https://dianavoltolini.com.br/fiscal-na-pratica","https://dianavoltolini.com.br/produtos","https://dianavoltolini.com.br"];
- if(!allowed.includes(cta_url)||!cta_label)redirect("/torre/modelos-email/editor?erro=cta");
- if(!name||!subject||!body)redirect("/torre/modelos-email/editor?erro=campos");
+ const legacyDestinations=["https://dianavoltolini.com.br/blog","https://dianavoltolini.com.br/ibs-cbs-na-pratica","https://dianavoltolini.com.br/diagnostico-ibs-cbs","https://dianavoltolini.com.br/fiscal-na-pratica","https://dianavoltolini.com.br/produtos","https://dianavoltolini.com.br"];
+ // A mesma origem de dados usada no editor valida destinos adicionados na Torre.
+ // Validar no servidor: o usuário não pode enviar uma URL arbitrária no POST.
  const db=getSupabaseAdmin();
+ const {data:enabledCta,error:ctaLookupError}=await db.from("fiscal_ctas")
+  .select("id").eq("active",true).eq("url",cta_url).limit(1).maybeSingle();
+ if(ctaLookupError)redirect("/torre/modelos-email/editor?erro=cta");
+ let previouslySaved=false;
+ if(id&&!legacyDestinations.includes(cta_url)&&!enabledCta){
+  const {data:existing,error:existingError}=await db.from("marketing_email_templates")
+   .select("cta_url").eq("id",id).maybeSingle();
+  if(existingError)redirect("/torre/modelos-email/editor?erro=cta");
+  previouslySaved=existing?.cta_url===cta_url;
+ }
+ const safeDestination=(()=>{
+  try{const u=new URL(cta_url);return u.protocol==="https:"&&
+   ["dianavoltolini.com.br","app.dianavoltolini.com.br"].includes(u.hostname);}
+  catch{return false;}
+ })();
+ if(!safeDestination||(!legacyDestinations.includes(cta_url)&&!enabledCta&&!previouslySaved)||!cta_label)
+  redirect("/torre/modelos-email/editor?erro=cta");
+ if(!name||!subject||!body)redirect("/torre/modelos-email/editor?erro=campos");
  const auto_enabled=f.get("auto_enabled")==="yes",auto_include_existing=f.get("auto_include_existing")==="yes";
  if(auto_enabled&&kind!=="welcome"&&!landing_id)redirect("/torre/modelos-email/editor?erro=landing");
  const existingTemplate=id?await db.from("marketing_email_templates").select("auto_enabled,auto_activated_at").eq("id",id).maybeSingle():{data:null};
