@@ -17,7 +17,7 @@ on conflict(code) do nothing;
 alter table public.commerce_v2_materials
  add column if not exists subject_code text not null default 'geral';
 alter table public.commerce_v2_materials
- drop not null from product_id;
+ alter column product_id drop not null;
 do $$
 begin
  if not exists(select 1 from pg_constraint
