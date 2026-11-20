@@ -1,7 +1,7 @@
 // app/torre/gerador-ebooks/pdf-engine.ts
 // A4 PDF compositor: measured lines, reflowing tables, TOC and clickable links.
 // Runs entirely in the browser. No server browser, service or database is required.
-import { PDFDocument, StandardFonts, rgb, PDFName } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, PDFName, PDFString } from "pdf-lib";
 import type { PDFFont, PDFPage, PDFDocument as PDFDoc } from "pdf-lib";
 
 export type EbookInput = {
@@ -13,7 +13,7 @@ type Block =
   | {type:"heading";text:string;level:number}
   | {type:"text";text:string}
   | {type:"note";label:string;text:string}
-  | {type:"list";entries:string[];ordered:boolean;check:boolean}
+  | {type:"list";entries:string[];ordered:boolean;check:boolean;start:number}
   | {type:"table";rows:string[][]}
   | {type:"cards";rows:string[][]}
   | {type:"steps";rows:string[][]}
@@ -26,7 +26,7 @@ const NAVY=rgb(.055,.118,.208),GOLD=rgb(.69,.51,.16),INK=rgb(.20,.27,.35),
 const clean=(s:string)=>s.replace(/\*\*/g,"").replace(/__(.*?)__/g,"$1")
   .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g,"$1")
   .replace(/[\u2011\u2012\u2013\u2014]/g,"-").replace(/[\u2018\u2019]/g,"'")
-  .replace(/[\u201c\u201d]/g,'"').replace(/[\u2022\u25cf]/g,"•")
+  .replace(/[\u201c\u201d]/g,'"').replace(/[\u2022\u25cf]/g,"·")
   .replace(/[\u2026]/g,"...").replace(/[\u00a0\u200b]/g," ")
   .replace(/[\u2713\u2714]/g,"x").trim();
 function safe(s:string){return clean(s).replace(/[^\u0020-\u00FF]/g,"?");}
@@ -89,7 +89,7 @@ function parse(md:string):Block[]{
      const entries=[t];while(i<lines.length&&/^(?:[-*]\s+|\d+\.\s+)/.test(lines[i].trim()))entries.push(lines[i++].trim());
      const check=entries.some(x=>/^[-*]\s+\[[ xX]\]/.test(x));
      const ordered=/^\d+\./.test(t);
-     blocks.push({type:"list",ordered,check,entries:entries.map(x=>clean(x.replace(/^(?:[-*]\s+|\d+\.\s+)/,"").replace(/^\[[ xX]\]\s*/,"").replace(/^\|\s*/,"")))});
+     blocks.push({type:"list",ordered,check,start:ordered?Number(/^\d+/.exec(t)?.[0]||"1"):1,entries:entries.map(x=>clean(x.replace(/^(?:[-*]\s+|\d+\.\s+)/,"").replace(/^\[[ xX]\]\s*/,"").replace(/^\|\s*/,"")))});
      continue;
    }
    if(/^https?:\/\//.test(t)){blocks.push({type:"text",text:t});continue;}
@@ -97,13 +97,13 @@ function parse(md:string):Block[]{
    while(i<lines.length && lines[i].trim() && !/^(?:#|>|[-*]\s|\d+\.\s|\||:::|<!--)/.test(lines[i].trim()))parts.push(lines[i++].trim());
    blocks.push({type:"text",text:parts.join(" ")});
  }
- return blocks.filter(b=> !(b.type==="text" && (/^(?:Subtítulo|Edição|Autoria|Neste guia):/.test(b.text)||/Nota de origem/i.test(b.text))));
+ return blocks.filter(b=> !(b.type==="text" && (/^(?:Subtítulo|Edição|Autoria|Neste guia):/.test(clean(b.text))||/Nota de origem/i.test(b.text))));
 }
 type Chapter={title:string;number:string;page:number;ref:PDFPage};
 function addLink(doc:PDFDoc,page:PDFPage,rect:[number,number,number,number],dest:PDFPage|string){
   try{
    const annotation=typeof dest==="string"
-      ?doc.context.obj({Type:"Annot",Subtype:"Link",Rect:rect,Border:[0,0,0],A:{S:"URI",URI:dest}})
+      ?doc.context.obj({Type:"Annot",Subtype:"Link",Rect:rect,Border:[0,0,0],A:{S:"URI",URI:PDFString.of(dest)}})
       :doc.context.obj({Type:"Annot",Subtype:"Link",Rect:rect,Border:[0,0,0],Dest:[dest.ref,PDFName.of("Fit")]});
    page.node.addAnnot(doc.context.register(annotation));
   }catch{/* Keep text usable even on PDF readers without link annotation support. */}
@@ -148,12 +148,12 @@ export async function generateEbookPdf(input:EbookInput):Promise<Uint8Array>{
    let ly=y-40;for(const ln of lines){draw(page,ln,M+16,ly,10.2,regular,ft);ly-=15;}
    y-=h+19;
  }
- function bulletList(entries:string[],ordered:boolean,check:boolean){
+ function bulletList(entries:string[],ordered:boolean,check:boolean,start=1){
    for(let i=0;i<entries.length;i++){
     const arr=splitLines(entries[i],regular,10.3,WIDTH-39),h=Math.max(25,arr.length*15+11);
     ensure(h);
     if(check)page.drawRectangle({x:M+3,y:y-12,width:11,height:11,borderColor:GOLD,borderWidth:1});
-    else if(ordered){page.drawCircle({x:M+12,y:y-9,size:10,color:NAVY});draw(page,String(i+1),M+9,y-12,8,bold,WHITE);}
+    else if(ordered){page.drawCircle({x:M+12,y:y-9,size:10,color:NAVY});draw(page,String(start+i),M+9,y-12,8,bold,WHITE);}
     else page.drawCircle({x:M+10,y:y-6,size:2.6,color:GOLD});
     for(let j=0;j<arr.length;j++)draw(page,arr[j],M+30,y-j*15,10.3);
     y-=h;
@@ -236,7 +236,7 @@ export async function generateEbookPdf(input:EbookInput):Promise<Uint8Array>{
      paragraph(b.text,{size:10.5,leading:16,after:11,color:url?rgb(.12,.32,.57):INK});
      if(url && originalPage===page)addLink(doc,page,[M,Math.max(y,originalY-29),R,originalY+8],url[0]);
    } else if(b.type==="note")panel(b.label,b.text,/IDEIA PRINCIPAL|SÍNTESE|RESULTADO DESTA/i.test(b.label));
-   else if(b.type==="list")bulletList(b.entries,b.ordered,b.check);
+   else if(b.type==="list")bulletList(b.entries,b.ordered,b.check,b.start);
    else if(b.type==="table")table(b.rows);
    else if(b.type==="cards")cards(b.rows);
    else if(b.type==="steps")steps(b.rows);
