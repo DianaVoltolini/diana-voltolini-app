@@ -31,26 +31,27 @@ const clean=(s:string)=>s.replace(/\*\*/g,"").replace(/__(.*?)__/g,"$1")
   .replace(/[\u2713\u2714]/g,"x").trim();
 function safe(s:string){return clean(s).replace(/[^\u0020-\u00FF]/g,"?");}
 function splitLines(source:string,font:PDFFont,size:number,width:number):string[]{
-  const out:string[]=[]; const words=safe(source).split(/\s+/).filter(Boolean);
-  let line="";
-  for(let word of words){
-    if(font.widthOfTextAtSize(word,size)>width){
-      const pieces:string[]=[];let part="";
-      for(const char of word){
-        if(part && font.widthOfTextAtSize(part+char,size)>width){pieces.push(part);part=char;}
-        else part+=char;
-      }
-      if(part)pieces.push(part);
-      word=pieces.shift()??word;
-      for(const piece of pieces.reverse())words.splice(words.indexOf(word)+1,0,piece);
-    }
-    const next=line?line+" "+word:word;
-    if(font.widthOfTextAtSize(next,size)<=width)line=next;
-    else{if(line)out.push(line);line=word;}
-  }
-  if(line)out.push(line);
-  return out.length?out:[""];
+ const words=safe(source).split(/\s+/).filter(Boolean);
+ const pieces:string[]=[];
+ for(const word of words){
+   if(font.widthOfTextAtSize(word,size)<=width){pieces.push(word);continue;}
+   let part="";
+   for(const ch of word){
+     if(part && font.widthOfTextAtSize(part+ch,size)>width){pieces.push(part);part=ch;}
+     else part+=ch;
+   }
+   if(part)pieces.push(part);
+ }
+ const out:string[]=[];let line="";
+ for(const word of pieces){
+   const candidate=line?line+" "+word:word;
+   if(font.widthOfTextAtSize(candidate,size)<=width)line=candidate;
+   else{if(line)out.push(line);line=word;}
+ }
+ if(line)out.push(line);
+ return out.length?out:[""];
 }
+
 function parse(md:string):Block[]{
  const blocks:Block[]=[];const lines=md.replace(/\r\n?/g,"\n").split("\n");
  let i=0,tag="";
@@ -219,7 +220,7 @@ export async function generateEbookPdf(input:EbookInput):Promise<Uint8Array>{
  let ty=150;for(const ln of splitLines(input.topics,regular,10.5,WIDTH-32)){draw(cover,ln,M+16,ty,10.5);ty-=15;}
  draw(cover,input.edition,M,82,9,regular,GRAY);
  // Body
- const blocks=parse(input.markdown);
+ const blocks=parse(input.markdown).filter((b,i)=>!(i===0 && b.type==="chapter" && !/^\d+/.test(input.markdown.trim().slice(0,10)) && b.text.trim().toLowerCase()===input.title.trim().toLowerCase()));
  for(let i=0;i<blocks.length;i++){
    const b=blocks[i];
    if(b.type==="chapter"){
