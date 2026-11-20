@@ -17,7 +17,8 @@ type Block =
   | {type:"table";rows:string[][]}
   | {type:"cards";rows:string[][]}
   | {type:"steps";rows:string[][]}
-  | {type:"rule"};
+  | {type:"rule"}
+  | {type:"references";items:{number:number;title:string;url:string}[]};
 
 const P_W=595.28,P_H=841.89,M=47,R=P_W-M,WIDTH=P_W-2*M;
 const NAVY=rgb(.055,.118,.208),GOLD=rgb(.69,.51,.16),INK=rgb(.20,.27,.35),
@@ -97,7 +98,24 @@ function parse(md:string):Block[]{
    while(i<lines.length && lines[i].trim() && !/^(?:#|>|[-*]\s|\d+\.\s|\||:::|<!--)/.test(lines[i].trim()))parts.push(lines[i++].trim());
    blocks.push({type:"text",text:parts.join(" ")});
  }
- return blocks.filter(b=> !(b.type==="text" && (/^(?:Subtítulo|Edição|Autoria|Neste guia):/.test(clean(b.text))||/Nota de origem/i.test(b.text))));
+ const filtered=blocks.filter(b=> !(b.type==="text" && (/^(?:Subtítulo|Edição|Autoria|Neste guia):/.test(clean(b.text))||/Nota de origem/i.test(b.text))));
+ const result:Block[]=[];let refs:{number:number;title:string;url:string}[]=[];let inRefs=false;
+ const flush=()=>{if(refs.length){result.push({type:"references",items:refs});refs=[];}};
+ for(const b of filtered){
+   if(b.type==="chapter"){
+     flush();inRefs=/fontes oficiais|referências|fundamentos utilizados/i.test(b.text);
+     result.push(b);continue;
+   }
+   if(inRefs && b.type==="list" && b.ordered){
+     b.entries.forEach((title,i)=>refs.push({number:b.start+i,title,url:""}));continue;
+   }
+   if(inRefs && b.type==="text" && /^https?:\/\//.test(b.text) && refs.length){
+     refs[refs.length-1].url=b.text;continue;
+   }
+   flush();result.push(b);
+ }
+ flush();
+ return result;
 }
 type Chapter={title:string;number:string;page:number;ref:PDFPage};
 function addLink(doc:PDFDoc,page:PDFPage,rect:[number,number,number,number],dest:PDFPage|string){
@@ -190,6 +208,26 @@ export async function generateEbookPdf(input:EbookInput):Promise<Uint8Array>{
      y-=h+11;
    }
  }
+ function references(items:{number:number;title:string;url:string}[]){
+   const gap=10,cw=(WIDTH-gap)/2;
+   for(let i=0;i<items.length;i+=2){
+     const pair=items.slice(i,i+2);
+     const lines=pair.map(item=>splitLines(item.title,regular,9.8,cw-26));
+     const h=Math.max(92,...lines.map(x=>x.length*13+47));
+     ensure(h+12);
+     pair.forEach((item,k)=>{
+       const x=M+k*(cw+gap);
+       page.drawRectangle({x,y:y-h,width:cw,height:h,color:PALE,borderColor:LINE,borderWidth:.7});
+       draw(page,String(item.number).padStart(2,"0"),x+12,y-19,10,bold,GOLD);
+       lines[k].forEach((ln,j)=>draw(page,ln,x+12,y-39-j*13,9.8,regular,NAVY));
+       if(item.url){
+         draw(page,"ACESSAR FONTE OFICIAL",x+12,y-h+13,8.4,bold,rgb(.12,.34,.62));
+         addLink(doc,page,[x+9,y-h+6,x+cw-8,y-h+28],item.url);
+       }
+     });
+     y-=h+11;
+   }
+ }
  function steps(rows:string[][]){
    rows.forEach((r,i)=>{
      const lines=splitLines(r[2]||"",regular,9.5,WIDTH-65);
@@ -240,6 +278,7 @@ export async function generateEbookPdf(input:EbookInput):Promise<Uint8Array>{
    else if(b.type==="table")table(b.rows);
    else if(b.type==="cards")cards(b.rows);
    else if(b.type==="steps")steps(b.rows);
+   else if(b.type==="references")references(b.items);
    else if(b.type==="rule"){ensure(23);page.drawLine({start:{x:M,y},end:{x:R,y},color:LINE,thickness:.6});y-=23;}
  }
  // Only add CTA when source content does not already include a closing chapter.
