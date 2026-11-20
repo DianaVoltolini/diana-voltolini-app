@@ -21,3 +21,9 @@ jobs:
         run: npm run build
       - name: Generate and inspect PDF
         run: node scripts/verify-ebook-generator.cjs
+      - name: Save generated PDF for visual review
+        uses: actions/upload-artifact@v4
+        with:
+          name: ebook-smoke-pdf
+          path: artifacts/ebook-smoke.pdf
+          retention-days: 7
