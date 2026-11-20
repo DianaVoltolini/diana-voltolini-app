@@ -262,7 +262,7 @@ export async function generateEbookPdf(input:EbookInput):Promise<Uint8Array>{
  for(let i=0;i<blocks.length;i++){
    const b=blocks[i];
    if(b.type==="chapter"){
-     ensure(125);
+     ensure(/decisões melhores|para continuar/i.test(b.text)?300:125);
      y-=9;label("CAPÍTULO "+b.number.padStart(2,"0")+(b.tag?" / "+b.tag:""));
      chapters.push({title:b.text,number:b.number,page:doc.getPageCount(),ref:page});
      paragraph(b.text,{font:serif,size:25,leading:29,color:NAVY,after:8,minLines:2});
@@ -281,10 +281,20 @@ export async function generateEbookPdf(input:EbookInput):Promise<Uint8Array>{
    else if(b.type==="references")references(b.items);
    else if(b.type==="rule"){ensure(23);page.drawLine({start:{x:M,y},end:{x:R,y},color:LINE,thickness:.6});y-=23;}
  }
- // Only add CTA when source content does not already include a closing chapter.
- const hasClosing=chapters.some(c=>/decisões melhores|para continuar/i.test(c.title));
- if(!hasClosing && input.cta){ensure(115);panel("CONTINUE APRENDENDO",input.cta,true);}
- if(input.ctaUrl && /^https?:\/\//.test(input.ctaUrl)){ensure(35);const p=page,yy=y;paragraph(input.ctaUrl,{size:10,color:rgb(.12,.32,.57)});addLink(doc,p,[M,yy-18,R,yy+9],input.ctaUrl);}
+ // CTA shares the closing chapter whenever possible; no blank standalone CTA page.
+ if(input.cta || input.ctaUrl){
+   const h=116;ensure(h+13);
+   page.drawRectangle({x:M,y:y-h,width:WIDTH,height:h,color:NAVY});
+   page.drawRectangle({x:M,y:y-h,width:4,height:h,color:GOLD});
+   draw(page,"CONTINUE APRENDENDO",M+18,y-24,8.5,bold,GOLD);
+   const titleLines=splitLines(input.cta||"Conheça o Blog Fiscal",serif,19,WIDTH-40);
+   titleLines.slice(0,2).forEach((ln,k)=>draw(page,ln,M+18,y-52-k*23,19,serif,WHITE));
+   if(input.ctaUrl && /^https?:\/\//.test(input.ctaUrl)){
+     draw(page,safe(input.ctaUrl),M+18,y-h+19,9.3,regular,WHITE);
+     addLink(doc,page,[M+11,y-h+9,R-10,y-5],input.ctaUrl);
+   }
+   y-=h+13;
+ }
  // TOC page is fixed before content, so page numbers are stable.
  toc.drawRectangle({x:0,y:P_H-9,width:P_W,height:9,color:NAVY});
  draw(toc,"EDIÇÃO "+safe(input.edition).toUpperCase()+" / GUIA PRÁTICO",M,754,8,bold,GOLD);
