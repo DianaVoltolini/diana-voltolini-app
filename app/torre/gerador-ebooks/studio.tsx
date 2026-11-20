@@ -4,6 +4,7 @@
 import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import styles from "./studio.module.css";
+import { generateEbookPdf } from "./pdf-engine";
 
 type Block =
   | { kind: "heading"; level: number; text: string }
@@ -212,6 +213,8 @@ export default function EbookStudio() {
   const [edition,setEdition] = useState("Edição novembro de 2026");
   const [topics,setTopics] = useState("Faturamento e lucro • Controle de caixa • Retirada mensal • DAS e IRPF • Reserva financeira • Exercícios práticos");
   const [markdown,setMarkdown] = useState(sample);
+  const [generating,setGenerating] = useState(false);
+  const [pdfError,setPdfError] = useState("");
   const [includeClosing,setIncludeClosing] = useState(false);
   const [cta,setCta] = useState("Conheça o Blog Fiscal");
   const [ctaUrl,setCtaUrl] = useState("https://dianavoltolini.com.br/blog");
@@ -224,16 +227,31 @@ export default function EbookStudio() {
   }
   if (!pages[pages.length - 1].length && pages.length > 1) pages.pop();
   const canPrint = title.trim() !== "" && markdown.trim() !== "";
-  function printPdf() {
-    if (!canPrint) return;
-    window.print();
+  async function printPdf() {
+    if (!canPrint || generating) return;
+    setGenerating(true); setPdfError("");
+    try {
+      const bytes = await generateEbookPdf({title,subtitle,label,edition,topics,markdown,cta:includeClosing?cta:"",ctaUrl:includeClosing?ctaUrl:""});
+      const blob = new Blob([new Uint8Array(bytes)], {type:"application/pdf"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href=url;
+      a.download=(title.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-|-$/g,"") || "ebook")+".pdf";
+      document.body.appendChild(a);a.click();a.remove();
+      window.setTimeout(()=>URL.revokeObjectURL(url),60000);
+    } catch (error) {
+      setPdfError(error instanceof Error?error.message:"Não foi possível gerar o PDF.");
+    } finally {
+      setGenerating(false);
+    }
   }
 
   return <main className={styles.root} id="dv-ebook-print">
     <header className={styles.toolbar}>
       <div><p className={styles.eyebrow}>MARKETING · FERRAMENTAS</p><h1>Gerador de E-books</h1><p>Modelo Diana Voltolini · PDF A4</p></div>
-      <button type="button" disabled={!canPrint} onClick={printPdf} className={styles.primary}>Gerar PDF</button>
+      <button type="button" disabled={!canPrint || generating} onClick={printPdf} className={styles.primary}>{generating?"Gerando PDF...":"Gerar PDF profissional"}</button>
     </header>
+    {pdfError && <p role="alert" style={{color:"#b42318",margin:"0 0 16px"}}>Erro na geração: {pdfError}</p>}
     <div className={styles.workspace}>
       <section className={styles.editor} aria-label="Editor do e-book">
         <label htmlFor="ebook-title">Título</label>
@@ -256,7 +274,7 @@ export default function EbookStudio() {
         <input id="ebook-url" type="url" value={ctaUrl} onChange={e=>setCtaUrl(e.target.value)}/>
       </section>
       <section className={styles.previewArea} aria-label="Prévia do e-book">
-        <p className={styles.previewLabel}>PRÉ-VISUALIZAÇÃO · O conteúdo é paginado na impressão</p>
+        <p className={styles.previewLabel}>PRÉVIA EDITORIAL · O PDF final é composto automaticamente e inclui sumário</p>
         <div className={`${styles.printDocument} ${styles.approved}`}>
           <section className={styles.cover}>
             <Image src="/brand/logo-light.png" alt="Diana Voltolini" width={1535} height={538} className={styles.coverLogo} unoptimized/>
