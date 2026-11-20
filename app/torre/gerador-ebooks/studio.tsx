@@ -231,7 +231,7 @@ export default function EbookStudio() {
     if (!canPrint || generating) return;
     setGenerating(true); setPdfError("");
     try {
-      const bytes = await generateEbookPdf({title,subtitle,label,edition,topics,markdown,cta:includeClosing?cta:"",ctaUrl:includeClosing?ctaUrl:""});
+      const bytes = await generateEbookPdf({title,subtitle,label,edition,topics,markdown,cta,ctaUrl});
       const blob = new Blob([new Uint8Array(bytes)], {type:"application/pdf"});
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
