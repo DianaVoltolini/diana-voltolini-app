@@ -33,6 +33,8 @@ global.fetch = async () => ({ ok: false });
       markdown:chapters,cta:"Conheça o Blog Fiscal",
       ctaUrl:"https://dianavoltolini.com.br/blog"
     });
+    fs.mkdirSync("artifacts",{recursive:true});
+    fs.writeFileSync("artifacts/ebook-smoke.pdf", Buffer.from(bytes));
     const pdf=await PDFDocument.load(bytes);
     if(pdf.getPageCount()<10) throw Error("Paginação incompleta: "+pdf.getPageCount());
     if(bytes.length<15000) throw Error("PDF suspeitamente pequeno");
