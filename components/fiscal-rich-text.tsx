@@ -38,8 +38,9 @@ function blocks(ts:Token[],depth=0):ReactNode{
    case "code":return <pre key={i} className={styles.codeBlock}><code>{t.text}</code></pre>;
    case "blockquote":return <blockquote key={i} className={styles.quote}>{blocks(t.tokens??[],depth+1)}</blockquote>;
    case "list":{
-    const children=(t.items??[]).map((x,j)=><li key={j}>{x.task?<span className={styles.checkMark}>{x.checked?"☑ ":"☐ "}</span>:null}{blocks(x.tokens??[],depth+1)}</li>);
-    return t.ordered?<ol key={i} className={styles.list} start={t.start||1}>{children}</ol>:<ul key={i} className={styles.list}>{children}</ul>;
+    const isTasks=(t.items??[]).some(x=>x.task);
+    const children=(t.items??[]).map((x,j)=><li key={j} className={x.task?styles.taskItem:undefined}>{x.task?<span aria-hidden="true" className={styles.checkMark}>{x.checked?"☑":"☐"}</span>:null}{blocks(x.tokens??[],depth+1)}</li>);
+    return t.ordered?<ol key={i} className={styles.list} start={t.start||1}>{children}</ol>:<ul key={i} className={[styles.list,isTasks?styles.taskList:""].join(" ")}>{children}</ul>;
    }
    case "table":return <div className={styles.tableWrap} key={i}><table className={styles.table}><thead><tr>{(t.header??[]).map((x,j)=><th key={j} scope="col" style={{textAlign:t.align?.[j]??"left"}}>{rich(x.tokens)}</th>)}</tr></thead><tbody>{(t.rows??[]).map((row,j)=><tr key={j}>{row.map((x,k)=><td key={k} style={{textAlign:t.align?.[k]??"left"}}>{rich(x.tokens)}</td>)}</tr>)}</tbody></table></div>;
    case "html":return <p key={i} className={styles.paragraph}>{t.raw??t.text??""}</p>;
