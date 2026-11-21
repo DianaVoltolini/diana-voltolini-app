@@ -172,3 +172,32 @@
 .reader .naPratica{background:#edf4f9;border-left:4px solid #486b87}
 
 .markdownImage{display:block;max-width:100%;height:auto;margin:18px auto;border-radius:9px}
+
+
+/* Regression fix: true GFM checklist items have one checkbox marker and one text column.
+   The browser list marker and the previous legacy ::before counters must not appear. */
+.reader ul.taskList{list-style:none!important;padding:10px 18px!important;margin:16px 0 24px!important;background:#f7f9fc;border:1px solid #e2e8f0;border-radius:9px}
+.reader ul.taskList>li.taskItem{
+ display:grid!important;grid-template-columns:23px minmax(0,1fr);
+ column-gap:11px;align-items:start;
+ list-style:none!important;
+ margin:0!important;padding:12px 0!important;
+ border:0;border-bottom:1px solid #e5eaf0;
+ background:transparent;min-width:0;
+}
+.reader ul.taskList>li.taskItem:last-child{border-bottom:0}
+.reader ul.taskList>li.taskItem::marker{content:""}
+.reader ul.taskList>li.taskItem::before{content:none!important;display:none!important}
+.reader ul.taskList>li.taskItem .checkMark{
+ display:block;font:normal 20px/1.3 Arial,sans-serif;color:#b18a27;
+ grid-column:1;grid-row:1;position:static;margin:0;
+}
+.reader ul.taskList>li.taskItem>p,
+.reader ul.taskList>li.taskItem>.paragraph{
+ grid-column:2;grid-row:1;
+ margin:0!important;padding:0!important;max-width:none;min-width:0;
+ line-height:1.65!important;
+}
+.reader ul.taskList>li.taskItem>ul,
+.reader ul.taskList>li.taskItem>ol{grid-column:2;min-width:0}
+@media(max-width:640px){.reader ul.taskList{padding:9px 13px!important}}
