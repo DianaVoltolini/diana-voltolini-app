@@ -246,8 +246,17 @@ export async function generateEbookPdf(input:EbookInput):Promise<Uint8Array>{
   if(!response.ok)throw new Error("Logomarca DV não encontrada em /brand/logo-light.png (HTTP "+response.status+").");
   const blob=await response.blob();
   if(!blob.type.startsWith("image/"))throw new Error("O endereço da logomarca não retornou uma imagem.");
-  // Canonicalize PNG through canvas. This avoids unsupported source PNG color profiles
-  // that made pdf-lib silently fall back to plain text.
+  const sourcePng=new Uint8Array(await blob.arrayBuffer());
+  // Prefer native embedding. Re-encode via canvas only when the PNG has an
+  // unsupported color profile or interlace configuration for pdf-lib.
+  try {
+    const image=await doc.embedPng(sourcePng);
+    return {image,width:image.width,height:image.height};
+  } catch {
+    if(typeof createImageBitmap!=="function" || typeof document==="undefined"){
+      throw new Error("Não foi possível incorporar a logomarca DV ao PDF.");
+    }
+  }
   const bitmap=await createImageBitmap(blob);
   try{
     const canvas=document.createElement("canvas");
