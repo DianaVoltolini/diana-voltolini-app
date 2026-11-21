@@ -35,7 +35,16 @@ export default async function FiscalAnalysisQuotePublic({params}:{params:Promise
      <p style={{margin:"4px 0"}}>Prazo de entrega: {q.delivery_business_days} dia(s) útil(eis), conforme condições do orçamento.</p>
      <p style={{margin:"4px 0"}}>Proposta válida até {dateBR(q.valid_until)}.</p>
     </div>
-    <p style={{fontSize:14,color:"#536372",marginTop:24}}>A aprovação e o pagamento pela plataforma serão disponibilizados após a conclusão da integração do checkout. Nenhuma cobrança foi gerada ao visualizar esta proposta.</p>
+    {process.env.FISCAL_ANALYSIS_VARIABLE_CHECKOUT_ENABLED==="1"?
+     <div style={{marginTop:28,textAlign:"center"}}>
+      <a href={"https://dianavoltolini.com.br/checkout/ANALISE-FISCAL-INDIVIDUAL?proposta="+encodeURIComponent(token)}
+        referrerPolicy="no-referrer" rel="noreferrer noopener"
+        style={{display:"inline-block",maxWidth:"100%",background:"#c9a227",padding:"16px 25px",borderRadius:7,textDecoration:"none",fontWeight:800,color:"#102033"}}>
+        Aprovar orçamento e contratar
+      </a>
+      <p style={{fontSize:12,color:"#536372",marginTop:12}}>Você será direcionado ao checkout com o valor deste orçamento. O atendimento será liberado após a confirmação do pagamento.</p>
+     </div>
+     :<p style={{fontSize:14,color:"#536372",marginTop:24}}>A aprovação e o pagamento pela plataforma serão disponibilizados após a conclusão da integração do checkout. Nenhuma cobrança foi gerada ao visualizar esta proposta.</p>}
     <p style={{fontSize:13,color:"#536372"}}>Para informações sobre esta proposta, responda ao e-mail recebido.</p>
    </div>
    <footer style={{padding:"16px 32px",borderTop:"1px solid #d6e0e8",background:"#f9fafb",textAlign:"center",fontSize:12}}>
