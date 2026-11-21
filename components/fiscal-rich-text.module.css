@@ -170,3 +170,5 @@
 .reader .resumo{background:#f0f5f6;border-left:4px solid #6c939c}
 .reader .dica{background:#faf7ee;border-left:4px solid #aa8934}
 .reader .naPratica{background:#edf4f9;border-left:4px solid #486b87}
+
+.markdownImage{display:block;max-width:100%;height:auto;margin:18px auto;border-radius:9px}
