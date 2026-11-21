@@ -3,7 +3,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const ts = require("typescript");
-const { PDFDocument } = require("pdf-lib");
+const { PDFDocument, PDFName, PDFDict } = require("pdf-lib");
 const sourcePath = path.join(process.cwd(), "app/torre/gerador-ebooks/pdf-engine.ts");
 const source = fs.readFileSync(sourcePath, "utf8");
 const compiled = ts.transpileModule(source, {
@@ -11,7 +11,8 @@ const compiled = ts.transpileModule(source, {
 }).outputText;
 const compiledPath = path.join(path.dirname(sourcePath), "pdf-engine.test.cjs");
 fs.writeFileSync(compiledPath, compiled);
-global.fetch = async () => ({ ok: false });
+const testLogo=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAIAAAASFvFNAAAAFUlEQVR4nGMUUbZhYGBgYGBgYoABAAgqAHfdURrrAAAAAElFTkSuQmCC","base64");
+global.fetch = async () => ({ ok:true, blob:async()=>new Blob([testLogo],{type:"image/png"}) });
 (async () => {
   try {
     const { generateEbookPdf } = require(compiledPath);
@@ -38,6 +39,9 @@ global.fetch = async () => ({ ok: false });
     const pdf=await PDFDocument.load(bytes);
     if(pdf.getPageCount()<10) throw Error("Paginação incompleta: "+pdf.getPageCount());
     if(bytes.length<15000) throw Error("PDF suspeitamente pequeno");
+    const cover=pdf.getPage(0);
+    const xobjects=cover.node.Resources()?.lookup(PDFName.of("XObject"));
+    if(!(xobjects instanceof PDFDict) || xobjects.keys().length<1) throw Error("Logo não incorporada ao PDF");
     const toc=pdf.getPage(1);
     const anns=toc.node.Annots();
     if(!anns || anns.size()<18) throw Error("Sumário sem links para os 18 capítulos");

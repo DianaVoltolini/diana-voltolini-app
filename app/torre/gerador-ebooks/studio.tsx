@@ -230,6 +230,10 @@ export default function EbookStudio() {
   const canPrint = title.trim() !== "" && markdown.trim() !== "";
   async function makePdf(download: boolean) {
     if (!canPrint || generating) return;
+    // Open a tab synchronously from the click, avoiding popup blockers.
+    // Embedded PDF plug-ins can show only an "Abrir" card rather than render pages.
+    const previewTab=download?null:window.open("about:blank","_blank");
+    if(previewTab){previewTab.document.title="Preparando prévia do e-book";previewTab.document.body.textContent="Gerando prévia do PDF...";}
     setGenerating(true);setPdfError("");
     try {
       const bytes = await generateEbookPdf({title,subtitle,label,edition,topics,markdown,cta,ctaUrl});
@@ -243,8 +247,10 @@ export default function EbookStudio() {
         window.setTimeout(()=>URL.revokeObjectURL(url),60000);
       }else{
         setPreviewUrl(prev=>{if(prev)URL.revokeObjectURL(prev);return url;});
+        if(previewTab)previewTab.location.replace(url);
       }
     }catch(error){
+      if(previewTab)previewTab.close();
       setPdfError(error instanceof Error?error.message:"Não foi possível gerar o PDF.");
     }finally{setGenerating(false);}
   }
@@ -282,8 +288,11 @@ export default function EbookStudio() {
       </section>
       <section className={styles.previewArea} aria-label="Prévia do e-book">
         <p className={styles.previewLabel}>PRÉVIA EDITORIAL · O PDF final é composto automaticamente e inclui sumário</p>
-        {previewUrl && <iframe title="Prévia do PDF final" src={previewUrl} style={{display:"block",width:"100%",minHeight:820,border:"1px solid #d8e1e9",borderRadius:8,background:"#fff"}}/>}
-        {!previewUrl && <p style={{padding:18,color:"#536271",background:"#f1f5fa",borderRadius:8}}>Clique em “Pré-visualizar PDF” para conferir o arquivo com a mesma paginação da exportação.</p>}
+        {previewUrl && <div style={{padding:18,background:"#f1f5fa",borderRadius:8}}>
+          <p style={{margin:"0 0 12px"}}>A prévia está disponível como PDF. Abra o documento completo em uma nova aba, com zoom e navegação entre páginas.</p>
+          <a href={previewUrl} target="_blank" rel="noopener noreferrer" style={{color:"#163d81",fontWeight:700,textDecoration:"underline"}}>Abrir prévia do PDF</a>
+        </div>}
+        {!previewUrl && <p style={{padding:18,color:"#536271",background:"#f1f5fa",borderRadius:8}}>Clique em “Pré-visualizar PDF” para abrir o arquivo final em outra aba. Se o navegador bloquear a aba, o link aparecerá aqui.</p>}
         <div style={{display:"none"}}>
         <div className={`${styles.printDocument} ${styles.approved}`}>
           <section className={styles.cover}>
