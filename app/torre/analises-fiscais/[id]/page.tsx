@@ -4,14 +4,16 @@ import {notFound} from "next/navigation";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 import {saveFiscalAnalysisQuoteDraft} from "../actions";
+import {sendFiscalAnalysisQuote} from "../send-quote-action";
+import {quoteUrl,whatsappQuoteUrl} from "@/lib/fiscal/analysis-quote-links";
 import css from "../../comercio-v2/commercial.module.css";
 
 export const metadata:Metadata={title:"Solicitação de Análise Fiscal | Torre"};
 export const dynamic="force-dynamic";
-type Props={params:Promise<{id:string}>;searchParams:Promise<{salvo?:string;erro?:string}>};
+type Props={params:Promise<{id:string}>;searchParams:Promise<{salvo?:string;erro?:string;email?:string}>};
 type Request={id:string;protocol:string|null;customer_name:string;customer_email:string;
  customer_phone:string;preferred_contact:string;question:string;status:string;created_at:string};
-type Quote={id:string;version:number;status:string;amount_cents:number;scope:string;
+type Quote={id:string;version:number;status:string;email_sent_at:string|null;amount_cents:number;scope:string;
  notes:string|null;delivery_business_days:number;valid_until:string;created_at:string};
 type Message={id:string;sender_role:string;body:string;created_at:string};
 type Attachment={id:string;original_filename:string;size_bytes:number;created_at:string};
@@ -29,7 +31,14 @@ const errors:Record<string,string>={
  salvar:"Não foi possível salvar o orçamento.",
  atualizar_situacao:"Orçamento registrado, mas houve erro ao atualizar a situação. Confira o histórico.",
  conflito:"Outra versão foi salva. Atualize a tela e confira antes de continuar.",
- solicitacao:"Solicitação não encontrada."
+ solicitacao:"Solicitação não encontrada.",
+ envio_bloqueado:"Envio não habilitado até o checkout individual estar operacional.",
+ envio_em_andamento:"Este orçamento já está sendo enviado ou já foi enviado.",
+ smtp:"Não foi possível enviar o e-mail. Consulte os registros de envio.",
+ conferencia_envio:"O servidor aceitou o e-mail, mas houve falha ao registrar o envio. Verifique antes de reenviar.",
+ prazo:"O prazo de validade do orçamento terminou.",
+ email:"O e-mail do solicitante precisa ser corrigido.",
+ nao_encontrado:"Proposta não encontrada."
 };
 export default async function FiscalAnalysisDetail({params,searchParams}:Props){
  await requireAdmin();
@@ -39,7 +48,7 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
  const db=getSupabaseAdmin();
  const [req,qs,ms,files,history]=await Promise.all([
   db.from("fiscal_analysis_requests").select("id,protocol,customer_name,customer_email,customer_phone,preferred_contact,question,status,created_at").eq("id",id).maybeSingle(),
-  db.from("fiscal_analysis_quotes").select("id,version,status,amount_cents,scope,notes,delivery_business_days,valid_until,created_at").eq("request_id",id).order("version",{ascending:false}).limit(30),
+  db.from("fiscal_analysis_quotes").select("id,version,status,email_sent_at,amount_cents,scope,notes,delivery_business_days,valid_until,created_at").eq("request_id",id).order("version",{ascending:false}).limit(30),
   db.from("fiscal_analysis_messages").select("id,sender_role,body,created_at").eq("request_id",id).order("created_at",{ascending:true}).limit(100),
   db.from("fiscal_analysis_attachments").select("id,original_filename,size_bytes,created_at").eq("request_id",id).order("created_at",{ascending:false}).limit(100),
   db.from("fiscal_analysis_events").select("id,event_type,created_at").eq("request_id",id).order("created_at",{ascending:false}).limit(30)
@@ -51,6 +60,10 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
  const canDraft=["received","awaiting_details","quoting"].includes(request.status)&&
   !quoteList.some(q=>q.status==="sent"||q.status==="accepted");
  const inputDefault=latest?.status==="draft"?latest:undefined;
+ const sendAvailable=process.env.FISCAL_ANALYSIS_QUOTE_EMAIL_ENABLED==="1"&&process.env.FISCAL_ANALYSIS_VARIABLE_CHECKOUT_ENABLED==="1";
+ const whatsapp=latest?.status==="sent"&&latest.email_sent_at&&request.preferred_contact==="whatsapp"
+  ? whatsappQuoteUrl(request.customer_phone,request.customer_name,request.protocol??request.id.slice(0,8),quoteUrl(latest.id,latest.version))
+  : null;
  return <main className={css.page}>
   <header className={css.header}>
    <div><p className={css.eyebrow}>TORRE DE CONTROLE · ANÁLISES FISCAIS</p>
@@ -61,6 +74,7 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
   <div className={css.banner}><strong>Atendimento em implantação</strong>
    O orçamento pode ser salvo como rascunho. O envio por e-mail, a mensagem de WhatsApp e o checkout ainda não estão habilitados.
   </div>
+  {query.email==="aceito"&&<p className={css.message} role="status">Orçamento aceito pelo servidor de e-mail. O WhatsApp, quando escolhido, pode ser enviado manualmente.</p>}
   {query.salvo==="1"&&<p className={css.message} role="status">Rascunho salvo. Nenhum e-mail ou WhatsApp foi enviado.</p>}
   {query.erro&&<p className={css.error} role="alert">{errors[query.erro]??"Não foi possível concluir a ação."}</p>}
   <div className={css.grid}>
@@ -93,6 +107,17 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
     <label>Observações (opcional)<textarea rows={3} name="notes" maxLength={3000} defaultValue={inputDefault?.notes??""} placeholder="Condições, limites ou documentos ainda necessários."/></label>
     <div className={css.actions}><button type="submit" className={css.button}>Salvar rascunho</button><span className={css.note}>Salvar não envia a proposta.</span></div>
    </form>}
+  </section>
+  <section className={css.section}><h2>Envio da proposta</h2>
+   {!latest||latest.status!=="draft"?<p className={css.note}>Nenhum rascunho aguardando envio.</p>:
+    !sendAvailable?<p className={css.note}>O envio por e-mail só será habilitado após o checkout de preço individual estar integrado e homologado.</p>:
+    <form action={sendFiscalAnalysisQuote} className={css.form}>
+     <input type="hidden" name="request_id" value={request.id}/>
+     <input type="hidden" name="quote_id" value={latest.id}/>
+     <p className={css.note}>Ao enviar, o orçamento será encaminhado obrigatoriamente para {request.customer_email}.</p>
+     <button className={css.button} type="submit">Enviar orçamento por e-mail</button>
+    </form>}
+   {whatsapp&&<div className={css.actions}><a className={css.button} href={whatsapp} target="_blank" rel="noopener noreferrer">Enviar WhatsApp</a><span className={css.note}>Abre a mensagem pronta; confirme o envio no WhatsApp.</span></div>}
   </section>
   <section className={css.section}><h2>Versões de orçamento</h2>
    {qs.error?<p className={css.error}>Não foi possível consultar os orçamentos.</p>:
