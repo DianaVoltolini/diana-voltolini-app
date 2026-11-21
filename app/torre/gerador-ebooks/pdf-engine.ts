@@ -241,14 +241,32 @@ export async function generateEbookPdf(input:EbookInput):Promise<Uint8Array>{
      y-=h+9;
    });
  }
- // Cover
+ async function loadLogoImage(doc: PDFDoc): Promise<{image: Awaited<ReturnType<PDFDoc["embedPng"]>>; width:number;height:number}> {
+  const response=await fetch("/brand/logo-light.png",{cache:"no-store",credentials:"same-origin"});
+  if(!response.ok)throw new Error("Logomarca DV não encontrada em /brand/logo-light.png (HTTP "+response.status+").");
+  const blob=await response.blob();
+  if(!blob.type.startsWith("image/"))throw new Error("O endereço da logomarca não retornou uma imagem.");
+  // Canonicalize PNG through canvas. This avoids unsupported source PNG color profiles
+  // that made pdf-lib silently fall back to plain text.
+  const bitmap=await createImageBitmap(blob);
+  try{
+    const canvas=document.createElement("canvas");
+    canvas.width=bitmap.width;canvas.height=bitmap.height;
+    const context=canvas.getContext("2d");
+    if(!context)throw new Error("Canvas indisponível para carregar logomarca.");
+    context.drawImage(bitmap,0,0);
+    const png=canvas.toDataURL("image/png");
+    const image=await doc.embedPng(png);
+    return {image,width:bitmap.width,height:bitmap.height};
+  }finally{bitmap.close();}
+}
+
+// Cover
  cover.drawRectangle({x:0,y:P_H-9,width:P_W,height:9,color:NAVY});
- try{
-   const res=await fetch("/brand/logo-light.png");
-   if(res.ok){const bytes=new Uint8Array(await res.arrayBuffer());const im=await doc.embedPng(bytes);
-     const w=260,h=w*im.height/im.width;cover.drawImage(im,{x:M,y:690,width:w,height:h});}
-   else draw(cover,"DIANA VOLTOLINI",M,735,24,serif,NAVY);
- }catch{draw(cover,"DIANA VOLTOLINI",M,735,24,serif,NAVY);}
+ const logo=await loadLogoImage(doc);
+ const logoWidth=260;
+ const logoHeight=logoWidth*logo.height/logo.width;
+ cover.drawImage(logo.image,{x:M,y:690,width:logoWidth,height:logoHeight});
  draw(cover,(input.label||"GUIA PRÁTICO").toUpperCase(),M,610,9,bold,GOLD);
  cover.drawLine({start:{x:M,y:600},end:{x:M+56,y:600},thickness:2,color:GOLD});
  let cy=537;for(const ln of splitLines(input.title,serif,36,WIDTH)){draw(cover,ln,M,cy,36,serif,NAVY);cy-=42;}
@@ -297,7 +315,7 @@ export async function generateEbookPdf(input:EbookInput):Promise<Uint8Array>{
  }
  // TOC page is fixed before content, so page numbers are stable.
  toc.drawRectangle({x:0,y:P_H-9,width:P_W,height:9,color:NAVY});
- draw(toc,"EDIÇÃO "+safe(input.edition).toUpperCase()+" / GUIA PRÁTICO",M,754,8,bold,GOLD);
+ draw(toc,"EDIÇÃO "+safe(input.edition).replace(/^edição\s+/i,"").toUpperCase()+" / GUIA PRÁTICO",M,754,8,bold,GOLD);
  draw(toc,"Sumário",M,708,31,serif,NAVY);
  toc.drawLine({start:{x:M,y:689},end:{x:M+48,y:689},color:GOLD,thickness:2.5});
  let yy=645;
