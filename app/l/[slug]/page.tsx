@@ -16,11 +16,11 @@ export default async function Landing({params,searchParams}:{params:Promise<{slu
  const benefits=[data.benefit_1,data.benefit_2,data.benefit_3].filter(Boolean) as string[];
  return <main className={styles.page}>
   <header className={styles.header}><Link href="https://dianavoltolini.com.br"><Image src="/brand/logo-light.png" alt="Diana Voltolini" width={210} height={76} priority /></Link></header>
-  <div className={styles.layout}>
+  <div className={`${styles.layout} ${cover?.signedUrl ? "" : styles.noCover}`}>
    <div className={styles.intro}>
     {data.eyebrow&&<p className={styles.eyebrow}>{data.eyebrow}</p>}
-    {data.campaign_name&&<p className={styles.campaignName}>{data.campaign_name}</p>}
     <h1>{data.title}</h1>
+    {data.campaign_name&&<p className={styles.campaignName}>{data.campaign_name}</p>}
     <p className={styles.description}>{data.summary}</p>
    </div>
    {cover?.signedUrl&&<div className={styles.cover}>{data.cover_path?.toLowerCase().endsWith(".pdf")?
