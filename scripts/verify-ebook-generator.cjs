@@ -11,7 +11,8 @@ const compiled = ts.transpileModule(source, {
 }).outputText;
 const compiledPath = path.join(path.dirname(sourcePath), "pdf-engine.test.cjs");
 fs.writeFileSync(compiledPath, compiled);
-global.fetch = async () => ({ ok: false });
+const testLogo=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAIAAAASFvFNAAAAFUlEQVR4nGMUUbZhYGBgYGBgYoABAAgqAHfdURrrAAAAAElFTkSuQmCC","base64");
+global.fetch = async () => ({ ok:true, blob:async()=>new Blob([testLogo],{type:"image/png"}) });
 (async () => {
   try {
     const { generateEbookPdf } = require(compiledPath);
@@ -38,6 +39,9 @@ global.fetch = async () => ({ ok: false });
     const pdf=await PDFDocument.load(bytes);
     if(pdf.getPageCount()<10) throw Error("Paginação incompleta: "+pdf.getPageCount());
     if(bytes.length<15000) throw Error("PDF suspeitamente pequeno");
+    const cover=pdf.getPage(0);
+    const xobjects=cover.node.Resources()?.XObject();
+    if(!xobjects || xobjects.size()<1) throw Error("Logo não incorporada ao PDF");
     const toc=pdf.getPage(1);
     const anns=toc.node.Annots();
     if(!anns || anns.size()<18) throw Error("Sumário sem links para os 18 capítulos");
