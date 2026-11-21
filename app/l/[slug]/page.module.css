@@ -26,7 +26,7 @@
 .check input[type="checkbox"]{width:17px;height:17px;margin:3px 0 0;accent-color:#10274a}
 .check span{min-width:0}
 .check a{color:#876713;text-underline-offset:2px}
-.card button{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:51px;background:#c9a34e;border:0;border-radius:11px;padding:14px 17px;color:#102033;font:800 14px/1.4 inherit;cursor:pointer;transition:background .2s ease,transform .2s ease}
+.card button{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:51px;background:#c9a34e;border:0;border-radius:11px;padding:14px 17px;color:#102033;font-size:14px;font-weight:800;line-height:1.4;cursor:pointer;transition:background .2s ease,transform .2s ease}
 .card button:hover{background:#ddb65c;transform:translateY(-1px)}
 .honeypot{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;overflow:hidden}
 .error{color:#b42318!important}
