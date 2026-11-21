@@ -20,6 +20,7 @@ function rich(ts:Token[]=[]):ReactNode{
    case "codespan":return <code key={i}>{t.text}</code>;
    case "br":return <br key={i}/>;
    case "link":{const href=url(t.href??"");return href?<a key={i} href={href} target={href.startsWith("http")?"_blank":undefined} rel="noopener noreferrer">{inner}</a>:<span key={i}>{inner}</span>}
+   case "image":{const src=url(t.href??"");return src?<img key={i} src={src} alt={t.text??""} loading="lazy" className={styles.markdownImage}/>:<span key={i}>{t.text??""}</span>}
    case "html":return <span key={i}>{t.raw??t.text??""}</span>;
    default:return <span key={i}>{inner}</span>;
   }
