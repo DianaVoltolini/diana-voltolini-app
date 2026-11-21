@@ -51,7 +51,6 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
  const canDraft=["received","awaiting_details","quoting"].includes(request.status)&&
   !quoteList.some(q=>q.status==="sent"||q.status==="accepted");
  const inputDefault=latest?.status==="draft"?latest:undefined;
- const defaultValidity=new Date(Date.now()+7*86400000).toISOString();
  return <main className={css.page}>
   <header className={css.header}>
    <div><p className={css.eyebrow}>TORRE DE CONTROLE · ANÁLISES FISCAIS</p>
@@ -89,7 +88,7 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
     <div className={css.formRowTriple}>
      <label>Valor (R$)<input name="amount" inputMode="decimal" placeholder="47,00" required defaultValue={inputDefault?String(inputDefault.amount_cents/100).replace(".",","):""}/></label>
      <label>Prazo (dias úteis)<input type="number" min="1" max="90" name="delivery_business_days" required defaultValue={inputDefault?.delivery_business_days??2}/></label>
-     <label>Validade da proposta<input type="date" name="valid_until" required defaultValue={dateInput(inputDefault?.valid_until??defaultValidity)}/></label>
+     <label>Validade da proposta<input type="date" name="valid_until" required defaultValue={inputDefault?dateInput(inputDefault.valid_until):undefined}/></label>
     </div>
     <label>Observações (opcional)<textarea rows={3} name="notes" maxLength={3000} defaultValue={inputDefault?.notes??""} placeholder="Condições, limites ou documentos ainda necessários."/></label>
     <div className={css.actions}><button type="submit" className={css.button}>Salvar rascunho</button><span className={css.note}>Salvar não envia a proposta.</span></div>
