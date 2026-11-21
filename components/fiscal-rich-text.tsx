@@ -1,117 +1,67 @@
 import type {ReactNode} from "react";
+import {marked} from "marked";
 import styles from "./fiscal-rich-text.module.css";
 
-/** Safe plain-text/Markdown reader. Never injects HTML or changes fiscal calculations. */
-const heading=(s:string)=>s.replace(/^#{1,6}\s+/,"").trim();
-function inline(text:string):ReactNode[]{
- const pieces=text.split(/(\[[^\]\n]+\]\(https?:\/\/[^)\s]+\)|\*\*[^*\n]+\*\*|\*[^*\n]+\*|`[^`\n]+`)/g);
- return pieces.map((part,i)=>{
-  const link=part.match(/^\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)$/);
-  if(link){
-   try{const url=new URL(link[2]);if(url.protocol==="https:"||url.protocol==="http:")return <a key={i} href={url.toString()} target="_blank" rel="noopener noreferrer">{link[1]}</a>}catch{}
+type Token={type:string;text?:string;raw?:string;tokens?:Token[];depth?:number;href?:string;items?:Token[];ordered?:boolean;start?:number;task?:boolean;checked?:boolean;header?:Cell[];rows?:Cell[][];align?:Array<"left"|"center"|"right"|null>};
+type Cell={text:string;tokens?:Token[]};
+const label:Record<string,string>={atencao:"PONTO DE ATENÇÃO",exemplo:"EXEMPLO PRÁTICO",checklist:"CHECKLIST DE CONFERÊNCIA",conclusao:"CONCLUSÃO"};
+function url(value:string){
+ if(value.startsWith("/")&&!value.startsWith("//"))return value;
+ if(value.startsWith("#"))return value;
+ try{const u=new URL(value);return u.protocol==="https:"||u.protocol==="http:"?u.toString():null}catch{return null}
+}
+function rich(ts:Token[]=[]):ReactNode{
+ return ts.map((t,i)=>{
+  const inner=t.tokens?rich(t.tokens):t.text??"";
+  switch(t.type){
+   case "strong":return <strong key={i}>{inner}</strong>;
+   case "em":return <em key={i}>{inner}</em>;
+   case "del":return <del key={i}>{inner}</del>;
+   case "codespan":return <code key={i}>{t.text}</code>;
+   case "br":return <br key={i}/>;
+   case "link":{const href=url(t.href??"");return href?<a key={i} href={href} target={href.startsWith("http")?"_blank":undefined} rel="noopener noreferrer">{inner}</a>:<span key={i}>{inner}</span>}
+   case "html":return <span key={i}>{t.raw??t.text??""}</span>;
+   default:return <span key={i}>{inner}</span>;
   }
-  if(part.startsWith("**")&&part.endsWith("**"))return <strong key={i}>{part.slice(2,-2)}</strong>;
-  if(part.startsWith("*")&&part.endsWith("*"))return <em key={i}>{part.slice(1,-1)}</em>;
-  if(part.startsWith("`")&&part.endsWith("`"))return <code key={i}>{part.slice(1,-1)}</code>;
-  return part;
  });
 }
-function isBullet(s:string){return /^\s*[-*•]\s+/.test(s)}
-function isNumber(s:string){return /^\s*\d+[.)]\s+/.test(s)}
-function isChecklist(s:string){return /^\s*(?:(?:[-*•]\s*)?\[[ xX]\]|[☐☑✅✔✓])\s*/.test(s)}
-function cleanChecklist(s:string){return s.trim().replace(/^(?:(?:[-*•]\s*)?\[[ xX]\]|[☐☑✅✔✓])\s*/,"")}
-function isChecked(s:string){return /^\s*(?:(?:[-*•]\s*)?\[[xX]\]|[☑✅✔✓])/.test(s)}
-function cells(line:string){return line.trim().replace(/^\|/,"").replace(/\|$/,"").split("|").map(c=>c.trim())}
-function tableSeparator(line:string){return /^\s*\|?\s*:?-{3,}:?(\s*\|\s*:?-{3,}:?)*\s*\|?\s*$/.test(line)}
-
-// Recognizes pasted two-column examples separated by tabs or 2+ spaces.
-// Existing Markdown tables are handled by the original parser below.
-function pastedCells(line:string){
- const parts=line.trim().split(/\t+| {2,}/).map(x=>x.trim()).filter(Boolean);
- return parts.length===2?parts:null;
+function blocks(ts:Token[],depth=0):ReactNode{
+ if(depth>12)return null;
+ return ts.map((t,i)=>{
+  switch(t.type){
+   case "space":return null;
+   case "heading":{const tag=Math.min(6,(t.depth??1)+1);const H=("h"+tag) as "h2"|"h3"|"h4"|"h5"|"h6";return <H key={i} className={styles.heading}>{rich(t.tokens)}</H>}
+   case "paragraph":return <p key={i} className={styles.paragraph}>{rich(t.tokens)}</p>;
+   case "text":return <p key={i} className={styles.paragraph}>{rich(t.tokens??[{type:"text",text:t.text??""}])}</p>;
+   case "hr":return <hr key={i}/>;
+   case "code":return <pre key={i} className={styles.codeBlock}><code>{t.text}</code></pre>;
+   case "blockquote":return <blockquote key={i} className={styles.quote}>{blocks(t.tokens??[],depth+1)}</blockquote>;
+   case "list":{
+    const children=(t.items??[]).map((x,j)=><li key={j}>{x.task?<span className={styles.checkMark}>{x.checked?"☑ ":"☐ "}</span>:null}{blocks(x.tokens??[],depth+1)}</li>);
+    return t.ordered?<ol key={i} className={styles.list} start={t.start||1}>{children}</ol>:<ul key={i} className={styles.list}>{children}</ul>;
+   }
+   case "table":return <div className={styles.tableWrap} key={i}><table className={styles.table}><thead><tr>{(t.header??[]).map((x,j)=><th key={j} scope="col" style={{textAlign:t.align?.[j]??"left"}}>{rich(x.tokens)}</th>)}</tr></thead><tbody>{(t.rows??[]).map((row,j)=><tr key={j}>{row.map((x,k)=><td key={k} style={{textAlign:t.align?.[k]??"left"}}>{rich(x.tokens)}</td>)}</tr>)}</tbody></table></div>;
+   case "html":return <p key={i} className={styles.paragraph}>{t.raw??t.text??""}</p>;
+   default:return t.tokens?<div key={i}>{blocks(t.tokens,depth+1)}</div>:null;
+  }
+ });
 }
-function isExampleTableHeader(line:string){
- const parts=pastedCells(line);
- return !!parts&&/^(informa[cç][aã]o|campo|item)$/i.test(parts[0])&&/^(exemplo|valor|descri[cç][aã]o)$/i.test(parts[1]);
-}
-// Short standalone questions are section headings in pasted fiscal lessons.
-// Only use explicit question forms to avoid promoting ordinary sentences.
-function isPlainSectionHeading(value:string){
- if(value.length>115||!value.endsWith("?")||value.includes("  ")||value.includes("\t"))return false;
- return /^(?:O que|Qual(?: é| a| o| são|quer)?|Quais|Como|Por que|Quando|Quem|E quanto|Para que|Em que|Há|Existe|Quais são)\b/i.test(value);
-}
-
-type EditorialKind="atencao"|"exemplo"|"checklist"|"conclusao";
-const editorialLabels:Record<EditorialKind,string>={
- atencao:"PONTO DE ATENÇÃO",exemplo:"EXEMPLO PRÁTICO",checklist:"CHECKLIST DE CONFERÊNCIA",conclusao:"CONCLUSÃO"
-};
-function isEditorialKind(value:string):value is EditorialKind{
- return value==="atencao"||value==="exemplo"||value==="checklist"||value==="conclusao";
+function segments(body:string){
+ const lines=body.replace(/\r\n?/g,"\n").split("\n"),out:{kind:string|null,content:string}[]=[];
+ let raw:string[]=[];
+ const flush=()=>{if(raw.length){out.push({kind:null,content:raw.join("\n")});raw=[]}};
+ for(let i=0;i<lines.length;i++){
+  const m=lines[i].trim().match(/^:::(atencao|exemplo|checklist|conclusao)$/);
+  if(m){let end=i+1;while(end<lines.length&&lines[end].trim()!==":::")end++;
+   if(end<lines.length){flush();out.push({kind:m[1],content:lines.slice(i+1,end).join("\n")});i=end;continue}
+  }
+  raw.push(lines[i]);
+ }
+ flush();return out;
 }
 export default function FiscalRichText({body}:{body:string}){
- const lines=body.replace(/\r\n?/g,"\n").split("\n");
- const elements:ReactNode[]=[];let i=0;
- while(i<lines.length){
-  const value=lines[i].trim();if(!value){i++;continue}
-  const key=i;
-  const blockStart=value.match(/^:::([a-z]+)$/);
-  if(blockStart&&isEditorialKind(blockStart[1])){
-   const blockKind=blockStart[1];
-   let end=i+1;
-   while(end<lines.length&&lines[end].trim()!==":::")end++;
-   if(end<lines.length){
-    let innerLines=lines.slice(i+1,end);
-    if(blockKind==="conclusao"){
-     const first=innerLines.findIndex(line=>line.trim().length>0);
-     if(first>=0&&/^(?:#{1,3}\s*)?Conclus[aã]o\s*:?\s*$/i.test(innerLines[first].trim()))innerLines=innerLines.filter((_,idx)=>idx!==first);
-    }
-    const content=innerLines.join("\n").trim();
-
-    elements.push(<section key={key} aria-label={editorialLabels[blockKind]} className={`${styles.block} ${styles[blockKind]}`}>
-     <p className={styles.blockLabel}>{editorialLabels[blockKind]}</p>
-     {content&&<FiscalRichText body={content}/>}
-    </section>);
-    i=end+1;continue;
-   }
-  }
-  if(isExampleTableHeader(lines[i])){
-   const heads=pastedCells(lines[i])!;
-   i++;
-   const rows:string[][]=[];
-   while(i<lines.length&&pastedCells(lines[i])&&rows.length<35){rows.push(pastedCells(lines[i])!);i++}
-   elements.push(<div key={key} className={styles.tableWrap}><table className={styles.table}><thead><tr>{heads.map((h,j)=><th key={j} scope="col" >{inline(h)}</th>)}</tr></thead><tbody>{rows.map((row,j)=><tr key={j}>{row.map((v,k)=><td key={k} >{inline(v)}</td>)}</tr>)}</tbody></table></div>);
-   continue;
-  }
-  if(value.startsWith("|")&&i+1<lines.length&&tableSeparator(lines[i+1])){
-   const heads=cells(lines[i]);i+=2;const rows:string[][]=[];
-   while(i<lines.length&&lines[i].trim().startsWith("|")){rows.push(cells(lines[i]));i++}
-   elements.push(<div key={key} className={styles.tableWrap}><table className={styles.table}><thead><tr>{heads.map((c,j)=><th key={j} scope="col" >{inline(c)}</th>)}</tr></thead><tbody>{rows.map((row,j)=><tr key={j}>{heads.map((_,k)=><td key={k} >{inline(row[k]??"")}</td>)}</tr>)}</tbody></table></div>);continue
-  }
-  const h=value.match(/^(#{1,6})\s+(.+)$/);
-  if(h){const H=h[1].length===1?"h2":h[1].length===2?"h3":h[1].length===3?"h4":h[1].length===4?"h5":"h6";const title=heading(value);const numbered=title.match(/^(\d{1,2})[.)]\s+(.+)$/);elements.push(<H key={key} className={numbered?styles.numberedHeading:styles.heading}>{numbered?<><span className={styles.sectionNumber}>{numbered[1].padStart(2,"0")}</span><span>{inline(numbered[2])}</span></>:inline(title)}</H>);i++;continue}
-  if(isPlainSectionHeading(value)){
-   elements.push(<h3 key={key} className={styles.heading}>{inline(value)}</h3>);
-   i++;continue;
-  }
-  if(/^(Resumo|Em resumo|Atenção|Importante|Aplicação prática|Na prática|Checklist|O que mudou|O que fazer agora|Conclusão|Exemplo prático|Fontes):?$/i.test(value)){
-   elements.push(<h3 key={key} className={styles.heading}>{value.replace(/:$/,"")}</h3>);i++;continue
-  }
-  if(/^(ATENÇÃO|IMPORTANTE|NA PRÁTICA|RESUMO|DICA):\s*.+/i.test(value)){
-   elements.push(<aside key={key} className={`${styles.block} ${styles.atencao}`}>{inline(value)}</aside>);i++;continue
-  }
-  if(isChecklist(value)){
-   const items:{text:string;checked:boolean}[]=[];
-   while(i<lines.length&&isChecklist(lines[i])){items.push({text:cleanChecklist(lines[i]),checked:isChecked(lines[i])});i++}
-   elements.push(<ul key={key} aria-label="Checklist" className={styles.checkList}>{items.map((item,j)=><li key={j} className={styles.checkItem}><span aria-hidden="true" className={styles.checkMark}>{item.checked?"☑":"☐"}</span><span>{inline(item.text)}</span></li>)}</ul>);continue
-  }
-  if(isBullet(value)||isNumber(value)){
-   const ordered=isNumber(value),items:string[]=[];
-   while(i<lines.length&&!isChecklist(lines[i])&&(ordered?isNumber(lines[i]):isBullet(lines[i]))){items.push(lines[i].trim().replace(ordered?/^\d+[.)]\s+/:/^[-*•]\s+/,""));i++}
-   const li=items.map((it,j)=><li key={j} >{inline(it)}</li>);
-   elements.push(ordered?<ol key={key} className={`${styles.list} ${styles.orderedList}`}>{li}</ol>:<ul key={key} className={`${styles.list} ${styles.bulletList}`}>{li}</ul>);continue
-  }
-  i++;
-  elements.push(<p key={key} className={styles.paragraph}>{inline(value)}</p>);
- }
- return <div className={styles.reader}>{elements}</div>;
+ return <div className={styles.reader}>{segments(body).map((part,i)=>{
+  const content=blocks(marked.lexer(part.content,{gfm:true}) as unknown as Token[]);
+  return part.kind?<section key={i} className={[styles.block,styles[part.kind as keyof typeof styles]].join(" ")} aria-label={label[part.kind]}><p className={styles.blockLabel}>{label[part.kind]}</p>{content}</section>:<div key={i} className={styles.markdownSegment}>{content}</div>;
+ })}</div>;
 }
