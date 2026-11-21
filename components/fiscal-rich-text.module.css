@@ -144,3 +144,31 @@
   .reader h5.heading{font-size:16px;margin-top:22px}
   .reader h6.heading{font-size:14px;margin-top:20px}
 }
+
+/* Renderização Markdown GFM: listas aninhadas, citações e código. */
+.markdownSegment{min-width:0}
+.reader .markdownSegment .paragraph{margin:0 0 18px;line-height:1.83}
+.reader .markdownSegment h2.heading{font-size:28px}
+.reader .markdownSegment h3.heading{font-size:24px}
+.reader .markdownSegment h4.heading{font-size:20px}
+.reader .markdownSegment h5.heading{font-size:17px}
+.reader .markdownSegment h6.heading{font-size:15px}
+.reader .list>li>p{margin:0 0 7px}
+.reader .list>li>ul,.reader .list>li>ol{margin:7px 0 12px}
+.reader .list>li{padding-left:4px}
+.reader .list>li::marker{color:#a47e16}
+.reader .quote{margin:22px 0;padding:17px 21px;background:#faf7ee;border-left:4px solid #c9a227;border-radius:0 8px 8px 0}
+.reader .quote p:last-child{margin-bottom:0}
+.reader .codeBlock{background:#102033;color:#f5f8fa;padding:18px;border-radius:8px;max-width:100%;overflow-x:auto}
+.reader .codeBlock code{color:inherit}
+.reader .block .markdownSegment{margin:0}
+.reader .block .paragraph:last-child{margin-bottom:0}
+@media(max-width:640px){.reader .markdownSegment h2.heading{font-size:24px}.reader .markdownSegment h3.heading{font-size:21px}}
+
+/* Blocos editoriais legados suportados pelo mesmo motor Markdown. */
+.reader .importante{background:#faf7eb;border-left:4px solid #c9a227}
+.reader .resumo{background:#f0f5f6;border-left:4px solid #6c939c}
+.reader .dica{background:#faf7ee;border-left:4px solid #aa8934}
+.reader .naPratica{background:#edf4f9;border-left:4px solid #486b87}
+
+.markdownImage{display:block;max-width:100%;height:auto;margin:18px auto;border-radius:9px}
