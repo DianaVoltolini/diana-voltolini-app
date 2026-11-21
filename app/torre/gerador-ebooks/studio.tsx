@@ -215,7 +215,6 @@ export default function EbookStudio() {
   const [markdown,setMarkdown] = useState(sample);
   const [generating,setGenerating] = useState(false);
   const [pdfError,setPdfError] = useState("");
-  const [previewUrl,setPreviewUrl] = useState("");
   const [includeClosing,setIncludeClosing] = useState(false);
   const [cta,setCta] = useState("Conheça o Blog Fiscal");
   const [ctaUrl,setCtaUrl] = useState("https://dianavoltolini.com.br/blog");
@@ -228,41 +227,32 @@ export default function EbookStudio() {
   }
   if (!pages[pages.length - 1].length && pages.length > 1) pages.pop();
   const canPrint = title.trim() !== "" && markdown.trim() !== "";
-  async function makePdf(download: boolean) {
+  async function downloadPdf() {
     if (!canPrint || generating) return;
-    // Open a tab synchronously from the click, avoiding popup blockers.
-    // Embedded PDF plug-ins can show only an "Abrir" card rather than render pages.
-    const previewTab=download?null:window.open("about:blank","_blank");
-    if(previewTab){previewTab.document.title="Preparando prévia do e-book";previewTab.document.body.textContent="Gerando prévia do PDF...";}
-    setGenerating(true);setPdfError("");
+    setGenerating(true);
+    setPdfError("");
     try {
       const bytes = await generateEbookPdf({title,subtitle,label,edition,topics,markdown,cta,ctaUrl});
-      const blob=new Blob([new Uint8Array(bytes)],{type:"application/pdf"});
-      const url=URL.createObjectURL(blob);
-      if(download){
-        const a=document.createElement("a");
-        a.href=url;
-        a.download=(title.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-|-$/g,"")||"ebook")+".pdf";
-        document.body.appendChild(a);a.click();a.remove();
-        window.setTimeout(()=>URL.revokeObjectURL(url),60000);
-      }else{
-        setPreviewUrl(prev=>{if(prev)URL.revokeObjectURL(prev);return url;});
-        if(previewTab)previewTab.location.replace(url);
-      }
-    }catch(error){
-      if(previewTab)previewTab.close();
-      setPdfError(error instanceof Error?error.message:"Não foi possível gerar o PDF.");
-    }finally{setGenerating(false);}
+      const blob = new Blob([new Uint8Array(bytes)], {type:"application/pdf"});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = (title.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-|-$/g,"") || "ebook") + ".pdf";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (error) {
+      setPdfError(error instanceof Error ? error.message : "Não foi possível gerar o PDF.");
+    } finally {
+      setGenerating(false);
+    }
   }
-
 
   return <main className={styles.root} id="dv-ebook-print">
     <header className={styles.toolbar}>
       <div><p className={styles.eyebrow}>MARKETING · FERRAMENTAS</p><h1>Gerador de E-books</h1><p>Modelo Diana Voltolini · PDF A4</p></div>
-      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-        <button type="button" disabled={!canPrint || generating} onClick={()=>void makePdf(false)} className={styles.primary}>{generating?"Gerando...":"Pré-visualizar PDF"}</button>
-        <button type="button" disabled={!canPrint || generating} onClick={()=>void makePdf(true)} className={styles.primary}>Baixar PDF</button>
-      </div>
+      <button type="button" disabled={!canPrint || generating} onClick={() => void downloadPdf()} className={styles.primary}>{generating ? "Gerando PDF..." : "Baixar PDF"}</button>
     </header>
     {pdfError && <p role="alert" style={{color:"#b42318",margin:"0 0 16px"}}>Erro na geração: {pdfError}</p>}
     <div className={styles.workspace}>
@@ -287,13 +277,7 @@ export default function EbookStudio() {
         <input id="ebook-url" type="url" value={ctaUrl} onChange={e=>setCtaUrl(e.target.value)}/>
       </section>
       <section className={styles.previewArea} aria-label="Prévia do e-book">
-        <p className={styles.previewLabel}>PRÉVIA EDITORIAL · O PDF final é composto automaticamente e inclui sumário</p>
-        {previewUrl && <div style={{padding:18,background:"#f1f5fa",borderRadius:8}}>
-          <p style={{margin:"0 0 12px"}}>A prévia está disponível como PDF. Abra o documento completo em uma nova aba, com zoom e navegação entre páginas.</p>
-          <a href={previewUrl} target="_blank" rel="noopener noreferrer" style={{color:"#163d81",fontWeight:700,textDecoration:"underline"}}>Abrir prévia do PDF</a>
-        </div>}
-        {!previewUrl && <p style={{padding:18,color:"#536271",background:"#f1f5fa",borderRadius:8}}>Clique em “Pré-visualizar PDF” para abrir o arquivo final em outra aba. Se o navegador bloquear a aba, o link aparecerá aqui.</p>}
-        <div style={{display:"none"}}>
+        <p className={styles.previewLabel}>PRÉ-VISUALIZAÇÃO DO E-BOOK · Acompanhe o conteúdo enquanto edita</p>
         <div className={`${styles.printDocument} ${styles.approved}`}>
           <section className={styles.cover}>
             <Image src="/brand/logo-light.png" alt="Diana Voltolini" width={1535} height={538} className={styles.coverLogo} unoptimized/>
@@ -319,7 +303,7 @@ export default function EbookStudio() {
             </div>
             <p className={styles.coverFooter}>DIANA VOLTOLINI • ESPECIALISTA EM FATURAMENTO E INTELIGÊNCIA FISCAL</p>
           </section>}
-        </div></div>
+        </div>
       </section>
     </div>
   </main>;
