@@ -33,6 +33,14 @@ export async function sendFiscalAnalysisQuote(form:FormData){
  if(new Date(q.valid_until).getTime()<=Date.now())fail(requestId,"prazo");
  const email=req.customer_email.trim().toLowerCase();
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))fail(requestId,"email");
+ let link:string,hash:string;
+ try{
+  const token=quoteToken(q.id,q.version);
+  hash=quoteTokenHash(token);
+  link=quoteUrl(q.id,q.version);
+ }catch{
+  fail(requestId,"segredo_ausente");
+ }
  const claim=randomUUID();
  const now=new Date().toISOString();
  // A atualização condicional impede envio simultâneo do mesmo orçamento.
@@ -44,9 +52,6 @@ export async function sendFiscalAnalysisQuote(form:FormData){
  if(reserveError||!reserved)fail(requestId,"envio_em_andamento");
 
  let success=false,reason="";
- const link=quoteUrl(q.id,q.version);
- const token=quoteToken(q.id,q.version);
- const hash=quoteTokenHash(token);
  const amount=moneyBR(q.amount_cents);
  const subject="Orçamento de Análise Fiscal Individual · "+(req.protocol||"Solicitação");
  const textBody=`Olá, ${req.customer_name}.\n\nSeu orçamento está disponível.\n\nServiço: Análise Fiscal Individual\nEscopo: ${q.scope}\nValor: ${amount}\nPrazo: ${q.delivery_business_days} dia(s) útil(eis)\n\nConsulte sua proposta: ${link}\n\nDiana Voltolini · Inteligência Fiscal`;
