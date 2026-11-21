@@ -38,15 +38,15 @@ export default async function AnalisesFiscaisTorre(){
    {error?<p className={css.error}>Não foi possível consultar solicitações. Verifique a migração do banco antes de ativar o módulo.</p>:
    rows.length===0?<p className={css.note}>Nenhuma solicitação registrada até o momento.</p>:
    <div className={css.tableScroll}><table className={css.table}>
-     <thead><tr><th>Protocolo</th><th>Cliente</th><th>Status</th><th>Retorno preferido</th><th>Recebida em</th></tr></thead>
+     <thead><tr><th>Protocolo</th><th>Cliente</th><th>Status</th><th>Retorno preferido</th><th>Recebida em</th><th>Ações</th></tr></thead>
      <tbody>{rows.map(r=><tr key={r.id}>
        <td><strong>{r.protocol??r.id.slice(0,8)}</strong></td>
        <td><strong>{r.customer_name}</strong><small>{r.customer_email}</small></td>
        <td>{statusText[r.status]??r.status}</td>
        <td>{r.preferred_contact==="whatsapp"?"WhatsApp + e-mail":"E-mail"}</td>
-       <td>{dateBR(r.created_at)}</td>
+       <td>{dateBR(r.created_at)}</td><td><Link href={`/torre/analises-fiscais/${r.id}`} className={css.link}>Abrir solicitação</Link></td>
       </tr>)}</tbody></table></div>}
   </section>
-  <p className={css.note}>Esta tela é a primeira etapa. Edição do orçamento, e-mail, botão WhatsApp e checkout serão implementados em etapas seguintes. <Link href="/torre/comercio-v2">Área Comercial</Link>.</p>
+  <p className={css.note}>Os orçamentos podem ser preparados em rascunho. O envio de e-mail, o botão WhatsApp e o checkout serão implementados após a homologação. <Link href="/torre/comercio-v2">Área Comercial</Link>.</p>
  </main>;
 }
