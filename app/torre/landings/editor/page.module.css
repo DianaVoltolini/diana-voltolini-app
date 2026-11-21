@@ -1,1 +1,18 @@
-.main{padding:32px;max-width:1180px;margin:auto}.main h1{font:700 38px Georgia,serif;color:#102033}.kicker{color:#9b7516;font-size:12px;letter-spacing:.1em;font-weight:800;margin-top:30px}.form{display:grid;gap:20px;border:1px solid #dce4eb;background:#fff;padding:28px;border-radius:12px;margin-top:24px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}.form label{display:grid;gap:7px;font-weight:650;font-size:13px;color:#33475b}.form input,.form textarea,.form select{padding:12px;border:1px solid #cbd5e1;border-radius:8px;width:100%;font:inherit;min-width:0}.form button{justify-self:start;background:#c9a227;border:0;border-radius:7px;padding:15px 22px;color:#102033;font-weight:850;cursor:pointer}.form small{font-weight:400;color:#65758a}@media(max-width:700px){.main{padding:18px}.grid{grid-template-columns:1fr}.form{padding:20px}}
+.main{padding:clamp(20px,3vw,40px);max-width:1180px;margin:auto;color:#102033}
+.main>a{display:inline-flex;text-decoration:none;color:#455d78;font-size:13px;font-weight:650;margin-bottom:18px}
+.main>a:hover{color:#9e7826}
+.main h1{font:700 clamp(30px,3.2vw,40px)/1.18 Georgia,serif;color:#10274a;margin:10px 0 8px}
+.main>p:not(.kicker){color:#64748b;line-height:1.65;margin-top:0}
+.kicker{color:#9b7516;font-size:11px;letter-spacing:.16em;font-weight:800;margin:4px 0}
+.form{display:grid;gap:22px;border:1px solid #dfe7f1;background:#fff;padding:clamp(20px,3vw,34px);border-radius:19px;margin-top:25px;box-shadow:0 14px 38px rgba(16,35,65,.055)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.form label{display:grid;gap:8px;font-weight:700;font-size:13px;color:#344960;min-width:0}
+.form input,.form textarea,.form select{padding:13px 14px;border:1px solid #cbd7e6;border-radius:10px;width:100%;font:inherit;min-width:0;background:#fff;color:#102033}
+.form textarea{resize:vertical;line-height:1.65}
+.form input[type=file]{border-style:dashed;background:#f8fbff;cursor:pointer}
+.form input[type=checkbox]{width:18px;height:18px;padding:0;accent-color:#10274a}
+.form input:focus-visible,.form textarea:focus-visible,.form select:focus-visible,.form button:focus-visible{outline:3px solid #d6b964;outline-offset:2px}
+.form button{justify-self:start;background:#c9a34e;border:0;border-radius:10px;padding:15px 24px;color:#102033;font-size:14px;font-weight:850;cursor:pointer;min-height:48px}
+.form button:hover{background:#ddb65c}
+.form small{font-weight:400;color:#65758a;line-height:1.5}
+@media(max-width:700px){.main{padding:18px}.grid{grid-template-columns:1fr}.form{padding:20px}.form button{width:100%}}
