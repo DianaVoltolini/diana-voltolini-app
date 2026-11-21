@@ -5,6 +5,7 @@ import {moneyBR} from "@/lib/fiscal/analysis-quote-links";
 
 export const metadata:Metadata={title:"Orçamento individual | Diana Voltolini",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
+const hasExpired=(value:string)=>new Date(value).getTime()<=Date.now();
 const dateBR=(date:string)=>new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo",dateStyle:"short"}).format(new Date(date));
 export default async function FiscalAnalysisQuotePublic({params}:{params:Promise<{token:string}>}){
  const {token}=await params;
@@ -16,8 +17,7 @@ export default async function FiscalAnalysisQuotePublic({params}:{params:Promise
   .select("id,request_id,version,scope,amount_cents,delivery_business_days,valid_until,status,token_expires_at")
   .eq("access_token_hash",quoteTokenHash(token)).eq("status","sent").maybeSingle();
  if(error||!q||!q.token_expires_at||
-    new Date(q.valid_until).getTime()<=Date.now()||
-    new Date(q.token_expires_at).getTime()<=Date.now())notFound();
+    hasExpired(q.valid_until)||hasExpired(q.token_expires_at))notFound();
  const {data:req}=await db.from("fiscal_analysis_requests").select("protocol").eq("id",q.request_id).maybeSingle();
  return <main style={{background:"#f4f6f8",minHeight:"100vh",padding:"40px 18px",color:"#102033"}}>
   <article style={{margin:"0 auto",maxWidth:740,background:"#fff",border:"1px solid #d6e0e8",borderRadius:12,overflow:"hidden"}}>
