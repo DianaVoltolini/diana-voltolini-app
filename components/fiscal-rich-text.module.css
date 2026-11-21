@@ -164,3 +164,9 @@
 .reader .block .markdownSegment{margin:0}
 .reader .block .paragraph:last-child{margin-bottom:0}
 @media(max-width:640px){.reader .markdownSegment h2.heading{font-size:24px}.reader .markdownSegment h3.heading{font-size:21px}}
+
+/* Blocos editoriais legados suportados pelo mesmo motor Markdown. */
+.reader .importante{background:#faf7eb;border-left:4px solid #c9a227}
+.reader .resumo{background:#f0f5f6;border-left:4px solid #6c939c}
+.reader .dica{background:#faf7ee;border-left:4px solid #aa8934}
+.reader .naPratica{background:#edf4f9;border-left:4px solid #486b87}
