@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./sidebar.module.css";
 const admin=[["/torre","Visão geral"],["/torre/financeiro","Financeiro"],["/torre/vendas","Vendas"],["/torre/clientes","Clientes"],["/torre/pendencias","Pendências"]];
-const services=[["/torre/diagnosticos","Diagnósticos"],["/torre/assinaturas","Assinatura Recorrente"]];
+const services=[["/torre/diagnosticos","Diagnósticos"],["/torre/analises-fiscais","Análises Fiscais"],["/torre/assinaturas","Assinatura Recorrente"]];
 export default function TorreSidebar(){
  const path=usePathname();
  const item=(href:string,label:string)=><Link key={href} href={href} aria-current={path===href||(href!=="/torre"&&path.startsWith(href+"/"))?"page":undefined} className={styles.link}>{label}</Link>;
