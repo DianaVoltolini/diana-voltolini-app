@@ -4,7 +4,7 @@ import styles from "./fiscal-rich-text.module.css";
 
 type Token={type:string;text?:string;raw?:string;tokens?:Token[];depth?:number;href?:string;items?:Token[];ordered?:boolean;start?:number;task?:boolean;checked?:boolean;header?:Cell[];rows?:Cell[][];align?:Array<"left"|"center"|"right"|null>};
 type Cell={text:string;tokens?:Token[]};
-const label:Record<string,string>={atencao:"PONTO DE ATENÇÃO",exemplo:"EXEMPLO PRÁTICO",checklist:"CHECKLIST DE CONFERÊNCIA",conclusao:"CONCLUSÃO"};
+const label:Record<string,string>={atencao:"PONTO DE ATENÇÃO",importante:"IMPORTANTE",exemplo:"EXEMPLO PRÁTICO",checklist:"CHECKLIST DE CONFERÊNCIA",conclusao:"CONCLUSÃO",resumo:"EM RESUMO",dica:"DICA PRÁTICA","na-pratica":"NA PRÁTICA"};
 function url(value:string){
  if(value.startsWith("/")&&!value.startsWith("//"))return value;
  if(value.startsWith("#"))return value;
@@ -51,9 +51,9 @@ function segments(body:string){
  let raw:string[]=[];
  const flush=()=>{if(raw.length){out.push({kind:null,content:raw.join("\n")});raw=[]}};
  for(let i=0;i<lines.length;i++){
-  const m=lines[i].trim().match(/^:::(atencao|exemplo|checklist|conclusao)$/);
+  const m=lines[i].trim().match(/^:::(atencao|importante|exemplo|checklist|conclusao|resumo|dica|na-pratica)$/i);
   if(m){let end=i+1;while(end<lines.length&&lines[end].trim()!==":::")end++;
-   if(end<lines.length){flush();out.push({kind:m[1],content:lines.slice(i+1,end).join("\n")});i=end;continue}
+   if(end<lines.length){flush();out.push({kind:m[1].toLowerCase(),content:lines.slice(i+1,end).join("\n")});i=end;continue}
   }
   raw.push(lines[i]);
  }
@@ -62,6 +62,6 @@ function segments(body:string){
 export default function FiscalRichText({body}:{body:string}){
  return <div className={styles.reader}>{segments(body).map((part,i)=>{
   const content=blocks(marked.lexer(part.content,{gfm:true}) as unknown as Token[]);
-  return part.kind?<section key={i} className={[styles.block,styles[part.kind as keyof typeof styles]].join(" ")} aria-label={label[part.kind]}><p className={styles.blockLabel}>{label[part.kind]}</p>{content}</section>:<div key={i} className={styles.markdownSegment}>{content}</div>;
+  return part.kind?<section key={i} className={[styles.block,styles[(part.kind==="na-pratica"?"naPratica":part.kind) as keyof typeof styles]].join(" ")} aria-label={label[part.kind]}><p className={styles.blockLabel}>{label[part.kind]}</p>{content}</section>:<div key={i} className={styles.markdownSegment}>{content}</div>;
  })}</div>;
 }
