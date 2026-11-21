@@ -1,0 +1,29 @@
+name: Validate Ebook PDF Engine
+on:
+  pull_request:
+    paths:
+      - 'app/torre/gerador-ebooks/**'
+      - 'scripts/verify-ebook-generator.cjs'
+      - '.github/workflows/validate-ebook-generator.yml'
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build Next.js
+        run: npm run build
+      - name: Generate and inspect PDF
+        run: node scripts/verify-ebook-generator.cjs
+      - name: Save generated PDF for visual review
+        uses: actions/upload-artifact@v4
+        with:
+          name: ebook-smoke-pdf
+          path: artifacts/ebook-smoke.pdf
+          retention-days: 7
