@@ -1,4 +1,5 @@
 // scripts/verify-ebook-generator.cjs
+/* eslint-disable @typescript-eslint/no-require-imports -- script CommonJS de verificação que carrega módulo gerado em tempo de execução */
 // Smoke test of the real PDF engine, not its HTML preview.
 const fs = require("node:fs");
 const path = require("node:path");
