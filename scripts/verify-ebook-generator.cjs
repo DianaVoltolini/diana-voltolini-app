@@ -41,7 +41,7 @@ global.fetch = async () => ({ ok:true, blob:async()=>new Blob([testLogo],{type:"
     if(bytes.length<15000) throw Error("PDF suspeitamente pequeno");
     const cover=pdf.getPage(0);
     const xobjects=cover.node.Resources()?.lookup(PDFName.of("XObject"));
-    if(!(xobjects instanceof PDFDict) || xobjects.size()<1) throw Error("Logo não incorporada ao PDF");
+    if(!(xobjects instanceof PDFDict) || xobjects.keys().length<1) throw Error("Logo não incorporada ao PDF");
     const toc=pdf.getPage(1);
     const anns=toc.node.Annots();
     if(!anns || anns.size()<18) throw Error("Sumário sem links para os 18 capítulos");
