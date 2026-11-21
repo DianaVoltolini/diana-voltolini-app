@@ -78,8 +78,11 @@ export async function sendFiscalAnalysisQuote(form:FormData){
    from:{name:(process.env.SMTP_FROM_NAME||"Diana Voltolini").replace(/[\r\n"]/g,""),address:fromEmail},
    to:email,subject,html,text:textBody
   });
-  if(!result.accepted.some((v: string | {address:string})=>(typeof v==="string"?v:v.address).toLowerCase()===email))
-   throw new Error("SMTP não aceitou o endereço");
+  const recipientAccepted=result.accepted.some((recipient: string | {address:string})=>{
+   const acceptedEmail=typeof recipient==="string"?recipient:recipient.address;
+   return acceptedEmail.toLowerCase()===email;
+  });
+  if(!recipientAccepted)throw new Error("SMTP não aceitou o endereço");
   success=true;
  }catch(error){
   reason=error instanceof Error?error.message:"Falha no SMTP";
