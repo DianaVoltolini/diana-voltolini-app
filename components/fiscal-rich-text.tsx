@@ -2,7 +2,7 @@ import type {ReactNode} from "react";
 import styles from "./fiscal-rich-text.module.css";
 
 /** Safe plain-text/Markdown reader. Never injects HTML or changes fiscal calculations. */
-const heading=(s:string)=>s.replace(/^#{1,3}\s+/,"").trim();
+const heading=(s:string)=>s.replace(/^#{1,6}\s+/,"").trim();
 function inline(text:string):ReactNode[]{
  const pieces=text.split(/(\[[^\]\n]+\]\(https?:\/\/[^)\s]+\)|\*\*[^*\n]+\*\*|\*[^*\n]+\*|`[^`\n]+`)/g);
  return pieces.map((part,i)=>{
@@ -87,8 +87,8 @@ export default function FiscalRichText({body}:{body:string}){
    while(i<lines.length&&lines[i].trim().startsWith("|")){rows.push(cells(lines[i]));i++}
    elements.push(<div key={key} className={styles.tableWrap}><table className={styles.table}><thead><tr>{heads.map((c,j)=><th key={j} scope="col" >{inline(c)}</th>)}</tr></thead><tbody>{rows.map((row,j)=><tr key={j}>{heads.map((_,k)=><td key={k} >{inline(row[k]??"")}</td>)}</tr>)}</tbody></table></div>);continue
   }
-  const h=value.match(/^(#{1,3})\s+(.+)$/);
-  if(h){const H=h[1].length===1?"h2":h[1].length===2?"h3":"h4";const title=heading(value);const numbered=title.match(/^(\d{1,2})[.)]\s+(.+)$/);elements.push(<H key={key} className={numbered?styles.numberedHeading:styles.heading}>{numbered?<><span className={styles.sectionNumber}>{numbered[1].padStart(2,"0")}</span><span>{inline(numbered[2])}</span></>:inline(title)}</H>);i++;continue}
+  const h=value.match(/^(#{1,6})\s+(.+)$/);
+  if(h){const H=h[1].length===1?"h2":h[1].length===2?"h3":h[1].length===3?"h4":h[1].length===4?"h5":"h6";const title=heading(value);const numbered=title.match(/^(\d{1,2})[.)]\s+(.+)$/);elements.push(<H key={key} className={numbered?styles.numberedHeading:styles.heading}>{numbered?<><span className={styles.sectionNumber}>{numbered[1].padStart(2,"0")}</span><span>{inline(numbered[2])}</span></>:inline(title)}</H>);i++;continue}
   if(isPlainSectionHeading(value)){
    elements.push(<h3 key={key} className={styles.heading}>{inline(value)}</h3>);
    i++;continue;

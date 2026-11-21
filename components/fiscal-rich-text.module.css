@@ -121,3 +121,26 @@
   .reader .block{margin-block:22px}
   .reader .tableWrap{margin-inline:-4px}
 }
+
+
+/* Níveis de subtítulo Markdown ####, ##### e ###### em conteúdos fiscais. */
+.reader h5.heading{
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:17px;
+  line-height:1.42;
+  font-weight:700;
+  color:#183650;
+  margin:25px 0 12px;
+}
+.reader h6.heading{
+  font-family:Arial,sans-serif;
+  font-size:15px;
+  line-height:1.45;
+  font-weight:750;
+  color:#28465c;
+  margin:22px 0 10px;
+}
+@media(max-width:640px){
+  .reader h5.heading{font-size:16px;margin-top:22px}
+  .reader h6.heading{font-size:14px;margin-top:20px}
+}
