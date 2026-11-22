@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import css from "../comercio-v2/commercial.module.css";
 import dash from "../painel.module.css";
+import {fiscalQuoteTokenReady} from "@/lib/fiscal/analysis-quote-links";
 
 export const metadata: Metadata = { title: "Análise Fiscal Individual | Torre" };
 export const dynamic = "force-dynamic";
@@ -32,7 +33,7 @@ export default async function AnalisesFiscaisTorre(){
   {label:"Serviço ativo",ok:catalogProduct?.active===true},
   {label:"Checkout financeiro habilitado",ok:catalogProduct?.checkout_enabled===true},
   {label:"Produto vinculado ao Bling",ok:Number(catalogProduct?.bling_product_id)>0},
-  {label:"Token seguro da Proposta configurado",ok:Boolean(process.env.FISCAL_ANALYSIS_QUOTE_TOKEN_SECRET&&process.env.FISCAL_ANALYSIS_QUOTE_TOKEN_SECRET.length>=32)},
+  {label:"Assinatura segura do link de Proposta (chave existente ou específica)",ok:fiscalQuoteTokenReady()},
   {label:"Envio por e-mail não suspenso",ok:process.env.FISCAL_ANALYSIS_QUOTE_EMAIL_ENABLED!=="0"},
   {label:"SMTP da Proposta configurado",ok:Boolean(process.env.SMTP_HOST&&process.env.SMTP_USER&&process.env.SMTP_PASS)},
   {label:"Checkout individual habilitado neste aplicativo",ok:process.env.FISCAL_ANALYSIS_VARIABLE_CHECKOUT_ENABLED==="1"}
@@ -56,7 +57,7 @@ export default async function AnalisesFiscaisTorre(){
    <div className={css.actions}><a href="/solicitar-analise-fiscal" className={css.button} target="_blank" rel="noopener noreferrer">Formulário para o cliente</a><Link href="/torre/analises-fiscais/nova" className={css.secondary}>Cadastro interno</Link><Link href="/torre/analises-fiscais/previa" className={css.secondary}>Visualizar telas demonstrativas</Link></div>
   </header>
   <div className={css.banner}><strong>Implantação controlada</strong>
-   A gestão das solicitações e dos rascunhos de propostas já está disponível. O envio ao cliente e a contratação dependem de homologação. Documentos iniciais são opcionais.</div>
+   O envio de Propostas por e-mail é independente da contratação. As cobranças continuam desativadas enquanto o checkout não for homologado. Documentos iniciais são opcionais.</div>
   <section className={css.section} aria-label="Diagnóstico de ativação">
    <h2>Preparação para operação</h2>
    <p className={css.note}>Conferência das condições do aplicativo. O envio de Propostas depende de SMTP e token seguro; o checkout e os pagamentos no Bling são etapas independentes e só serão habilitados após homologação.</p>
@@ -90,6 +91,6 @@ export default async function AnalisesFiscaisTorre(){
        <td>{dateBR(r.created_at)}</td><td><Link href={`/torre/analises-fiscais/${r.id}`} className={css.link}>Abrir solicitação</Link></td>
       </tr>)}</tbody></table></div>}
   </section>
-  <p className={css.note}>As propostas podem ser preparadas em rascunho. O envio por e-mail, o botão WhatsApp e a contratação permanecem condicionados à homologação. <Link href="/torre/comercio-v2">Área Comercial</Link>.</p>
+  <p className={css.note}>As propostas podem ser salvas e enviadas usando o SMTP e o link seguro da Torre. Somente a contratação permanece condicionada à homologação financeira. <Link href="/torre/comercio-v2">Área Comercial</Link>.</p>
  </main>;
 }
