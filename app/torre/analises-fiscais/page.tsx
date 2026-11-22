@@ -62,7 +62,7 @@ export default async function AnalisesFiscaisTorre(){
        <td><strong>{r.customer_name}</strong><small>{r.customer_email}</small></td>
        <td>{statusText[r.status]??r.status}</td>
        <td>{newestByRequest.has(r.id)?money(newestByRequest.get(r.id)!.amount_cents):"—"}</td>
-       <td>{newestByRequest.has(r.id)?dateBR(newestByRequest.get(r.id)!.valid_until):"—"}</td>
+       <td>{newestByRequest.has(r.id)?(newestByRequest.get(r.id)!.status==="draft"?"3 dias após envio":dateBR(newestByRequest.get(r.id)!.valid_until)):"—"}</td>
        <td>{r.preferred_contact==="whatsapp"?"WhatsApp + e-mail":"E-mail"}</td>
        <td>{dateBR(r.created_at)}</td><td><Link href={`/torre/analises-fiscais/${r.id}`} className={css.link}>Abrir solicitação</Link></td>
       </tr>)}</tbody></table></div>}
