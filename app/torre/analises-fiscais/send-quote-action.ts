@@ -14,15 +14,15 @@ const escapeHtml=(s:string)=>s.replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;","
 function fail(id:string,reason:string):never{
  redirect("/torre/analises-fiscais/"+id+"?erro="+encodeURIComponent(reason));
 }
-/** O servidor só habilita o envio junto com o checkout de valor variável. */
+/** O envio da Proposta é independente do checkout: a cobrança exige aceite posterior. */
 export async function sendFiscalAnalysisQuote(form:FormData){
  const {userId}=await requireAdmin();
  const requestId=String(form.get("request_id")??"").trim();
  const quoteId=String(form.get("quote_id")??"").trim();
  if(!validId.test(requestId)||!validId.test(quoteId))redirect("/torre/analises-fiscais?erro=identificacao");
- if(process.env.FISCAL_ANALYSIS_QUOTE_EMAIL_ENABLED!=="1" ||
-    process.env.FISCAL_ANALYSIS_VARIABLE_CHECKOUT_ENABLED!=="1")
-    fail(requestId,"envio_bloqueado");
+ // Bloqueio administrativo opcional; não condicionar o envio ao Bling/checkout.
+ if(process.env.FISCAL_ANALYSIS_QUOTE_EMAIL_ENABLED==="0")
+  fail(requestId,"envio_bloqueado");
  const db=getSupabaseAdmin();
  const [{data:req,error:re},{data:q,error:qe}]=await Promise.all([
   db.from("fiscal_analysis_requests").select("id,protocol,status,customer_name,customer_email").eq("id",requestId).maybeSingle(),
