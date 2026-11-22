@@ -1,3 +1,4 @@
+import {groupEditorialSections} from "@/lib/fiscal/editorial-grouping.mjs";
 import type {ReactNode} from "react";
 import {marked} from "marked";
 import styles from "./fiscal-rich-text.module.css";
@@ -26,25 +27,34 @@ function rich(ts:Token[]=[]):ReactNode{
   }
  });
 }
-function blocks(ts:Token[],depth=0):ReactNode{
+/** Editorial treatment is inferred from explicit heading wording, never from fiscal values. */
+function headingTreatment(tokens:Token[]=[]){
+ const value=tokens.map(token=>token.text??"").join("").replace(/^\d{1,3}[.)]\s*/,"").trim().toLocaleLowerCase("pt-BR");
+ if(/^exemplo prático\b|^estudo de caso\b|^situação hipotética\b/.test(value))return "example";
+ if(/^conclusão\b|^considerações finais\b|^síntese final\b/.test(value))return "conclusion";
+ if(/^o que (?:a empresa|você) deve fazer\b|^como (?:conferir|proceder|corrigir)\b|^procedimento\b|^passo a passo\b/.test(value))return "procedure";
+ if(/^ponto de atenção\b|^atenção\b|^cuidados importantes\b/.test(value))return "attention";
+ return null;
+}
+function blocks(ts:Token[],depth=0,headingIds:string[]=[],cursor:{value:number}={value:0}):ReactNode{
  if(depth>12)return null;
  return ts.map((t,i)=>{
   switch(t.type){
    case "space":return null;
-   case "heading":{const tag=Math.min(6,(t.depth??1)+1);const H=("h"+tag) as "h2"|"h3"|"h4"|"h5"|"h6";return <H key={i} className={styles.heading}>{rich(t.tokens)}</H>}
+   case "heading":{const tag=Math.min(6,(t.depth??1)+1);const H=("h"+tag) as "h2"|"h3"|"h4"|"h5"|"h6";const treatment=headingTreatment(t.tokens);const themed=depth===0&&treatment?styles["heading"+treatment.charAt(0).toUpperCase()+treatment.slice(1) as keyof typeof styles]:"";return <H key={i} id={t.depth===2?headingIds[cursor.value++]:undefined} className={[styles.heading,themed].filter(Boolean).join(" ")}>{rich(t.tokens)}</H>}
    case "paragraph":return <p key={i} className={styles.paragraph}>{rich(t.tokens)}</p>;
    case "text":return <p key={i} className={styles.paragraph}>{rich(t.tokens??[{type:"text",text:t.text??""}])}</p>;
    case "hr":return <hr key={i}/>;
    case "code":return <pre key={i} className={styles.codeBlock}><code>{t.text}</code></pre>;
-   case "blockquote":return <blockquote key={i} className={styles.quote}>{blocks(t.tokens??[],depth+1)}</blockquote>;
+   case "blockquote":return <blockquote key={i} className={styles.quote}>{blocks(t.tokens??[],depth+1,headingIds,cursor)}</blockquote>;
    case "list":{
     const isTasks=(t.items??[]).some(x=>x.task);
-    const children=(t.items??[]).map((x,j)=><li key={j} className={x.task?styles.taskItem:undefined}>{x.task?<span aria-hidden="true" className={styles.checkMark}>{x.checked?"☑":"☐"}</span>:null}{blocks(x.tokens??[],depth+1)}</li>);
+    const children=(t.items??[]).map((x,j)=><li key={j} className={x.task?styles.taskItem:undefined}>{x.task?<span aria-hidden="true" className={styles.checkMark}>{x.checked?"☑":"☐"}</span>:null}{blocks(x.tokens??[],depth+1,headingIds,cursor)}</li>);
     return t.ordered?<ol key={i} className={styles.list} start={t.start||1}>{children}</ol>:<ul key={i} className={[styles.list,isTasks?styles.taskList:""].join(" ")}>{children}</ul>;
    }
    case "table":return <div className={styles.tableWrap} key={i}><table className={styles.table}><thead><tr>{(t.header??[]).map((x,j)=><th key={j} scope="col" style={{textAlign:t.align?.[j]??"left"}}>{rich(x.tokens)}</th>)}</tr></thead><tbody>{(t.rows??[]).map((row,j)=><tr key={j}>{row.map((x,k)=><td key={k} style={{textAlign:t.align?.[k]??"left"}}>{rich(x.tokens)}</td>)}</tr>)}</tbody></table></div>;
    case "html":return <p key={i} className={styles.paragraph}>{t.raw??t.text??""}</p>;
-   default:return t.tokens?<div key={i}>{blocks(t.tokens,depth+1)}</div>:null;
+   default:return t.tokens?<div key={i}>{blocks(t.tokens,depth+1,headingIds,cursor)}</div>:null;
   }
  });
 }
@@ -61,9 +71,16 @@ function segments(body:string){
  }
  flush();return out;
 }
-export default function FiscalRichText({body}:{body:string}){
- return <div className={styles.reader}>{segments(body).map((part,i)=>{
-  const content=blocks(marked.lexer(part.content,{gfm:true}) as unknown as Token[]);
+export default function FiscalRichText({body,editorial=false}:{body:string;editorial?:boolean}){
+ const headingIds=body.replace(/\r\n?/g,"\n").split("\n").flatMap((line,index)=>/^##\s+/.test(line.trim())?["secao-"+index]:[]);
+ const cursor={value:0};
+ return <div className={editorial?[styles.reader,styles.editorial].join(" "):styles.reader}>{segments(body).map((part,i)=>{
+  const groups=groupEditorialSections(marked.lexer(part.content,{gfm:true}) as unknown as Token[]);
+  const content=groups.map((group,j)=>group.kind?
+    <section key={j} className={[styles.editorialSection,styles["section"+group.kind.charAt(0).toUpperCase()+group.kind.slice(1) as keyof typeof styles]].join(" ")}>
+      {blocks(group.tokens,0,headingIds,cursor)}
+    </section>:
+    <div key={j} className={styles.editorialPlain}>{blocks(group.tokens,0,headingIds,cursor)}</div>);
   return part.kind?<section key={i} className={[styles.block,styles[(part.kind==="na-pratica"?"naPratica":part.kind) as keyof typeof styles]].join(" ")} aria-label={label[part.kind]}><p className={styles.blockLabel}>{label[part.kind]}</p>{content}</section>:<div key={i} className={styles.markdownSegment}>{content}</div>;
  })}</div>;
 }
