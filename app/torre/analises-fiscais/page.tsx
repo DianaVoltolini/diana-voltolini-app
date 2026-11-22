@@ -33,7 +33,8 @@ export default async function AnalisesFiscaisTorre(){
   {label:"Checkout financeiro habilitado",ok:catalogProduct?.checkout_enabled===true},
   {label:"Produto vinculado ao Bling",ok:Number(catalogProduct?.bling_product_id)>0},
   {label:"Token seguro da Proposta configurado",ok:Boolean(process.env.FISCAL_ANALYSIS_QUOTE_TOKEN_SECRET&&process.env.FISCAL_ANALYSIS_QUOTE_TOKEN_SECRET.length>=32)},
-  {label:"Envio da Proposta habilitado",ok:process.env.FISCAL_ANALYSIS_QUOTE_EMAIL_ENABLED==="1"},
+  {label:"Envio por e-mail não suspenso",ok:process.env.FISCAL_ANALYSIS_QUOTE_EMAIL_ENABLED!=="0"},
+  {label:"SMTP da Proposta configurado",ok:Boolean(process.env.SMTP_HOST&&process.env.SMTP_USER&&process.env.SMTP_PASS)},
   {label:"Checkout individual habilitado neste aplicativo",ok:process.env.FISCAL_ANALYSIS_VARIABLE_CHECKOUT_ENABLED==="1"}
  ];
  const [{data,error},{data:quotes,error:quotesError}]=await Promise.all([
@@ -58,7 +59,7 @@ export default async function AnalisesFiscaisTorre(){
    A gestão das solicitações e dos rascunhos de propostas já está disponível. O envio ao cliente e a contratação dependem de homologação. Documentos iniciais são opcionais.</div>
   <section className={css.section} aria-label="Diagnóstico de ativação">
    <h2>Preparação para operação</h2>
-   <p className={css.note}>Conferência automática das condições deste aplicativo. A configuração do checkout do site e o teste real de pagamento devem ser verificados separadamente antes da liberação.</p>
+   <p className={css.note}>Conferência das condições do aplicativo. O envio de Propostas depende de SMTP e token seguro; o checkout e os pagamentos no Bling são etapas independentes e só serão habilitados após homologação.</p>
    <ul style={{paddingLeft:20,display:"grid",gap:7}}>
     {readiness.map(item=><li key={item.label} style={{color:item.ok?"#166534":"#8a681c"}}>
      <strong>{item.ok?"Configurado":"Pendente"}</strong> · {item.label}
