@@ -4,7 +4,7 @@ import {revalidatePath} from "next/cache";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 const value=(f:FormData,k:string,max:number)=>String(f.get(k)||"").trim().slice(0,max);
-export type EmailTemplateSaveState={status:"idle"|"error"|"success";message:string};
+export type EmailTemplateSaveState={status:"idle"|"error"|"success";message:string;savedId?:string};
 const EMAIL_SAVE_IDLE:EmailTemplateSaveState={status:"idle",message:""};
 export async function saveEmailTemplate(_previous:EmailTemplateSaveState=EMAIL_SAVE_IDLE,f?:FormData):Promise<EmailTemplateSaveState>{
  await requireAdmin();
@@ -24,6 +24,7 @@ export async function saveEmailTemplate(_previous:EmailTemplateSaveState=EMAIL_S
  const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
  const auto_enabled=f.get("auto_enabled")==="yes",auto_include_existing=f.get("auto_include_existing")==="yes";
  if(auto_enabled&&kind!=="welcome"&&!landing_id)return fail("Selecione a landing de origem para ativar o envio automático.");
+ let savedId="";
  try{
   const db=getSupabaseAdmin();
   if(selectedLandingCtaId){
@@ -70,13 +71,14 @@ export async function saveEmailTemplate(_previous:EmailTemplateSaveState=EMAIL_S
   const payload={audience_kind,auto_activated_at,auto_enabled,auto_include_existing:auto_enabled&&auto_include_existing,name,description:description||null,subject,body,kind,interest:interest||null,landing_id:landing_id||null,cta_label,cta_url,active:f.get("active")==="yes",updated_at:new Date().toISOString()};
   const {data:saved,error}=id?await db.from("marketing_email_templates").update(payload).eq("id",id).select("id").maybeSingle():await db.from("marketing_email_templates").insert(payload).select("id").maybeSingle();
   if(error||!saved){console.error("[email-template-save] database write",error??"no row returned");return fail("Não foi possível salvar o modelo no banco. O conteúdo permanece no formulário; tente novamente.");}
+  savedId=saved.id;
   revalidatePath("/torre/modelos-email");
   revalidatePath("/torre/modelos-email/editor");
  }catch(error){
   console.error("[email-template-save] unexpected",error);
   return fail("Ocorreu uma falha inesperada ao salvar. Seus campos foram mantidos; tente novamente.");
  }
- return {status:"success",message:"Modelo salvo com sucesso."};
+ return {status:"success",message:"Modelo salvo com sucesso.",savedId};
 }
 export async function saveEmailDraft(f:FormData){
  await requireAdmin();
