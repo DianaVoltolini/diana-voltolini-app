@@ -28,6 +28,15 @@ const products = [
     cta: "Conhecer o diagnóstico",
   },
   {
+    key: "fiscalAnalysis",
+    label: "ATENDIMENTO INDIVIDUAL",
+    title: "Análise Fiscal Individual",
+    description:
+      "Uma análise direcionada à sua dúvida fiscal, com Proposta personalizada, acompanhamento do atendimento, troca de mensagens e entrega dos documentos pela Área do Cliente.",
+    url: "/painel/analises-fiscais",
+    cta: "Ver minhas análises",
+  },
+  {
     key: "ebook",
     label: "E-BOOK DIGITAL",
     title: "IBS e CBS na Prática",
@@ -69,15 +78,17 @@ export default async function OtherProducts() {
   const [access, { data: diagnostics, error: diagnosticsError },
     { data: orders, error: ordersError },
     { data: catalog, error: catalogError },
-    { data: subscriptions, error: subscriptionsError }] = await Promise.all([
+    { data: subscriptions, error: subscriptionsError },
+    { data: fiscalAnalyses, error: fiscalAnalysesError }] = await Promise.all([
     getEbookPurchaseAccess(uid),
     db.from("diagnostics").select("id").eq("user_id", uid).limit(1),
     db.from("orders").select("product_id,paid_at").eq("user_id", uid).eq("status", "paid").limit(200),
     db.from("products").select("id,code").in("code", [EBOOK_PRODUCT_CODE, ENCOUNTER_PRODUCT_CODE]),
     db.from("fiscal_subscriptions").select("id").eq("user_id", uid).limit(1),
+    db.from("fiscal_analysis_requests").select("id").eq("user_id", uid).not("paid_at", "is", null).limit(1),
   ]);
 
-  if (diagnosticsError || ordersError || catalogError || subscriptionsError) {
+  if (diagnosticsError || ordersError || catalogError || subscriptionsError || fiscalAnalysesError) {
     throw new Error("Não foi possível conferir seus produtos no momento.");
   }
 
@@ -87,6 +98,7 @@ export default async function OtherProducts() {
   );
   const acquired: Record<(typeof products)[number]["key"], boolean> = {
     diagnostic: Boolean(diagnostics?.length),
+    fiscalAnalysis: Boolean(fiscalAnalyses?.length),
     ebook: hasDirectEbookPurchase,
     encounter: access.hasEncounterOrder,
     subscription: Boolean(subscriptions?.length),
@@ -107,10 +119,12 @@ export default async function OtherProducts() {
           {products.map(product => {
             const purchased = acquired[product.key];
             const isEncounter = product.key === "encounter";
+            const isFiscalAnalysis = product.key === "fiscalAnalysis";
             const isEbook = product.key === "ebook";
             const link = purchased && (isEncounter || isEbook)
               ? "/painel/ebooks" : product.url;
-            const action = purchased && isEncounter
+            const action = isFiscalAnalysis && purchased
+              ? "Acessar meu atendimento" : purchased && isEncounter
               ? "Ver minha inscrição" : purchased && isEbook
                 ? "Acessar meu e-book" : product.cta;
 
@@ -118,6 +132,9 @@ export default async function OtherProducts() {
               <article className={styles.card} key={product.key}>
                 <div className={styles.cardHeading}>
                   <span>{product.label}</span>
+                  {isFiscalAnalysis && !purchased && (
+                    <span className={styles.pending}>Em preparação</span>
+                  )}
                   {purchased && (
                     <span className={styles.acquired}>
                       {isEncounter ? "✓ Inscrição confirmada" : "✓ Adquirido"}

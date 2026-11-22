@@ -27,7 +27,12 @@ export default function LandingEditorForm({landing}:{landing:Landing|null}){
  const [state,setState]=useState<LandingSaveState>({status:"idle",message:""});
  const [pending,startTransition]=useTransition();
  useEffect(()=>{
-   try{setDraftAvailable(Boolean(window.sessionStorage.getItem(storageKey)));}catch{}
+   // Leitura do rascunho após a montagem, fora do corpo síncrono do efeito.
+   const frame=window.requestAnimationFrame(()=>{
+     try{setDraftAvailable(Boolean(window.sessionStorage.getItem(storageKey)));}
+     catch{setDraftAvailable(false);}
+   });
+   return ()=>window.cancelAnimationFrame(frame);
  },[storageKey]);
  function storeDraft(){
    if(!formRef.current)return;
