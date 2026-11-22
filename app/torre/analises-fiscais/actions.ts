@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import {fiscalProposalExpiresAt} from "@/lib/fiscal/proposal-validity";
 
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 function read(form:FormData,key:string,max=10000){
@@ -26,18 +27,13 @@ export async function saveFiscalAnalysisQuoteDraft(form:FormData){
  const notes=read(form,"notes",3000);
  const amountCents=parseCents(read(form,"amount",30));
  const days=Number(read(form,"delivery_business_days",5));
- const validity=read(form,"valid_until",10);
  if(!uuid.test(requestId))redirect("/torre/analises-fiscais?erro=solicitacao");
  if(scope.length<10||scope.length>10000||notes.length>3000||amountCents===null||
     !Number.isSafeInteger(days)||days<1||days>90||!/^\d{4}-\d{2}-\d{2}$/.test(validity)){
   fail(requestId,"validacao");
  }
- const [year,month,day]=validity.split("-").map(Number);
- const calendarCheck=new Date(Date.UTC(year,month-1,day));
- if(calendarCheck.getUTCFullYear()!==year||calendarCheck.getUTCMonth()!==month-1||
-    calendarCheck.getUTCDate()!==day)fail(requestId,"data_invalida");
- const validUntil=new Date(`${validity}T23:59:59-03:00`);
- if(!(validUntil.getTime()>Date.now()))fail(requestId,"validade_expirada");
+ // Valor provisório obrigatório pelo banco; a validade oficial começa no envio.
+ const validUntil=fiscalProposalExpiresAt(new Date());
  const db=getSupabaseAdmin();
  const {data:request,error:lookupError}=await db.from("fiscal_analysis_requests")
   .select("id,status").eq("id",requestId).maybeSingle();
@@ -53,7 +49,7 @@ export async function saveFiscalAnalysisQuoteDraft(form:FormData){
  const now=new Date().toISOString();
  const fields={
   scope,notes:notes||null,amount_cents:amountCents,delivery_business_days:days,
-  valid_until:validUntil.toISOString(),updated_at:now
+  valid_until:validUntil,updated_at:now
  };
  let quoteId:string|null=null;
  if(latest?.status==="draft"){
