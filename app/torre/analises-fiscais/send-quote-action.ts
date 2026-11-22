@@ -7,6 +7,7 @@ import nodemailer from "nodemailer";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 import {moneyBR,quoteUrl,quoteToken,quoteTokenHash} from "@/lib/fiscal/analysis-quote-links";
+import {fiscalProposalExpiresAt} from "@/lib/fiscal/proposal-validity";
 
 const validId=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const escapeHtml=(s:string)=>s.replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]??ch));
@@ -30,7 +31,7 @@ export async function sendFiscalAnalysisQuote(form:FormData){
  ]);
  if(re||qe||!req||!q)fail(requestId,"nao_encontrado");
  if(q.status!=="draft"||!["received","awaiting_details","quoting"].includes(req.status))fail(requestId,"situacao");
- if(new Date(q.valid_until).getTime()<=Date.now())fail(requestId,"prazo");
+ // A validade comercial começa na emissão, não no salvamento do rascunho.
  const email=req.customer_email.trim().toLowerCase();
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))fail(requestId,"email");
  let link:string,hash:string;
@@ -53,18 +54,18 @@ export async function sendFiscalAnalysisQuote(form:FormData){
 
  let success=false,reason="";
  const amount=moneyBR(q.amount_cents);
- const subject="Orçamento de Análise Fiscal Individual · "+(req.protocol||"Solicitação");
- const textBody=`Olá, ${req.customer_name}.\n\nSeu orçamento está disponível.\n\nServiço: Análise Fiscal Individual\nEscopo: ${q.scope}\nValor: ${amount}\nPrazo: ${q.delivery_business_days} dia(s) útil(eis)\n\nConsulte sua proposta: ${link}\n\nDiana Voltolini · Inteligência Fiscal`;
+ const subject="Proposta de Análise Fiscal Individual · "+(req.protocol||"Solicitação");
+ const textBody=`Olá, ${req.customer_name}.\n\nSua Proposta está disponível.\n\nServiço: Análise Fiscal Individual\nEscopo: ${q.scope}\nValor: ${amount}\nPrazo: ${q.delivery_business_days} dia(s) útil(eis)\nValidade: 3 dias corridos a partir deste envio\n\nConsulte sua Proposta: ${link}\n\nDiana Voltolini · Inteligência Fiscal`;
  const html=`<!doctype html><html lang="pt-BR"><body style="background:#f4f6f8;margin:0;padding:24px;font-family:Arial,Helvetica,sans-serif;color:#102033">
  <div style="max-width:640px;background:#fff;border:1px solid #d6e0e8;border-top:5px solid #c9a227;margin:auto;border-radius:9px;overflow:hidden">
  <div style="padding:26px 32px;text-align:center"><img src="https://app.dianavoltolini.com.br/brand/logo-light.png" alt="Diana Voltolini" width="175" style="max-width:80%;height:auto"></div>
- <div style="padding:0 32px 32px"><h1 style="font-family:Georgia,serif;font-size:26px">Seu orçamento está disponível</h1>
+ <div style="padding:0 32px 32px"><h1 style="font-family:Georgia,serif;font-size:26px">Sua Proposta está disponível</h1>
  <p>Olá, ${escapeHtml(req.customer_name)}.</p>
  <p>Preparamos uma proposta individual para a sua solicitação.</p>
  <p style="white-space:pre-line;line-height:1.7"><strong>Escopo:</strong> ${escapeHtml(q.scope)}</p>
  <p style="font-size:24px;font-weight:bold;color:#102033">${escapeHtml(amount)}</p>
- <p>Prazo previsto: ${q.delivery_business_days} dia(s) útil(eis).</p>
- <p style="text-align:center;margin:28px 0"><a href="${escapeHtml(link)}" style="padding:14px 22px;display:inline-block;background:#c9a227;color:#102033;text-decoration:none;border-radius:7px;font-weight:700">Consultar meu orçamento</a></p>
+ <p>Prazo previsto: ${q.delivery_business_days} dia(s) útil(eis).</p>\n <p>Validade da Proposta: 3 dias corridos a partir do envio.</p>
+ <p style="text-align:center;margin:28px 0"><a href="${escapeHtml(link)}" style="padding:14px 22px;display:inline-block;background:#c9a227;color:#102033;text-decoration:none;border-radius:7px;font-weight:700">Consultar minha Proposta</a></p>
  <p style="font-size:13px;color:#536372">Esta mensagem não é uma cobrança.</p>
  </div>
  <div style="padding:20px;text-align:center;background:#f7f9fb;font-size:12px;border-top:1px solid #d6e0e8">DIANA VOLTOLINI · ESPECIALISTA EM FATURAMENTO E INTELIGÊNCIA FISCAL</div></div></body></html>`;
@@ -102,9 +103,10 @@ export async function sendFiscalAnalysisQuote(form:FormData){
   fail(requestId,"smtp");
  }
  const sentAt=new Date().toISOString();
+ const expiresAt=fiscalProposalExpiresAt(new Date(sentAt));
  const {data:sent,error:sentErr}=await db.from("fiscal_analysis_quotes")
   .update({status:"sent",email_delivery_state:"accepted",sent_at:sentAt,email_sent_at:sentAt,
-   access_token_hash:hash,token_expires_at:q.valid_until,updated_at:sentAt})
+   access_token_hash:hash,valid_until:expiresAt,token_expires_at:expiresAt,updated_at:sentAt})
   .eq("id",q.id).eq("email_send_claim",claim).eq("email_delivery_state","sending")
   .eq("status","draft").select("id").maybeSingle();
  if(sentErr||!sent){
