@@ -114,7 +114,7 @@ export async function sendFiscalAnalysisQuote(form:FormData){
   fail(requestId,"conferencia_envio");
  }
  const {error:statusError}=await db.from("fiscal_analysis_requests")
-  .update({status:"quote_sent",updated_at:sentAt}).eq("id",requestId).eq("status","quoting");
+  .update({status:"quote_sent",updated_at:sentAt}).eq("id",requestId).in("status",["received","awaiting_details","quoting"]);
  if(statusError)console.error("[fiscal-analysis-email] Falha ao atualizar solicitação",statusError.code);
  await db.from("fiscal_analysis_events").insert({request_id:requestId,actor_user_id:userId,
   event_type:"quote_email_accepted",detail:{quote_id:q.id,quote_version:q.version}})

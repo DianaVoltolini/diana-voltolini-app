@@ -24,6 +24,18 @@ const dateBR = (v:string) => new Intl.DateTimeFormat("pt-BR", {timeZone:"America
 export default async function AnalisesFiscaisTorre(){
  await requireAdmin();
  const db=getSupabaseAdmin();
+ const {data:catalogProduct,error:catalogError}=await db.from("products")
+  .select("code,active,checkout_enabled,bling_product_id")
+  .eq("code","ANALISE-FISCAL-INDIVIDUAL").maybeSingle();
+ const readiness=[
+  {label:"Serviço cadastrado no catálogo",ok:!catalogError&&Boolean(catalogProduct)},
+  {label:"Serviço ativo",ok:catalogProduct?.active===true},
+  {label:"Checkout financeiro habilitado",ok:catalogProduct?.checkout_enabled===true},
+  {label:"Produto vinculado ao Bling",ok:Number(catalogProduct?.bling_product_id)>0},
+  {label:"Token seguro da Proposta configurado",ok:Boolean(process.env.FISCAL_ANALYSIS_QUOTE_TOKEN_SECRET&&process.env.FISCAL_ANALYSIS_QUOTE_TOKEN_SECRET.length>=32)},
+  {label:"Envio da Proposta habilitado",ok:process.env.FISCAL_ANALYSIS_QUOTE_EMAIL_ENABLED==="1"},
+  {label:"Checkout individual habilitado neste aplicativo",ok:process.env.FISCAL_ANALYSIS_VARIABLE_CHECKOUT_ENABLED==="1"}
+ ];
  const [{data,error},{data:quotes,error:quotesError}]=await Promise.all([
   db.from("fiscal_analysis_requests")
     .select("id,protocol,customer_name,customer_email,preferred_contact,status,created_at")
@@ -40,10 +52,19 @@ export default async function AnalisesFiscaisTorre(){
   <header className={css.header}><div><p className={css.eyebrow}>TORRE DE CONTROLE · SERVIÇOS</p>
    <h1 className={css.title}>Análise Fiscal Individual</h1>
    <p className={css.subtitle}>Solicitações, propostas individuais, pagamentos e acompanhamento de atendimentos.</p></div>
-   <Link href="/torre/analises-fiscais/previa" className={css.button}>Visualizar telas demonstrativas</Link>
+   <div className={css.actions}><Link href="/torre/analises-fiscais/nova" className={css.button}>Nova solicitação</Link><Link href="/torre/analises-fiscais/previa" className={css.secondary}>Visualizar telas demonstrativas</Link></div>
   </header>
   <div className={css.banner}><strong>Implantação controlada</strong>
    A gestão das solicitações e dos rascunhos de propostas já está disponível. O envio ao cliente e a contratação dependem de homologação. Documentos iniciais são opcionais.</div>
+  <section className={css.section} aria-label="Diagnóstico de ativação">
+   <h2>Preparação para operação</h2>
+   <p className={css.note}>Conferência automática das condições deste aplicativo. A configuração do checkout do site e o teste real de pagamento devem ser verificados separadamente antes da liberação.</p>
+   <ul style={{paddingLeft:20,display:"grid",gap:7}}>
+    {readiness.map(item=><li key={item.label} style={{color:item.ok?"#166534":"#8a681c"}}>
+     <strong>{item.ok?"Configurado":"Pendente"}</strong> · {item.label}
+    </li>)}
+   </ul>
+  </section>
   <section className={dash.summaryGrid} aria-label="Resumo das Análises Fiscais">
    <article><span>Solicitações registradas</span><strong>{error?"—":rows.length}</strong><small>Até 200 registros recentes</small></article>
    <article><span>Preparando proposta</span><strong>{error?"—":count("quoting")}</strong><small>Em avaliação e elaboração</small></article>
