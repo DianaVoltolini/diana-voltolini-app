@@ -23,7 +23,7 @@ test("envio efetiva prazo e token juntos somente após sucesso SMTP",()=>{
  assert.match(action,/const expiresAt=fiscalProposalExpiresAt\(new Date\(sentAt\)\)/);
  assert.match(action,/valid_until:expiresAt,token_expires_at:expiresAt/);
  assert.match(action,/email_delivery_state:"failed"/);
- assert.match(action,/FISCAL_ANALYSIS_VARIABLE_CHECKOUT_ENABLED/);
+ assert.doesNotMatch(action,/FISCAL_ANALYSIS_VARIABLE_CHECKOUT_ENABLED/);
  assert.match(action,/Proposta de Análise Fiscal Individual/);
 });
 test("cliente visualiza data e hora exatas no horário de Brasília",()=>{

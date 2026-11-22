@@ -6,7 +6,7 @@ import {getSupabaseAdmin} from "@/lib/supabase/admin";
 import {saveFiscalAnalysisQuoteDraft} from "../actions";
 import {sendFiscalAnalysisQuote} from "../send-quote-action";
 import {sendFiscalAdminMessage,updateFiscalServiceStatus,uploadFiscalAdminFile} from "../service-actions";
-import {quoteUrl,whatsappQuoteUrl} from "@/lib/fiscal/analysis-quote-links";
+import {quoteUrl,whatsappQuoteUrl,fiscalQuoteTokenReady} from "@/lib/fiscal/analysis-quote-links";
 import css from "../../comercio-v2/commercial.module.css";
 import {fiscalProposalExpiresLabel} from "@/lib/fiscal/proposal-validity";
 
@@ -87,7 +87,7 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
    "application/pdf","application/vnd.openxmlformats-officedocument.wordprocessingml.document"
   ].includes(file.media_type)));
  const sendBlocked=process.env.FISCAL_ANALYSIS_QUOTE_EMAIL_ENABLED==="0";
- const tokenReady=Boolean(process.env.FISCAL_ANALYSIS_QUOTE_TOKEN_SECRET&&process.env.FISCAL_ANALYSIS_QUOTE_TOKEN_SECRET.length>=32);
+ const tokenReady=fiscalQuoteTokenReady();
  const smtpReady=Boolean(process.env.SMTP_HOST&&process.env.SMTP_USER&&process.env.SMTP_PASS);
  const sendAvailable=!sendBlocked&&tokenReady&&smtpReady;
  const whatsapp=latest?.status==="sent"&&latest.email_sent_at&&request.preferred_contact==="whatsapp"
@@ -140,7 +140,7 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
   </section>
   <section className={css.section}><h2>Envio da proposta</h2>
    {!latest||latest.status!=="draft"?<p className={css.note}>Nenhum rascunho aguardando envio.</p>:
-    !sendAvailable?<p className={css.note}>O envio depende apenas da configuração de e-mail e do link seguro da Proposta, não da integração financeira. {!tokenReady?"Configure o segredo do link de Proposta. ":null}{!smtpReady?"Confira as credenciais SMTP. ":null}{sendBlocked?"O envio foi suspenso pela configuração administrativa.":null}</p>:
+    !sendAvailable?<p className={css.note}>O envio está temporariamente indisponível nesta aplicação. {!smtpReady?"O SMTP precisa estar configurado na hospedagem da Torre, mesmo que já esteja ativo no site público. ":null}{!tokenReady?"A chave privada do servidor não está disponível para assinar o link seguro. ":null}{sendBlocked?"O envio está suspenso pela configuração administrativa.":null} Nenhuma cobrança será gerada.</p>:
     <form action={sendFiscalAnalysisQuote} className={css.form}>
      <input type="hidden" name="request_id" value={request.id}/>
      <input type="hidden" name="quote_id" value={latest.id}/>
