@@ -3,6 +3,7 @@ import {notFound} from "next/navigation";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 import {moneyBR} from "@/lib/fiscal/analysis-quote-links";
 import {fiscalProposalExpiresLabel} from "@/lib/fiscal/proposal-validity";
+import {getFiscalProposalPayment} from "@/lib/fiscal/analysis-proposal-payment";
 
 export const metadata:Metadata={title:"Proposta individual | Diana Voltolini",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
@@ -14,10 +15,11 @@ export default async function FiscalAnalysisQuotePublic({params}:{params:Promise
  const {quoteTokenHash}=await import("@/lib/fiscal/analysis-quote-links");
  const db=getSupabaseAdmin();
  const {data:q,error}=await db.from("fiscal_analysis_quotes")
-  .select("id,request_id,version,scope,amount_cents,delivery_business_days,valid_until,status,token_expires_at")
-  .eq("access_token_hash",quoteTokenHash(token)).eq("status","sent").maybeSingle();
+  .select("id,request_id,version,scope,amount_cents,delivery_business_days,valid_until,status,token_expires_at,order_id")
+  .eq("access_token_hash",quoteTokenHash(token)).in("status",["sent","accepted"]).maybeSingle();
  if(error||!q||!q.token_expires_at||
     hasExpired(q.valid_until)||hasExpired(q.token_expires_at))notFound();
+ const payment=await getFiscalProposalPayment(q);
  const {data:req}=await db.from("fiscal_analysis_requests").select("protocol").eq("id",q.request_id).maybeSingle();
  return <main style={{background:"#f4f6f8",minHeight:"100vh",padding:"40px 18px",color:"#102033"}}>
   <article style={{margin:"0 auto",maxWidth:740,background:"#fff",border:"1px solid #d6e0e8",borderRadius:12,overflow:"hidden"}}>
@@ -35,16 +37,26 @@ export default async function FiscalAnalysisQuotePublic({params}:{params:Promise
      <p style={{margin:"4px 0"}}>Prazo de entrega: {q.delivery_business_days} dia(s) útil(eis), conforme condições da Proposta.</p>
      <p style={{margin:"4px 0"}}>Proposta válida até {fiscalProposalExpiresLabel(q.valid_until)} (horário de Brasília).</p>
     </div>
-    {process.env.FISCAL_ANALYSIS_VARIABLE_CHECKOUT_ENABLED==="1"?
+    {payment.state==="paid"?
+     <p style={{marginTop:24,fontWeight:700}}>Pagamento confirmado. Acompanhe o atendimento pela sua Área do Cliente.</p>:
+     payment.state==="pending"?
+     <div style={{marginTop:28,textAlign:"center"}}>
+      {payment.url?<a href={payment.url} target="_blank" rel="noopener noreferrer"
+       style={{display:"inline-block",maxWidth:"100%",background:"#c9a227",padding:"16px 25px",borderRadius:7,textDecoration:"none",fontWeight:800,color:"#102033"}}>
+       Acessar cobrança {payment.method==="pix"?"PIX":"Boleto"} no Bling
+      </a>:<p style={{fontWeight:700}}>Cobrança registrada. O link de pagamento ainda não está disponível. Consulte o e-mail de cobrança ou entre em contato para receber as orientações.</p>}
+      <p style={{fontSize:12,color:"#536372",marginTop:12}}>Esta cobrança já existe; acessar novamente a Proposta não gera outra cobrança.</p>
+     </div>:
+     q.status==="sent"&&process.env.FISCAL_ANALYSIS_VARIABLE_CHECKOUT_ENABLED==="1"?
      <div style={{marginTop:28,textAlign:"center"}}>
       <a href={"https://dianavoltolini.com.br/checkout/ANALISE-FISCAL-INDIVIDUAL?proposta="+encodeURIComponent(token)}
         referrerPolicy="no-referrer" rel="noreferrer noopener"
         style={{display:"inline-block",maxWidth:"100%",background:"#c9a227",padding:"16px 25px",borderRadius:7,textDecoration:"none",fontWeight:800,color:"#102033"}}>
         Aprovar Proposta e contratar
       </a>
-      <p style={{fontSize:12,color:"#536372",marginTop:12}}>Você será direcionado ao checkout com o valor deste orçamento. O atendimento será liberado após a confirmação do pagamento.</p>
-     </div>
-     :<p style={{fontSize:14,color:"#536372",marginTop:24}}>A aprovação e o pagamento pela plataforma serão disponibilizados após a conclusão da integração do checkout. Nenhuma cobrança foi gerada ao visualizar esta proposta.</p>}
+      <p style={{fontSize:12,color:"#536372",marginTop:12}}>Você será direcionado ao formulário de contratação para gerar a cobrança no Bling pelo valor desta Proposta. O atendimento será liberado após a confirmação do pagamento.</p>
+     </div>:
+     <p style={{fontSize:14,color:"#536372",marginTop:24}}>A contratação não está disponível no momento. Nenhuma cobrança é criada apenas ao visualizar a Proposta.</p>}
     <p style={{fontSize:13,color:"#536372"}}>Para informações sobre esta proposta, responda ao e-mail recebido.</p>
    </div>
    <footer style={{padding:"16px 32px",borderTop:"1px solid #d6e0e8",background:"#f9fafb",textAlign:"center",fontSize:12}}>
