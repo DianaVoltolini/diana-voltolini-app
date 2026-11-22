@@ -5,10 +5,23 @@ const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]
 export function moneyBR(cents:number){
  return new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(cents/100);
 }
+/**
+ * A chave específica tem prioridade, preservando links já emitidos.
+ * Na ausência dela, usa a chave secreta de servidor já exigida pela Torre.
+ * Domínio separado no HMAC impede compartilhar tokens com outros serviços.
+ * A rotação da chave de servidor invalida links produzidos pelo fallback.
+ */
+export function fiscalQuoteTokenReady(){
+ const dedicated=process.env.FISCAL_ANALYSIS_QUOTE_TOKEN_SECRET;
+ const existing=process.env.SUPABASE_SECRET_KEY;
+ return Boolean((dedicated&&dedicated.length>=32)||(existing&&existing.length>=32));
+}
 function tokenSecret(){
- const s=process.env.FISCAL_ANALYSIS_QUOTE_TOKEN_SECRET;
- if(!s||s.length<32)throw new Error("FISCAL_ANALYSIS_QUOTE_TOKEN_SECRET ausente ou curta");
- return s;
+ const dedicated=process.env.FISCAL_ANALYSIS_QUOTE_TOKEN_SECRET;
+ if(dedicated&&dedicated.length>=32)return dedicated;
+ const existing=process.env.SUPABASE_SECRET_KEY;
+ if(existing&&existing.length>=32)return existing;
+ throw new Error("Chave privada do servidor indisponível para gerar o link da Proposta");
 }
 export function quoteToken(id:string,version:number){
  if(!uuid.test(id)||!Number.isInteger(version)||version<1)throw new Error("Identificação de orçamento inválida");
