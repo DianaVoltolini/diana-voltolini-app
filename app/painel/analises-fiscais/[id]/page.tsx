@@ -17,7 +17,7 @@ export default async function FiscalClientService({params,searchParams}:Props){
  const db=getSupabaseAdmin();
  const [{data:messages,error:messageError},{data:files,error:fileError}]=await Promise.all([
   db.from("fiscal_analysis_messages").select("id,sender_role,body,created_at").eq("request_id",id).eq("visible_to_client",true).order("created_at",{ascending:true}).limit(200),
-  db.from("fiscal_analysis_attachments").select("id,original_filename,size_bytes,created_at").eq("request_id",id).eq("visible_to_client",true).order("created_at",{ascending:false}).limit(100)
+  db.from("fiscal_analysis_attachments").select("id,original_filename,size_bytes,created_at,uploaded_by_role,media_type").eq("request_id",id).eq("visible_to_client",true).order("created_at",{ascending:false}).limit(100)
  ]);
  const item=found.request;
  const canReply=["paid","in_progress","awaiting_client"].includes(item.status);
@@ -51,11 +51,11 @@ export default async function FiscalClientService({params,searchParams}:Props){
     <div className={css.actions}><button type="submit" className={css.button}>Enviar mensagem</button></div>
    </form>}
   </section>
-  <section className={css.section}><h2>Documentos compartilhados</h2>
+  <section className={css.section}><h2>Documentos e entrega da análise</h2>
    {fileError?<p className={css.error}>Não foi possível carregar os documentos.</p>:
     !files?.length?<p className={css.note}>Nenhum documento disponível no momento.</p>:
     <ul>{files.map(file=><li key={file.id} style={{marginBottom:10}}>
-     <a className={css.link} href={"/api/fiscal-analysis/files/"+file.id}>{file.original_filename}</a> · {Math.ceil(file.size_bytes/1024)} KB · {date(file.created_at)}
+     <a className={css.link} href={"/api/fiscal-analysis/files/"+file.id}>{file.original_filename}</a> · {Math.ceil(file.size_bytes/1024)} KB · {date(file.created_at)} {file.uploaded_by_role==="admin"&&["application/pdf","application/vnd.openxmlformats-officedocument.wordprocessingml.document"].includes(file.media_type)?<strong> · Documento da equipe</strong>:null}
     </li>)}</ul>}
    {canReply&&<form action={uploadFiscalClientFile} className={css.form} encType="multipart/form-data">
     <input type="hidden" name="request_id" value={id}/>
@@ -64,6 +64,6 @@ export default async function FiscalClientService({params,searchParams}:Props){
     <div className={css.actions}><button type="submit" className={css.button}>Enviar documento</button></div>
    </form>}
   </section>
-  {item.status==="completed"&&<p className={css.note}>Atendimento concluído. Os documentos compartilhados permanecem disponíveis para consulta.</p>}
+  {item.status==="completed"&&<p className={css.note}>Atendimento concluído. A análise entregue e os documentos compartilhados permanecem disponíveis para consulta nesta área restrita.</p>}
  </main>;
 }
