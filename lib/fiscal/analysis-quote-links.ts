@@ -31,6 +31,6 @@ export function whatsappQuoteUrl(phone:string,customer:string,protocol:string,ur
  const international=digits.startsWith("55")?digits:"55"+digits;
  if(!/^55\d{10,11}$/.test(international))return null;
  const firstName=customer.trim().split(/\s+/)[0]||"Olá";
- const message=`Olá, ${firstName}! Seu orçamento de Análise Fiscal Individual (solicitação ${protocol}) está disponível. Consulte escopo, valor e prazo no link: ${url} . O orçamento também foi encaminhado por e-mail. Diana Voltolini.`;
+ const message=`Olá, ${firstName}! Sua Proposta de Análise Fiscal Individual (solicitação ${protocol}) está disponível. Consulte escopo, valor e prazo no link: ${url}. A Proposta também foi encaminhada por e-mail. Diana Voltolini.`;
  return "https://wa.me/"+international+"?text="+encodeURIComponent(message);
 }
