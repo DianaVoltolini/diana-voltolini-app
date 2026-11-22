@@ -1,7 +1,8 @@
 "use client";
 import {useState,useRef,useEffect,useActionState} from "react";
 import Link from "next/link";
-import {saveEmailTemplate} from "./actions";
+import {useRouter} from "next/navigation";
+import {saveEmailTemplate,type EmailTemplateSaveState} from "./actions";
 import {saveTransactionalEmail} from "./transacionais/actions";
 import css from "./template-editor.module.css";
 type Template={audience_kind?:string|null;id:string;name:string;subject:string;body:string;kind:string;active:boolean;description:string|null;interest:string|null;landing_id:string|null;cta_label:string|null;cta_url:string|null;auto_enabled?:boolean;auto_include_existing?:boolean};
@@ -19,7 +20,9 @@ const starter="Olá, {{nome}}!\n\nQue bom ter você por aqui!\n\nMeu objetivo é
 const buttonPattern=/\[BOTAO:\s*([^\]\n|]+?)\s*\|\s*(https:\/\/[^\]\s]+)\]/g;
 export default function TemplateEditor({selected,interests,landings,ctas,defaultAudience="leads"}:{selected:Template|null;interests:string[];landings:Landing[];ctas:CatalogCta[];defaultAudience?:string}){
  const transactional=selected?.kind==="transactional";
- const [saveState,saveAction,savePending]=useActionState(saveEmailTemplate,{status:"idle" as const,message:""});
+ const router=useRouter();
+ const [saveState,saveAction,savePending]=useActionState<EmailTemplateSaveState,FormData>(saveEmailTemplate,{status:"idle",message:""});
+ useEffect(()=>{if(!selected&&saveState.status==="success"&&saveState.savedId)router.replace("/torre/modelos-email/editor?editar="+encodeURIComponent(saveState.savedId));},[saveState.status,saveState.savedId,selected,router]);
  // O identificador do CTA (não apenas a URL) mantém nome, botão e destino juntos.
  // URLs podem existir tanto no catálogo quanto na lista de destinos tradicionais.
  const destinations=[
