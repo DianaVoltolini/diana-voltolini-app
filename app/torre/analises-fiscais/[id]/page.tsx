@@ -14,7 +14,7 @@ export const metadata:Metadata={title:"Solicitação de Análise Fiscal | Torre"
 export const dynamic="force-dynamic";
 type Props={params:Promise<{id:string}>;searchParams:Promise<{salvo?:string;erro?:string;email?:string;mensagem?:string;arquivo?:string;situacao?:string}>};
 type Request={id:string;protocol:string|null;customer_name:string;customer_email:string;
- customer_phone:string;preferred_contact:string;question:string;status:string;created_at:string};
+ customer_phone:string;preferred_contact:string;question:string;status:string;paid_at:string|null;created_at:string};
 type Quote={id:string;version:number;status:string;email_sent_at:string|null;amount_cents:number;scope:string;
  notes:string|null;delivery_business_days:number;valid_until:string;created_at:string};
 type Message={id:string;sender_role:string;body:string;created_at:string};
@@ -28,11 +28,11 @@ const errors:Record<string,string>={
  proposta_ativa:"Já existe uma proposta enviada ou aceita para esta solicitação.",
  consulta_orcamentos:"Não foi possível consultar as versões anteriores.",
  salvar:"Não foi possível salvar a Proposta.",
- atualizar_situacao:"Proposta registrado, mas houve erro ao atualizar a situação. Confira o histórico.",
+ atualizar_situacao:"Proposta registrada, mas houve erro ao atualizar a situação. Confira o histórico.",
  conflito:"Outra versão foi salva. Atualize a tela e confira antes de continuar.",
  solicitacao:"Solicitação não encontrada.",
  envio_bloqueado:"Envio não habilitado até o checkout individual estar operacional.",
- envio_em_andamento:"Este Proposta já está sendo enviado ou já foi enviado.",
+ envio_em_andamento:"Esta Proposta já está sendo enviado ou já foi enviado.",
  smtp:"Não foi possível enviar o e-mail. Consulte os registros de envio.",
  conferencia_envio:"O servidor aceitou o e-mail, mas houve falha ao registrar o envio. Verifique antes de reenviar.",
  prazo:"O prazo de validade da Proposta terminou.",
@@ -53,7 +53,7 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
  if(!/^[a-f\d-]{36}$/i.test(id))notFound();
  const db=getSupabaseAdmin();
  const [req,qs,ms,files,history]=await Promise.all([
-  db.from("fiscal_analysis_requests").select("id,protocol,customer_name,customer_email,customer_phone,preferred_contact,question,status,created_at").eq("id",id).maybeSingle(),
+  db.from("fiscal_analysis_requests").select("id,protocol,customer_name,customer_email,customer_phone,preferred_contact,question,status,paid_at,created_at").eq("id",id).maybeSingle(),
   db.from("fiscal_analysis_quotes").select("id,version,status,email_sent_at,amount_cents,scope,notes,delivery_business_days,valid_until,created_at").eq("request_id",id).order("version",{ascending:false}).limit(30),
   db.from("fiscal_analysis_messages").select("id,sender_role,body,created_at").eq("request_id",id).order("created_at",{ascending:true}).limit(100),
   db.from("fiscal_analysis_attachments").select("id,original_filename,size_bytes,created_at,visible_to_client").eq("request_id",id).order("created_at",{ascending:false}).limit(100),
@@ -66,7 +66,7 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
  const canDraft=["received","awaiting_details","quoting"].includes(request.status)&&
   !quoteList.some(q=>q.status==="sent"||q.status==="accepted");
  const inputDefault=latest?.status==="draft"?latest:undefined;
- const serviceEnabled=Boolean((req.data as Request).status==="paid"||(req.data as Request).status==="in_progress"||(req.data as Request).status==="awaiting_client");
+ const serviceEnabled=Boolean(request.paid_at&&["paid","in_progress","awaiting_client"].includes(request.status));
  const transitions:Record<string,{code:string;label:string}[]>={
   paid:[{code:"in_progress",label:"Iniciar análise"},{code:"awaiting_client",label:"Aguardar informações do cliente"}],
   in_progress:[{code:"awaiting_client",label:"Aguardar cliente"},{code:"completed",label:"Concluir atendimento"}],
