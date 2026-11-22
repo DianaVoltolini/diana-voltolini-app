@@ -4,6 +4,7 @@ import {randomUUID} from "node:crypto";
 import {revalidatePath} from "next/cache";
 import {redirect} from "next/navigation";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
+import {normalizeFiscalWhatsapp} from "./whatsapp-format";
 
 const PUBLIC_PATH="/solicitar-analise-fiscal";
 function value(form:FormData,key:string,max:number):string{
@@ -18,13 +19,13 @@ export async function submitPublicFiscalAnalysisRequest(form:FormData){
  if(value(form,"website",200))redirect(PUBLIC_PATH+"?recebida=1");
  const name=value(form,"customer_name",180);
  const email=value(form,"customer_email",254).toLowerCase();
- const phone=value(form,"customer_phone",30);
+ const phone=normalizeFiscalWhatsapp(value(form,"customer_phone",30));
  const preferred=value(form,"preferred_contact",30);
  const question=value(form,"question",10000);
  const consent=value(form,"consent",10);
  if(name.length<2||name.length>180||
   !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254||
-  phone.length<8||phone.length>30||
+  phone===null||
   !["email","whatsapp"].includes(preferred)||
   question.length<10||question.length>10000||
   consent!=="yes")fail("campos");
