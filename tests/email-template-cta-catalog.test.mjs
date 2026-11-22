@@ -18,7 +18,7 @@ test("editor consulta CTAs ativos compartilhados com o Blog",()=>{
 test("modelo existente mantém destino e botão escolhido",()=>{
  assert.match(editor,/selected\?\.cta_url/);
  assert.match(editor,/selected\?\.cta_label/);
- assert.match(editor,/if\(savedUrl&&!matchingCta&&!matchingLegacy\)/);
+ assert.match(editor,/if\(savedUrl&&!matchingCta&&!matchingLanding&&!matchingLegacy\)/);
  assert.match(editor,/setCta\(chosen\.buttonLabel\)/);
 });
 test("servidor só aceita URL segura de CTA cadastrado, legado ou do modelo existente",()=>{
@@ -28,4 +28,21 @@ test("servidor só aceita URL segura de CTA cadastrado, legado ou do modelo exis
  assert.match(save,/previouslySaved=existing\?\.cta_url===cta_url/);
  assert.match(save,/u\.protocol==="https:"/);
  assert.match(save,/app\.dianavoltolini\.com\.br/);
+});
+
+test("landing pages publicadas aparecem no seletor sem duplicar CTA",()=>{
+ assert.match(page,/from\("marketing_landings"\)/);
+ assert.match(page,/id,title,slug,status,button_text/);
+ assert.match(editor,/landings\.filter\(l=>l\.status==="published"\)/);
+ assert.match(editor,/key:"landing:"\+l\.id/);
+ assert.match(editor,/cta_landing_id/);
+ assert.match(editor,/matchingLanding/);
+ assert.match(editor,/setCta\(chosen\.buttonLabel\)/);
+});
+test("servidor resolve CTA da landing publicada por ID e valida o destino",()=>{
+ assert.match(save,/selectedLandingCtaId/);
+ assert.match(save,/from\("marketing_landings"\)/);
+ assert.match(save,/\.eq\("id",selectedLandingCtaId\)\.eq\("status","published"\)/);
+ assert.match(save,/cta_url="https:\/\/dianavoltolini\.com\.br\/l\/"\+landingCta\.slug/);
+ assert.match(save,/if\(selectedCtaId&&selectedLandingCtaId\)/);
 });

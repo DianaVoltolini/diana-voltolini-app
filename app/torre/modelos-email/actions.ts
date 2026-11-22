@@ -13,9 +13,21 @@ export async function saveEmailTemplate(f:FormData){
   landing_id=value(f,"landing_id",50);
  let cta_label=value(f,"cta_label",80),cta_url=value(f,"cta_url",300);
  const selectedCtaId=value(f,"cta_id",40);
+ const selectedLandingCtaId=value(f,"cta_landing_id",40);
  const legacyDestinations=["https://dianavoltolini.com.br/blog","https://dianavoltolini.com.br/ibs-cbs-na-pratica","https://dianavoltolini.com.br/diagnostico-ibs-cbs","https://dianavoltolini.com.br/fiscal-na-pratica","https://dianavoltolini.com.br/produtos","https://dianavoltolini.com.br"];
  const db=getSupabaseAdmin();
- if(selectedCtaId){
+ if(selectedCtaId&&selectedLandingCtaId)redirect("/torre/modelos-email/editor?erro=cta");
+ if(selectedLandingCtaId){
+  // Resolver a landing pelo ID impede que o navegador envie URLs arbitrárias.
+  if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(selectedLandingCtaId))
+   redirect("/torre/modelos-email/editor?erro=cta");
+  const {data:landingCta,error:landingCtaError}=await db.from("marketing_landings")
+   .select("id,slug,status,button_text").eq("id",selectedLandingCtaId).eq("status","published").maybeSingle();
+  if(landingCtaError||!landingCta||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(landingCta.slug))
+   redirect("/torre/modelos-email/editor?erro=cta");
+  cta_url="https://dianavoltolini.com.br/l/"+landingCta.slug;
+  cta_label=(landingCta.button_text||"Acessar material gratuito").slice(0,80);
+ }else if(selectedCtaId){
   // A seleção de catálogo é validada e resolvida no servidor.
   // Nunca confiar no texto ou URL enviada pelo navegador.
   if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(selectedCtaId))
