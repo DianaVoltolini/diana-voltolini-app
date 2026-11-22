@@ -44,8 +44,7 @@ const errors:Record<string,string>={
  tipo:"Envie PDF, Word (.docx), JPG ou PNG.",
  storage:"Não foi possível armazenar o arquivo privado.",
  salvar_arquivo:"Não foi possível registrar o documento.",
- transicao:"Esta mudança de situação não é permitida.",
- conflito:"Outra atualização ocorreu. Atualize a tela e confira antes de continuar."
+ transicao:"Esta mudança de situação não é permitida."
 };
 export default async function FiscalAnalysisDetail({params,searchParams}:Props){
  await requireAdmin();
