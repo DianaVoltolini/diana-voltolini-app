@@ -14,7 +14,7 @@ test("CTA selecionado vincula nome, URL e texto ao mesmo ID",()=>{
  assert.match(editor,/url:c\.url,buttonLabel:c\.button_label,ctaId:c\.id/);
  assert.match(editor,/name="cta_id" value=\{catalogCtaId\}/);
  assert.match(editor,/setCta\(chosen\.buttonLabel\)/);
- assert.match(editor,/readOnly=\{Boolean\(catalogCtaId\)\}/);
+ assert.match(editor,/readOnly=\{Boolean\(catalogCtaId\|\|selectedLandingCtaId\)\}/);
  assert.match(editor,/href=\{url\}.*className=\{css\.mailButton\}/);
  assert.match(editor,/\{cta\}<\/a>/);
 });
