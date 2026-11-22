@@ -3,12 +3,14 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import Link from "next/link";
+import {claimPaidFiscalAnalyses} from "./claim-action";
 import css from "../../torre/comercio-v2/commercial.module.css";
 export const metadata: Metadata = { title:"Minhas Análises Fiscais | Diana Voltolini", robots:{index:false,follow:false} };
 export const dynamic="force-dynamic";
 type RequestRow={id:string;protocol:string|null;status:string;created_at:string;question:string};
 const statusText:Record<string,string>={paid:"Pagamento confirmado",in_progress:"Em análise",awaiting_client:"Informações necessárias",completed:"Concluída",cancelled:"Cancelada"};
-export default async function FiscalAnalysisCustomerPage(){
+export default async function FiscalAnalysisCustomerPage({searchParams}:{searchParams:Promise<{acesso?:string}>}){
+ const {acesso}=await searchParams;
  const auth=await createClient();
  const {data,error}=await auth.auth.getClaims();
  const uid=typeof data?.claims?.sub==="string"?data.claims.sub:null;
@@ -22,6 +24,16 @@ export default async function FiscalAnalysisCustomerPage(){
   <h1 className={css.title}>Minhas Análises Fiscais</h1>
   <p className={css.subtitle}>Consulte os atendimentos contratados. Consulte seus atendimentos, converse com a equipe e acompanhe documentos e entregas.</p>
   </div></header>
+  {acesso==="vinculado"&&<p className={css.message} role="status">Pagamento confirmado e atendimento vinculado à sua conta.</p>}
+  {acesso==="confirmacao"&&<p className={css.error} role="alert">Confirme seu e-mail de acesso antes de vincular um pagamento.</p>}
+  {acesso==="consulta"&&<p className={css.error} role="alert">Não foi possível conferir os pagamentos. Tente novamente.</p>}
+  {acesso==="nenhum"&&<p className={css.note} role="status">Nenhum pagamento novo foi encontrado para o e-mail confirmado desta conta. Se acabou de pagar, aguarde a confirmação financeira.</p>}
+  <section className={css.section}><h2>Vincular uma contratação</h2>
+   <p className={css.note}>Se contratou uma Análise Fiscal Individual pelo site, entre com o mesmo e-mail da contratação e confirme o pagamento para liberar seu atendimento nesta conta. Nenhuma cobrança é gerada aqui.</p>
+   <form action={claimPaidFiscalAnalyses}>
+    <button className={css.button} type="submit">Verificar pagamento confirmado</button>
+   </form>
+  </section>
   <section className={css.section}><h2>Meus atendimentos</h2>
   {queryError?<p className={css.error}>Não foi possível carregar seus atendimentos.</p>:
   !rows?.length?<p className={css.note}>Você ainda não possui análises fiscais individuais com pagamento confirmado.</p>:
