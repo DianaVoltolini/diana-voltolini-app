@@ -7,7 +7,6 @@ import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 const safe=(f:FormData,k:string,max=300)=>String(f.get(k)??"").trim().slice(0,max);
 export type LandingSaveState={status:"idle"|"error"|"success";message:string};
-export const initialLandingSaveState:LandingSaveState={status:"idle",message:""};
 export async function saveLandingWithFeedback(_previous:LandingSaveState,f:FormData):Promise<LandingSaveState>{
   await requireAdmin();
   const fail=(message:string):LandingSaveState=>({status:"error",message});
