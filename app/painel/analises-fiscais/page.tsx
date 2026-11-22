@@ -20,16 +20,16 @@ export default async function FiscalAnalysisCustomerPage(){
  return <main className={css.page}>
   <header className={css.header}><div><p className={css.eyebrow}>ÁREA DO CLIENTE · SERVIÇOS</p>
   <h1 className={css.title}>Minhas Análises Fiscais</h1>
-  <p className={css.subtitle}>Consulte os atendimentos contratados. A conversa e a entrega serão disponibilizadas após a integração do módulo.</p>
+  <p className={css.subtitle}>Consulte os atendimentos contratados. Consulte seus atendimentos, converse com a equipe e acompanhe documentos e entregas.</p>
   </div></header>
   <section className={css.section}><h2>Meus atendimentos</h2>
   {queryError?<p className={css.error}>Não foi possível carregar seus atendimentos.</p>:
   !rows?.length?<p className={css.note}>Você ainda não possui análises fiscais individuais com pagamento confirmado.</p>:
   <div className={css.grid}>{(rows as RequestRow[]).map(r=><article className={css.card} key={r.id}>
    <p className={css.status}>{statusText[r.status]??r.status}</p>
-   <h3>{r.protocol??"Análise fiscal"}</h3>
+   <h3><Link href={"/painel/analises-fiscais/"+r.id} className={css.link}>{r.protocol??"Análise fiscal"}</Link></h3>
    <p>{r.question.slice(0,200)}{r.question.length>200?"…":""}</p>
-   <small className={css.note}>Solicitada em {new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo"}).format(new Date(r.created_at))}</small>
+   <small className={css.note}>Solicitada em {new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo"}).format(new Date(r.created_at))}</small><p><Link className={css.link} href={"/painel/analises-fiscais/"+r.id}>Abrir atendimento</Link></p>
   </article>)}</div>}
   </section><Link className={css.secondary} href="/painel">Voltar à visão geral</Link>
  </main>;
