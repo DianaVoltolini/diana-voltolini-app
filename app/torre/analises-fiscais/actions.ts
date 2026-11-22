@@ -29,7 +29,7 @@ export async function saveFiscalAnalysisQuoteDraft(form:FormData){
  const days=Number(read(form,"delivery_business_days",5));
  if(!uuid.test(requestId))redirect("/torre/analises-fiscais?erro=solicitacao");
  if(scope.length<10||scope.length>10000||notes.length>3000||amountCents===null||
-    !Number.isSafeInteger(days)||days<1||days>90||!/^\d{4}-\d{2}-\d{2}$/.test(validity)){
+    !Number.isSafeInteger(days)||days<1||days>90){
   fail(requestId,"validacao");
  }
  // Valor provisório obrigatório pelo banco; a validade oficial começa no envio.
