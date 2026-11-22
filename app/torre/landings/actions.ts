@@ -1,47 +1,68 @@
 "use server";
 import {redirect} from "next/navigation";
 import {headers} from "next/headers";
-import {createHash} from "node:crypto";
+import {createHash, randomUUID} from "node:crypto";
 import {revalidatePath} from "next/cache";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 const safe=(f:FormData,k:string,max=300)=>String(f.get(k)??"").trim().slice(0,max);
-export async function saveLanding(f:FormData){
- await requireAdmin();
- const db=getSupabaseAdmin();
- const id=safe(f,"id",60),title=safe(f,"title",160),slug=safe(f,"slug",120).toLowerCase(),summary=safe(f,"summary",1000);
- const eyebrow=safe(f,"eyebrow",100)||"MATERIAL GRATUITO",button_text=safe(f,"button_text",100)||"Receber material gratuito",delivery_title=safe(f,"delivery_title",180)||"Seu material está pronto";
- const status=safe(f,"status",20);
- if(!title||!summary||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)||!["draft","published"].includes(status))redirect("/torre/landings?erro=validacao");
- const file=f.get("file");
- let file_path:string|undefined;
- if(file instanceof File&&file.size>0){
-  if(file.type!=="application/pdf"||file.size>10*1024*1024)redirect("/torre/landings?erro=pdf");
-  const {data:uploaded,error:upError}=await db.storage.from("marketing-deliveries").upload(`${crypto.randomUUID()}.pdf`,await file.arrayBuffer(),{contentType:"application/pdf",upsert:false});
-  if(upError||!uploaded)redirect("/torre/landings?erro=upload");
-  file_path=uploaded.path;
- }
- const cover=f.get("cover");
- let cover_path:string|undefined;
- if(cover instanceof File&&cover.size>0){
-  const types:Record<string,string>={"image/jpeg":"jpg","image/png":"png","image/webp":"webp","application/pdf":"pdf"};
-  const extension=types[cover.type];
-  if(!extension||cover.size>5*1024*1024)redirect("/torre/landings?erro=capa");
-  const {data:uploaded,error:upError}=await db.storage.from("marketing-deliveries").upload("covers/"+crypto.randomUUID()+"."+extension,await cover.arrayBuffer(),{contentType:cover.type,upsert:false});
-  if(upError||!uploaded)redirect("/torre/landings?erro=capa");
-  cover_path=uploaded.path;
- }
- const removeCover=f.get("remove_cover")==="yes";
- let previousPath:string|null=null;
- if(id){const {data:old}=await db.from("marketing_landings").select("file_path").eq("id",id).maybeSingle();previousPath=old?.file_path??null;}
- if(status==="published"&&!file_path&&!previousPath)redirect("/torre/landings?erro=arquivo");
- const payload={title,slug,summary,eyebrow,button_text,delivery_title,status,campaign_name:safe(f,"campaign_name",120)||null,benefit_1:safe(f,"benefit_1",160)||null,benefit_2:safe(f,"benefit_2",160)||null,benefit_3:safe(f,"benefit_3",160)||null,...(removeCover&&!cover_path?{cover_path:null}:{}),...(cover_path?{cover_path}:{}),updated_at:new Date().toISOString(),...(file_path?{file_path}:{})};
- const {error}=id?await db.from("marketing_landings").update(payload).eq("id",id):await db.from("marketing_landings").insert(payload);
- if(error)redirect("/torre/landings?erro=salvar");
- revalidatePath("/torre/landings");
- revalidatePath("/l/"+slug);
- redirect("/torre/landings?salvo=1");
+export type LandingSaveState={status:"idle"|"error"|"success";message:string};
+export const initialLandingSaveState:LandingSaveState={status:"idle",message:""};
+export async function saveLandingWithFeedback(_previous:LandingSaveState,f:FormData):Promise<LandingSaveState>{
+  await requireAdmin();
+  const fail=(message:string):LandingSaveState=>({status:"error",message});
+  const id=safe(f,"id",60),title=safe(f,"title",160),slug=safe(f,"slug",120).toLowerCase(),summary=safe(f,"summary",1000);
+  const eyebrow=safe(f,"eyebrow",100)||"MATERIAL GRATUITO";
+  const button_text=safe(f,"button_text",100)||"Receber material gratuito";
+  const delivery_title=safe(f,"delivery_title",180)||"Seu material está pronto";
+  const status=safe(f,"status",20);
+  if(!title||!summary||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)||!["draft","published"].includes(status))return fail("Confira os campos obrigatórios e o endereço da campanha. Seus dados foram mantidos.");
+  const cover=f.get("cover"),file=f.get("file");
+  const coverTypes:Record<string,string>={"image/jpeg":"jpg","image/png":"png","image/webp":"webp","application/pdf":"pdf"};
+  if(cover instanceof File&&cover.size>0&&(!coverTypes[cover.type]||cover.size>5*1024*1024))return fail("A capa deve ser PNG, JPG, WebP ou PDF e ter no máximo 5 MB. Escolha outro arquivo.");
+  if(file instanceof File&&file.size>0&&(file.type!=="application/pdf"||file.size>10*1024*1024))return fail("O material para entrega deve ser PDF e ter no máximo 10 MB.");
+  const db=getSupabaseAdmin();
+  let previousPath:string|null=null;
+  if(id){
+    const {data:old,error:lookupError}=await db.from("marketing_landings").select("file_path").eq("id",id).maybeSingle();
+    if(lookupError||!old)return fail("Não foi possível consultar a landing original. Tente novamente sem sair desta página.");
+    previousPath=old.file_path??null;
+  }
+  if(status==="published"&&!(file instanceof File&&file.size>0)&&!previousPath)return fail("Para publicar, selecione um PDF de entrega. Você também pode salvar como rascunho.");
+  let file_path:string|undefined,cover_path:string|undefined;
+  try{
+    if(file instanceof File&&file.size>0){
+      const {data,error}=await db.storage.from("marketing-deliveries").upload(`${randomUUID()}.pdf`,await file.arrayBuffer(),{contentType:"application/pdf",upsert:false});
+      if(error||!data){console.error("[landing-save] pdf upload failed",error);return fail("Não foi possível enviar o PDF. Confira o arquivo e tente novamente.");}
+      file_path=data.path;
+    }
+    if(cover instanceof File&&cover.size>0){
+      const {data,error}=await db.storage.from("marketing-deliveries").upload(`covers/${randomUUID()}.${coverTypes[cover.type]}`,await cover.arrayBuffer(),{contentType:cover.type,upsert:false});
+      if(error||!data){console.error("[landing-save] cover upload failed",error);return fail("Não foi possível enviar a imagem da capa. Confira o tamanho e o formato e tente novamente.");}
+      cover_path=data.path;
+    }
+    const payload={
+      title,slug,summary,eyebrow,button_text,delivery_title,status,
+      campaign_name:safe(f,"campaign_name",120)||null,
+      benefit_1:safe(f,"benefit_1",160)||null,
+      benefit_2:safe(f,"benefit_2",160)||null,
+      benefit_3:safe(f,"benefit_3",160)||null,
+      ...(f.get("remove_cover")==="yes"&&!cover_path?{cover_path:null}:{}),
+      ...(cover_path?{cover_path}:{}),
+      ...(file_path?{file_path}:{}),
+      updated_at:new Date().toISOString()
+    };
+    const {error}=id?await db.from("marketing_landings").update(payload).eq("id",id):await db.from("marketing_landings").insert(payload);
+    if(error){console.error("[landing-save] database failed",error);return fail(error.code==="23505"?"O endereço da campanha já está em uso. Escolha outro.":"Não foi possível salvar a landing. Seu conteúdo permanece no editor.");}
+    revalidatePath("/torre/landings");
+    revalidatePath("/l/"+slug);
+    return {status:"success",message:"Landing salva com sucesso."};
+  }catch(error){
+    console.error("[landing-save] unexpected error",error);
+    return fail("Ocorreu uma falha no servidor ao salvar. Tente novamente; os campos permanecem preenchidos.");
+  }
 }
+
 export async function captureLead(f:FormData){
  const slug=safe(f,"slug",120),name=safe(f,"name",120),email=safe(f,"email",254).toLowerCase(),interest=safe(f,"interest",90);
  if(safe(f,"website"))redirect("/l/"+slug+"?erro=validacao");
