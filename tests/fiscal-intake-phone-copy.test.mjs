@@ -14,7 +14,7 @@ test("WhatsApp brasileiro é formatado enquanto cliente digita",()=>{
  assert.match(input,/name="customer_phone"/);
  assert.match(input,/maxLength=\{16\}/);
  assert.match(input,/placeholder="\(47\) 9 9285-1601"/);
- assert.match(input,/pattern="\\\(\[0-9\]\{2\}\\\) 9 \[0-9\]\{4\}-\[0-9\]\{4\}"/);
+ assert.ok(input.includes(String.raw`pattern="\\([0-9]{2}\\) 9 [0-9]{4}-[0-9]{4}"`));
  assert.match(page,/<FiscalWhatsappInput\/>/);
 });
 test("servidor valida DDD + celular com nono dígito e padroniza para salvar",()=>{
