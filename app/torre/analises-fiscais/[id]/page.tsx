@@ -7,6 +7,7 @@ import {saveFiscalAnalysisQuoteDraft} from "../actions";
 import {sendFiscalAnalysisQuote} from "../send-quote-action";
 import {quoteUrl,whatsappQuoteUrl} from "@/lib/fiscal/analysis-quote-links";
 import css from "../../comercio-v2/commercial.module.css";
+import {fiscalProposalExpiresLabel} from "@/lib/fiscal/proposal-validity";
 
 export const metadata:Metadata={title:"Solicitação de Análise Fiscal | Torre"};
 export const dynamic="force-dynamic";
@@ -20,23 +21,22 @@ type Attachment={id:string;original_filename:string;size_bytes:number;created_at
 type Event={id:string;event_type:string;created_at:string};
 const money=(n:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(n/100);
 const date=(v:string)=>new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo",dateStyle:"short",timeStyle:"short"}).format(new Date(v));
-const dateInput=(v:string)=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(v));
 const errors:Record<string,string>={
- validacao:"Confira os campos do orçamento e informe um valor positivo.",
+ validacao:"Confira os campos do Proposta e informe um valor positivo.",
  data_invalida:"Informe uma data de validade válida.",
  validade_expirada:"A validade deve ser posterior a hoje.",
- situacao:"A situação atual não permite modificar o orçamento.",
+ situacao:"A situação atual não permite modificar o Proposta.",
  proposta_ativa:"Já existe uma proposta enviada ou aceita para esta solicitação.",
  consulta_orcamentos:"Não foi possível consultar as versões anteriores.",
- salvar:"Não foi possível salvar o orçamento.",
- atualizar_situacao:"Orçamento registrado, mas houve erro ao atualizar a situação. Confira o histórico.",
+ salvar:"Não foi possível salvar o Proposta.",
+ atualizar_situacao:"Proposta registrado, mas houve erro ao atualizar a situação. Confira o histórico.",
  conflito:"Outra versão foi salva. Atualize a tela e confira antes de continuar.",
  solicitacao:"Solicitação não encontrada.",
  envio_bloqueado:"Envio não habilitado até o checkout individual estar operacional.",
- envio_em_andamento:"Este orçamento já está sendo enviado ou já foi enviado.",
+ envio_em_andamento:"Este Proposta já está sendo enviado ou já foi enviado.",
  smtp:"Não foi possível enviar o e-mail. Consulte os registros de envio.",
  conferencia_envio:"O servidor aceitou o e-mail, mas houve falha ao registrar o envio. Verifique antes de reenviar.",
- prazo:"O prazo de validade do orçamento terminou.",
+ prazo:"O prazo de validade do Proposta terminou.",
  email:"O e-mail do solicitante precisa ser corrigido.",
  nao_encontrado:"Proposta não encontrada."
 };
@@ -68,13 +68,13 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
   <header className={css.header}>
    <div><p className={css.eyebrow}>TORRE DE CONTROLE · ANÁLISES FISCAIS</p>
     <h1 className={css.title}>Solicitação {request.protocol??request.id.slice(0,8)}</h1>
-    <p className={css.subtitle}>Avalie o pedido e prepare um orçamento individual, sem enviar antes da integração comercial.</p>
+    <p className={css.subtitle}>Avalie o pedido e prepare um Proposta individual, sem enviar antes da integração comercial.</p>
    </div><Link href="/torre/analises-fiscais" className={css.secondary}>Voltar às solicitações</Link>
   </header>
   <div className={css.banner}><strong>Atendimento em implantação</strong>
-   O orçamento pode ser salvo como rascunho. O envio por e-mail, a mensagem de WhatsApp e o checkout ainda não estão habilitados.
+   O Proposta pode ser salvo como rascunho. O envio por e-mail, a mensagem de WhatsApp e o checkout ainda não estão habilitados.
   </div>
-  {query.email==="aceito"&&<p className={css.message} role="status">Orçamento aceito pelo servidor de e-mail. O WhatsApp, quando escolhido, pode ser enviado manualmente.</p>}
+  {query.email==="aceito"&&<p className={css.message} role="status">Proposta aceito pelo servidor de e-mail. O WhatsApp, quando escolhido, pode ser enviado manualmente.</p>}
   {query.salvo==="1"&&<p className={css.message} role="status">Rascunho salvo. Nenhum e-mail ou WhatsApp foi enviado.</p>}
   {query.erro&&<p className={css.error} role="alert">{errors[query.erro]??"Não foi possível concluir a ação."}</p>}
   <div className={css.grid}>
@@ -94,7 +94,7 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
    </section>
   </div>
   <section className={css.section}>
-   <h2>Preparar orçamento</h2>
+   <h2>Preparar Proposta</h2>
    {!canDraft?<p className={css.note}>Esta solicitação não permite novos rascunhos no momento. Uma proposta enviada ou aceita não pode ter o valor alterado.</p>:
    <form action={saveFiscalAnalysisQuoteDraft} className={css.form}>
     <input type="hidden" name="request_id" value={request.id}/>
@@ -102,7 +102,7 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
     <div className={css.formRowTriple}>
      <label>Valor (R$)<input name="amount" inputMode="decimal" placeholder="47,00" required defaultValue={inputDefault?String(inputDefault.amount_cents/100).replace(".",","):""}/></label>
      <label>Prazo (dias úteis)<input type="number" min="1" max="90" name="delivery_business_days" required defaultValue={inputDefault?.delivery_business_days??2}/></label>
-     <label>Validade da proposta<input type="date" name="valid_until" required defaultValue={inputDefault?dateInput(inputDefault.valid_until):undefined}/></label>
+     <div style={{display:"grid",alignContent:"center",gap:7}}><strong style={{fontSize:13,color:"#102033"}}>Validade da Proposta</strong><span className={css.note}>3 dias corridos (72 horas) a partir do envio</span></div>
     </div>
     <label>Observações (opcional)<textarea rows={3} name="notes" maxLength={3000} defaultValue={inputDefault?.notes??""} placeholder="Condições, limites ou documentos ainda necessários."/></label>
     <div className={css.actions}><button type="submit" className={css.button}>Salvar rascunho</button><span className={css.note}>Salvar não envia a proposta.</span></div>
@@ -110,20 +110,20 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
   </section>
   <section className={css.section}><h2>Envio da proposta</h2>
    {!latest||latest.status!=="draft"?<p className={css.note}>Nenhum rascunho aguardando envio.</p>:
-    !sendAvailable?<p className={css.note}>O envio por e-mail só será habilitado após o checkout de preço individual estar integrado e homologado.</p>:
+    !sendAvailable?<p className={css.note}>O envio da Proposta será habilitado após a homologação do pagamento individual no Bling.</p>:
     <form action={sendFiscalAnalysisQuote} className={css.form}>
      <input type="hidden" name="request_id" value={request.id}/>
      <input type="hidden" name="quote_id" value={latest.id}/>
-     <p className={css.note}>Ao enviar, o orçamento será encaminhado obrigatoriamente para {request.customer_email}.</p>
-     <button className={css.button} type="submit">Enviar orçamento por e-mail</button>
+     <p className={css.note}>Ao enviar, o Proposta será encaminhado obrigatoriamente para {request.customer_email}.</p>
+     <button className={css.button} type="submit">Enviar Proposta por e-mail</button>
     </form>}
    {whatsapp&&<div className={css.actions}><a className={css.button} href={whatsapp} target="_blank" rel="noopener noreferrer">Enviar WhatsApp</a><span className={css.note}>Abre a mensagem pronta; confirme o envio no WhatsApp.</span></div>}
   </section>
-  <section className={css.section}><h2>Versões de orçamento</h2>
-   {qs.error?<p className={css.error}>Não foi possível consultar os orçamentos.</p>:
-   quoteList.length===0?<p className={css.note}>Nenhum orçamento preparado.</p>:
+  <section className={css.section}><h2>Versões de Proposta</h2>
+   {qs.error?<p className={css.error}>Não foi possível consultar os Propostas.</p>:
+   quoteList.length===0?<p className={css.note}>Nenhum Proposta preparado.</p>:
    <div className={css.tableScroll}><table className={css.table}><thead><tr><th>Versão</th><th>Valor</th><th>Prazo</th><th>Validade</th><th>Status</th></tr></thead>
-   <tbody>{quoteList.map(q=><tr key={q.id}><td>v{q.version}</td><td>{money(q.amount_cents)}</td><td>{q.delivery_business_days} dias úteis</td><td>{dateInput(q.valid_until)}</td><td>{q.status==="draft"?"Rascunho":q.status}</td></tr>)}</tbody></table></div>}
+   <tbody>{quoteList.map(q=><tr key={q.id}><td>v{q.version}</td><td>{money(q.amount_cents)}</td><td>{q.delivery_business_days} dias úteis</td><td>{q.status==="draft"?"3 dias após envio":fiscalProposalExpiresLabel(q.valid_until)}</td><td>{q.status==="draft"?"Rascunho":q.status}</td></tr>)}</tbody></table></div>}
   </section>
   <div className={css.grid}>
    <section className={css.section}><h2>Documentos anexados</h2>
