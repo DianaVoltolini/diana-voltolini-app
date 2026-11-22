@@ -1,7 +1,8 @@
 "use client";
-import {useState,useRef,useEffect} from "react";
+import {useState,useRef,useEffect,useActionState} from "react";
 import Link from "next/link";
-import {saveEmailTemplate} from "./actions";
+import {useRouter} from "next/navigation";
+import {saveEmailTemplate,type EmailTemplateSaveState} from "./actions";
 import {saveTransactionalEmail} from "./transacionais/actions";
 import css from "./template-editor.module.css";
 type Template={audience_kind?:string|null;id:string;name:string;subject:string;body:string;kind:string;active:boolean;description:string|null;interest:string|null;landing_id:string|null;cta_label:string|null;cta_url:string|null;auto_enabled?:boolean;auto_include_existing?:boolean};
@@ -19,6 +20,9 @@ const starter="Olá, {{nome}}!\n\nQue bom ter você por aqui!\n\nMeu objetivo é
 const buttonPattern=/\[BOTAO:\s*([^\]\n|]+?)\s*\|\s*(https:\/\/[^\]\s]+)\]/g;
 export default function TemplateEditor({selected,interests,landings,ctas,defaultAudience="leads"}:{selected:Template|null;interests:string[];landings:Landing[];ctas:CatalogCta[];defaultAudience?:string}){
  const transactional=selected?.kind==="transactional";
+ const router=useRouter();
+ const [saveState,saveAction,savePending]=useActionState<EmailTemplateSaveState,FormData>(saveEmailTemplate,{status:"idle",message:""});
+ useEffect(()=>{if(!selected&&saveState.status==="success"&&saveState.savedId)router.replace("/torre/modelos-email/editor?editar="+encodeURIComponent(saveState.savedId));},[saveState.status,saveState.savedId,selected,router]);
  // O identificador do CTA (não apenas a URL) mantém nome, botão e destino juntos.
  // URLs podem existir tanto no catálogo quanto na lista de destinos tradicionais.
  const destinations=[
@@ -56,7 +60,7 @@ export default function TemplateEditor({selected,interests,landings,ctas,default
  const [sendType,setSendType]=useState<"automatic"|"manual">(selected?.auto_enabled||selected?.kind==="welcome"?"automatic":"manual");
  const bodyRef=useRef<HTMLTextAreaElement>(null);
  useEffect(()=>{const el=bodyRef.current;if(el){el.style.height="auto";el.style.height=Math.max(320,el.scrollHeight)+"px"}},[body]);
- return <form action={transactional?saveTransactionalEmail:saveEmailTemplate} className={css.grid}>
+ return <form action={transactional?saveTransactionalEmail:saveAction} className={css.grid}>
   <input type="hidden" name="id" value={selected?.id??""}/>
   <input type="hidden" name="audience_kind" value={audience}/>
   <input type="hidden" name="kind" value={source==="home"?"welcome":"manual"}/>
@@ -147,7 +151,8 @@ export default function TemplateEditor({selected,interests,landings,ctas,default
     </div>
    </div>}
    {transactional?<p style={{fontSize:13,color:"#607184"}}>O link de cobrança e o link de acesso são incluídos pelo sistema conforme o produto. Variáveis disponíveis: {"{{produto}}"}, {"{{nome}}"}, {"{{valor}}"}, {"{{forma_pagamento}}"} e {"{{situacao_encontro}}"}.</p>:<label className={css.checkbox}><input type="checkbox" checked={active} onChange={e=>setActive(e.target.checked)}/> Modelo disponível para seleção</label>}
-   <div className={css.buttons}><button type="submit">Salvar modelo</button><Link href="/torre/modelos-email" className={css.backButton}>Voltar</Link></div>
+   {!transactional&&saveState.status!=="idle"&&<p role={saveState.status==="error"?"alert":"status"} aria-live="polite" style={{border:"1px solid "+(saveState.status==="error"?"#e7b6b6":"#b4d7c3"),background:saveState.status==="error"?"#fff7f7":"#f1faf4",color:saveState.status==="error"?"#9f2424":"#17613a",borderRadius:8,padding:"12px 14px",lineHeight:1.5}}>{saveState.message}</p>}
+   <div className={css.buttons}><button type="submit" disabled={savePending}>{savePending?"Salvando...":"Salvar modelo"}</button><Link href="/torre/modelos-email" className={css.backButton}>Voltar</Link></div>
   </section>
   <aside className={css.previewPanel}>
    <div className={css.previewHeader}><span className={css.previewTitle}>04 · VISUALIZAÇÃO</span><p>O resultado aparece ao lado enquanto você escreve.</p></div>
