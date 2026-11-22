@@ -5,7 +5,7 @@ import {saveEmailTemplate} from "./actions";
 import {saveTransactionalEmail} from "./transacionais/actions";
 import css from "./template-editor.module.css";
 type Template={audience_kind?:string|null;id:string;name:string;subject:string;body:string;kind:string;active:boolean;description:string|null;interest:string|null;landing_id:string|null;cta_label:string|null;cta_url:string|null;auto_enabled?:boolean;auto_include_existing?:boolean};
-type Landing={id:string;title:string};
+type Landing={id:string;title:string;slug:string;status:string;button_text:string|null};
 type CatalogCta={id:string;name:string;button_label:string;url:string;active:boolean};
 const links=[
  ["Blog Fiscal","https://dianavoltolini.com.br/blog"],
@@ -22,16 +22,19 @@ export default function TemplateEditor({selected,interests,landings,ctas,default
  // O identificador do CTA (não apenas a URL) mantém nome, botão e destino juntos.
  // URLs podem existir tanto no catálogo quanto na lista de destinos tradicionais.
  const destinations=[
-  ...links.map(([label,url])=>({key:"legacy:"+url,label,url,buttonLabel:"Acessar "+label,ctaId:""})),
+  ...links.map(([label,url])=>({key:"legacy:"+url,label,url,buttonLabel:"Acessar "+label,ctaId:"",landingId:""})),
   ...ctas.filter(c=>c.active).map(c=>({key:"cta:"+c.id,label:c.name.startsWith("CTA — ")?
-   c.name:"CTA — "+c.name,url:c.url,buttonLabel:c.button_label,ctaId:c.id}))
+   c.name:"CTA — "+c.name,url:c.url,buttonLabel:c.button_label,ctaId:c.id,landingId:""})),
+  ...landings.filter(l=>l.status==="published").map(l=>({key:"landing:"+l.id,label:"Landing — "+l.title,
+   url:"https://dianavoltolini.com.br/l/"+l.slug,buttonLabel:(l.button_text||"Acessar material gratuito").slice(0,80),ctaId:"",landingId:l.id}))
  ];
  const savedUrl=selected?.cta_url??"";
  const matchingCta=ctas.find(c=>c.active&&c.url===savedUrl&&c.button_label===selected?.cta_label);
- const matchingLegacy=destinations.find(d=>!d.ctaId&&d.url===savedUrl);
- const startingKey=matchingCta?"cta:"+matchingCta.id:matchingLegacy?.key??(savedUrl?"saved":"legacy:"+links[0][1]);
- if(savedUrl&&!matchingCta&&!matchingLegacy)
-  destinations.push({key:"saved",label:"Destino salvo neste modelo",url:savedUrl,buttonLabel:selected?.cta_label??"Acessar",ctaId:""});
+ const matchingLanding=destinations.find(d=>d.landingId&&d.url===savedUrl);
+ const matchingLegacy=destinations.find(d=>!d.ctaId&&!d.landingId&&d.url===savedUrl);
+ const startingKey=matchingCta?"cta:"+matchingCta.id:matchingLanding?.key??matchingLegacy?.key??(savedUrl?"saved":"legacy:"+links[0][1]);
+ if(savedUrl&&!matchingCta&&!matchingLanding&&!matchingLegacy)
+  destinations.push({key:"saved",label:"Destino salvo neste modelo",url:savedUrl,buttonLabel:selected?.cta_label??"Acessar",ctaId:"",landingId:""});
 
  const [audience,setAudience]=useState(selected?.audience_kind??defaultAudience);
  const [name,setName]=useState(selected?.name??"");
@@ -43,6 +46,7 @@ export default function TemplateEditor({selected,interests,landings,ctas,default
  const [cta,setCta]=useState(matchingCta?.button_label??selected?.cta_label??"Conhecer o Blog Fiscal");
  const selectedDestination=destinations.find(d=>d.key===destinationKey);
  const catalogCtaId=selectedDestination?.ctaId??"";
+ const selectedLandingCtaId=selectedDestination?.landingId??"";
  const [interest,setInterest]=useState(selected?.interest??"");
  const [landing,setLanding]=useState(selected?.landing_id??"");
  const [active,setActive]=useState(selected?.active??false);
@@ -126,6 +130,7 @@ export default function TemplateEditor({selected,interests,landings,ctas,default
     <strong>CTA — Botão de acesso</strong>
     <div className={css.duo}>
      <input type="hidden" name="cta_id" value={catalogCtaId}/>
+     <input type="hidden" name="cta_landing_id" value={selectedLandingCtaId}/>
      <input type="hidden" name="cta_url" value={url}/>
      <label>Destino<select value={destinationKey} onChange={e=>{
       const chosen=destinations.find(d=>d.key===e.target.value);
@@ -135,8 +140,9 @@ export default function TemplateEditor({selected,interests,landings,ctas,default
       setCta(chosen.buttonLabel);
      }}>{destinations.map(d=><option key={d.key} value={d.key}>{d.label}</option>)}</select></label>
      <label>Texto do botão<input name="cta_label" required maxLength={80} value={cta}
-       readOnly={Boolean(catalogCtaId)} onChange={e=>setCta(e.target.value)}/>
+       readOnly={Boolean(catalogCtaId||selectedLandingCtaId)} onChange={e=>setCta(e.target.value)}/>
        {catalogCtaId&&<small>Texto definido no cadastro do CTA. Para alterá-lo, edite o CTA na Torre.</small>}
+       {selectedLandingCtaId&&<small>Texto definido na landing page. Para alterá-lo, edite a landing na Torre.</small>}
      </label>
     </div>
    </div>}
