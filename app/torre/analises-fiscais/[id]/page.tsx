@@ -39,7 +39,7 @@ const errors:Record<string,string>={
  atualizar_situacao:"Proposta registrada, mas houve erro ao atualizar a situação. Confira o histórico.",
  conflito:"Outra versão foi salva. Atualize a tela e confira antes de continuar.",
  solicitacao:"Solicitação não encontrada.",
- envio_bloqueado:"Envio não habilitado até o checkout individual estar operacional.",
+ envio_bloqueado:"O envio de Propostas está suspenso pela configuração administrativa.",
  envio_em_andamento:"Esta Proposta já está sendo enviada ou já foi enviada.",
  smtp:"Não foi possível enviar o e-mail. Consulte os registros de envio.",
  conferencia_envio:"O servidor aceitou o e-mail, mas houve falha ao registrar o envio. Verifique antes de reenviar.",
@@ -86,7 +86,10 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
   file.uploaded_by_role==="admin"&&file.visible_to_client&&[
    "application/pdf","application/vnd.openxmlformats-officedocument.wordprocessingml.document"
   ].includes(file.media_type)));
- const sendAvailable=process.env.FISCAL_ANALYSIS_QUOTE_EMAIL_ENABLED==="1"&&process.env.FISCAL_ANALYSIS_VARIABLE_CHECKOUT_ENABLED==="1";
+ const sendBlocked=process.env.FISCAL_ANALYSIS_QUOTE_EMAIL_ENABLED==="0";
+ const tokenReady=Boolean(process.env.FISCAL_ANALYSIS_QUOTE_TOKEN_SECRET&&process.env.FISCAL_ANALYSIS_QUOTE_TOKEN_SECRET.length>=32);
+ const smtpReady=Boolean(process.env.SMTP_HOST&&process.env.SMTP_USER&&process.env.SMTP_PASS);
+ const sendAvailable=!sendBlocked&&tokenReady&&smtpReady;
  const whatsapp=latest?.status==="sent"&&latest.email_sent_at&&request.preferred_contact==="whatsapp"
   ? whatsappQuoteUrl(request.customer_phone,request.customer_name,request.protocol??request.id.slice(0,8),quoteUrl(latest.id,latest.version))
   : null;
@@ -94,11 +97,11 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
   <header className={css.header}>
    <div><p className={css.eyebrow}>TORRE DE CONTROLE · ANÁLISES FISCAIS</p>
     <h1 className={css.title}>Solicitação {request.protocol??request.id.slice(0,8)}</h1>
-    <p className={css.subtitle}>Avalie o pedido e prepare uma Proposta individual, sem enviar antes da integração comercial.</p>
+    <p className={css.subtitle}>Avalie a solicitação, prepare a Proposta individual e envie ao cliente para análise, sem gerar cobrança.</p>
    </div><Link href="/torre/analises-fiscais" className={css.secondary}>Voltar às solicitações</Link>
   </header>
-  <div className={css.banner}><strong>Atendimento em implantação</strong>
-   A Proposta pode ser salva como rascunho. O envio por e-mail, a mensagem de WhatsApp e o checkout ainda não estão habilitados.
+  <div className={css.banner}><strong>Proposta e contratação são etapas separadas</strong>
+   O envio por e-mail apenas disponibiliza a Proposta ao cliente. Nenhuma cobrança é gerada neste momento. A contratação financeira será iniciada somente quando o cliente aprovar e o checkout estiver habilitado.
   </div>
   {query.email==="aceito"&&<p className={css.message} role="status">Proposta aceita pelo servidor de e-mail. O WhatsApp, quando escolhido, pode ser enviado manualmente.</p>}
   {(query.mensagem==="1"||query.arquivo==="1"||query.situacao==="1")&&<p className={css.message} role="status">Operação registrada com sucesso.</p>}
@@ -137,11 +140,11 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
   </section>
   <section className={css.section}><h2>Envio da proposta</h2>
    {!latest||latest.status!=="draft"?<p className={css.note}>Nenhum rascunho aguardando envio.</p>:
-    !sendAvailable?<p className={css.note}>O envio da Proposta será habilitado após a homologação do pagamento individual no Bling.</p>:
+    !sendAvailable?<p className={css.note}>O envio depende apenas da configuração de e-mail e do link seguro da Proposta, não da integração financeira. {!tokenReady?"Configure o segredo do link de Proposta. ":null}{!smtpReady?"Confira as credenciais SMTP. ":null}{sendBlocked?"O envio foi suspenso pela configuração administrativa.":null}</p>:
     <form action={sendFiscalAnalysisQuote} className={css.form}>
      <input type="hidden" name="request_id" value={request.id}/>
      <input type="hidden" name="quote_id" value={latest.id}/>
-     <p className={css.note}>Ao enviar, a Proposta será encaminhada obrigatoriamente para {request.customer_email}.</p>
+     <p className={css.note}>A Proposta será enviada a {request.customer_email}, com validade de 3 dias corridos a partir do envio. O cliente poderá consultar o escopo, valor e prazo; nenhuma cobrança será gerada agora.</p>
      <button className={css.button} type="submit">Enviar Proposta por e-mail</button>
     </form>}
    {whatsapp&&<div className={css.actions}><a className={css.button} href={whatsapp} target="_blank" rel="noopener noreferrer">Enviar WhatsApp</a><span className={css.note}>Abre a mensagem pronta; confirme o envio no WhatsApp.</span></div>}
