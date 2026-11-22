@@ -1,3 +1,4 @@
+import "./email-template-save-feedback.test.mjs";
 // tests/email-template-cta-catalog.test.mjs
 import test from "node:test";
 import assert from "node:assert/strict";
