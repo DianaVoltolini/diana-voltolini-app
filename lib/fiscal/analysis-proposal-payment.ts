@@ -25,7 +25,7 @@ export async function getFiscalProposalPayment(quote:{
  if(!metadata||typeof metadata!=="object"||Array.isArray(metadata))return empty;
  const meta=metadata as Record<string,unknown>;
  if(meta.fiscal_analysis_quote_id!==quote.id||
-    meta.fiscal_analysis_request_id!==quote.request_id||
+    typeof meta.fiscal_analysis_quote_version!=="string"||
     order.amount_cents!==quote.amount_cents)return empty;
  if(order.paid_at||order.status==="paid")return {state:"paid",method:null,url:null,dueDate:null};
  if(order.status!=="pending")return empty;
