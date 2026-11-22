@@ -2,11 +2,11 @@ import type {Metadata} from "next";
 import {notFound} from "next/navigation";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 import {moneyBR} from "@/lib/fiscal/analysis-quote-links";
+import {fiscalProposalExpiresLabel} from "@/lib/fiscal/proposal-validity";
 
-export const metadata:Metadata={title:"Orçamento individual | Diana Voltolini",robots:{index:false,follow:false}};
+export const metadata:Metadata={title:"Proposta individual | Diana Voltolini",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
 const hasExpired=(value:string)=>new Date(value).getTime()<=Date.now();
-const dateBR=(date:string)=>new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo",dateStyle:"short"}).format(new Date(date));
 export default async function FiscalAnalysisQuotePublic({params}:{params:Promise<{token:string}>}){
  const {token}=await params;
  if(!/^[a-f0-9]{64}$/.test(token))notFound();
@@ -23,7 +23,7 @@ export default async function FiscalAnalysisQuotePublic({params}:{params:Promise
   <article style={{margin:"0 auto",maxWidth:740,background:"#fff",border:"1px solid #d6e0e8",borderRadius:12,overflow:"hidden"}}>
    <header style={{borderTop:"5px solid #c9a227",padding:"28px 32px",borderBottom:"1px solid #d6e0e8"}}>
     <p style={{fontSize:12,fontWeight:800,color:"#997100",letterSpacing:".1em"}}>DIANA VOLTOLINI · INTELIGÊNCIA FISCAL</p>
-    <h1 style={{fontFamily:"Georgia,serif",fontSize:30,lineHeight:1.2}}>Seu orçamento de Análise Fiscal Individual</h1>
+    <h1 style={{fontFamily:"Georgia,serif",fontSize:30,lineHeight:1.2}}>Sua Proposta de Análise Fiscal Individual</h1>
     <p style={{color:"#536372"}}>Solicitação {req?.protocol??"individual"} · Versão {q.version}</p>
    </header>
    <div style={{padding:"28px 32px",lineHeight:1.75}}>
@@ -32,15 +32,15 @@ export default async function FiscalAnalysisQuotePublic({params}:{params:Promise
     <div style={{background:"#f7f9fb",padding:20,borderRadius:8,borderLeft:"3px solid #c9a227"}}>
      <p style={{margin:0,color:"#536372"}}>Investimento</p>
      <p style={{fontSize:30,fontWeight:800,margin:"3px 0"}}>{moneyBR(q.amount_cents)}</p>
-     <p style={{margin:"4px 0"}}>Prazo de entrega: {q.delivery_business_days} dia(s) útil(eis), conforme condições do orçamento.</p>
-     <p style={{margin:"4px 0"}}>Proposta válida até {dateBR(q.valid_until)}.</p>
+     <p style={{margin:"4px 0"}}>Prazo de entrega: {q.delivery_business_days} dia(s) útil(eis), conforme condições da Proposta.</p>
+     <p style={{margin:"4px 0"}}>Proposta válida até {fiscalProposalExpiresLabel(q.valid_until)} (horário de Brasília).</p>
     </div>
     {process.env.FISCAL_ANALYSIS_VARIABLE_CHECKOUT_ENABLED==="1"?
      <div style={{marginTop:28,textAlign:"center"}}>
       <a href={"https://dianavoltolini.com.br/checkout/ANALISE-FISCAL-INDIVIDUAL?proposta="+encodeURIComponent(token)}
         referrerPolicy="no-referrer" rel="noreferrer noopener"
         style={{display:"inline-block",maxWidth:"100%",background:"#c9a227",padding:"16px 25px",borderRadius:7,textDecoration:"none",fontWeight:800,color:"#102033"}}>
-        Aprovar orçamento e contratar
+        Aprovar Proposta e contratar
       </a>
       <p style={{fontSize:12,color:"#536372",marginTop:12}}>Você será direcionado ao checkout com o valor deste orçamento. O atendimento será liberado após a confirmação do pagamento.</p>
      </div>
