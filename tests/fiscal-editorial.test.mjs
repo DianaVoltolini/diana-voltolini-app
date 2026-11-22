@@ -35,7 +35,9 @@ test("preserva todos os tokens e os dados de um estudo de caso",()=>{
  assert.ok(example.tokens.some(x=>x.type==="table"));
  assert.ok(example.tokens.some(x=>x.type==="heading"&&x.depth===4));
  assert.equal(conclusion.tokens.filter(x=>x.type==="paragraph").length,2);
- assert.deepEqual(groups.flatMap(g=>g.tokens),tokens);
+ const flatten=groups.flatMap(g=>g.tokens);
+ assert.equal(flatten.length,tokens.length);
+ assert.ok(flatten.every((token,index)=>token===tokens[index]));
 });
 test("prévia, assinantes e blog usam composição de seção",()=>{
  const renderer=read("components/fiscal-rich-text.tsx");
