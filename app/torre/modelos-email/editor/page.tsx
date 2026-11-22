@@ -10,7 +10,7 @@ export default async function EmailTemplateEditor({searchParams}:{searchParams:P
  await requireAdmin();const params=await searchParams;const db=getSupabaseAdmin();
  const [{data:selected,error},{data:landings},{data:interestRows},{data:ctaRows,error:ctaError}]=await Promise.all([
  params.editar?db.from("marketing_email_templates").select("id,name,description,subject,body,kind,active,interest,landing_id,cta_label,cta_url,auto_enabled,auto_include_existing,audience_kind").eq("id",params.editar).maybeSingle():Promise.resolve({data:null,error:null}),
- db.from("marketing_landings").select("id,title").order("created_at",{ascending:false}).limit(100),
+ db.from("marketing_landings").select("id,title,slug,status,button_text").order("created_at",{ascending:false}).limit(500),
  db.from("marketing_leads").select("interest").not("interest","is",null).limit(2000),
  db.from("fiscal_ctas").select("id,name,button_label,url,active").eq("active",true).order("name").limit(500)
  ]);
