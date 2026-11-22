@@ -165,6 +165,20 @@
 .reader .block .paragraph:last-child{margin-bottom:0}
 @media(max-width:640px){.reader .markdownSegment h2.heading{font-size:24px}.reader .markdownSegment h3.heading{font-size:21px}}
 
+/* Blog público: integra o mesmo parser GFM com estética editorial. */
+.editorial .paragraph{color:#34465a;line-height:1.85;margin-bottom:22px}
+.editorial>.markdownSegment>.paragraph:first-child{font-size:18px;color:#253e54;line-height:1.8}
+.editorial .heading{font-family:Georgia,serif;color:#102033;scroll-margin-top:98px}
+.editorial h3.heading{font-size:clamp(24px,2.3vw,29px);padding-top:24px;margin-top:42px;position:relative;border-top:0}
+.editorial h3.heading::before{content:"";position:absolute;top:0;left:0;height:3px;width:47px;background:#c9a227}
+.editorial h4.heading{border-left:3px solid #c9a227;padding-left:14px}
+.editorial .table thead th{background:#102b48;color:#fff}
+.editorial .list{background:#f7f9fc;border:1px solid #e3e9f1;border-radius:9px;padding:14px 18px 13px 40px;margin:20px 0 25px}
+.editorial .list li>p{margin:0 0 7px}
+.editorial .quote{border-left:4px solid #c9a227;background:#f8f5ec;padding:18px 22px}
+.editorial .block{margin:28px 0}
+@media(max-width:680px){.editorial>.markdownSegment>.paragraph:first-child{font-size:16px}.editorial h3.heading{font-size:22px}}
+
 /* Blocos editoriais legados suportados pelo mesmo motor Markdown. */
 .reader .importante{background:#faf7eb;border-left:4px solid #c9a227}
 .reader .resumo{background:#f0f5f6;border-left:4px solid #6c939c}
@@ -201,3 +215,136 @@
 .reader ul.taskList>li.taskItem>ul,
 .reader ul.taskList>li.taskItem>ol{grid-column:2;min-width:0}
 @media(max-width:640px){.reader ul.taskList{padding:9px 13px!important}}
+
+
+/* Distinct editorial treatments inferred from semantic Markdown headings.
+   Only headings whose text declares a specific role receive special treatment. */
+.editorial .headingExample{
+ background:#f3f7fb;
+ border:1px solid #d9e3ec;
+ border-top:3px solid #c9a227;
+ border-radius:10px 10px 0 0;
+ padding:21px 24px 17px!important;
+ margin-bottom:0!important;
+}
+.editorial .headingExample::before{display:none!important}
+.editorial .headingExample + .paragraph{
+ background:#f3f7fb;
+ border:1px solid #d9e3ec;
+ border-top:0;
+ border-radius:0 0 10px 10px;
+ padding:12px 24px 22px!important;
+ margin-top:0!important;
+}
+.editorial .headingConclusion{
+ background:#102033;
+ color:#fff!important;
+ border:0;
+ border-top:3px solid #c9a227!important;
+ padding:19px 24px!important;
+ border-radius:10px 10px 0 0;
+ margin-bottom:0!important;
+}
+.editorial .headingConclusion::before{display:none!important}
+.editorial .headingConclusion + .paragraph{
+ background:#f2f6fa;
+ border:1px solid #d9e3ec;
+ border-top:0;
+ border-radius:0 0 10px 10px;
+ margin-top:0!important;
+ padding:18px 24px 21px!important;
+}
+.editorial .headingProcedure{
+ border-left:4px solid #c9a227;
+ padding-left:20px!important;
+}
+.editorial .headingProcedure::before{left:20px}
+.editorial .headingAttention{
+ color:#6c4f12;
+ border-left:4px solid #b78d2b;
+ background:#faf8f1;
+ padding:17px 20px!important;
+ border-radius:0 8px 8px 0;
+}
+.editorial .headingAttention::before{display:none!important}
+@media(max-width:680px){
+ .editorial .headingExample,.editorial .headingConclusion{padding:16px!important}
+ .editorial .headingExample + .paragraph,.editorial .headingConclusion + .paragraph{padding:12px 16px 17px!important}
+ .editorial .headingProcedure{padding-left:13px!important}
+ .editorial .headingAttention{padding:14px!important}
+}
+
+
+/* Full-section editorial composition: every paragraph, list, table, and deeper
+   subsection stays in the same semantic block until the next peer heading. */
+.editorial .editorialSection{
+ margin:35px 0 38px;
+ padding:25px 29px 27px;
+ border:1px solid #dbe4ee;
+ border-radius:12px;
+ break-inside:avoid-page;
+ min-width:0;
+}
+.editorial .editorialSection>*:last-child,
+.editorial .editorialSection> .paragraph:last-child{margin-bottom:0!important}
+.editorial .editorialSection .heading{
+ margin-top:20px!important;
+ padding-top:0!important;
+ border:0!important;
+ background:transparent;
+ color:#102033!important;
+ border-radius:0;
+}
+.editorial .editorialSection>.heading:first-child{
+ margin:0 0 18px!important;
+ padding:0 0 13px!important;
+ font-size:clamp(21px,2.1vw,26px);
+ border-bottom:1px solid #d9e3ed!important;
+}
+.editorial .editorialSection>.heading:first-child::before{content:none!important;display:none!important}
+.editorial .editorialSection .heading + .paragraph{
+ margin:0 0 19px!important;
+ border:0!important;
+ padding:0!important;
+ background:transparent!important;
+ border-radius:0!important;
+ color:#34465a!important;
+ font-size:16px;
+}
+.editorial .sectionExample{
+ background:#f4f8fc;
+ border-top:3px solid #c9a227;
+}
+.editorial .sectionExample .list{background:#fff}
+.editorial .sectionExample .tableWrap{background:#fff}
+.editorial .sectionConclusion{
+ background:#f2f6fa;
+ border-top:3px solid #c9a227;
+}
+.editorial .sectionConclusion>.heading:first-child{
+ background:#102033!important;
+ color:#fff!important;
+ margin:-25px -29px 22px!important;
+ padding:20px 29px!important;
+ border-radius:9px 9px 0 0!important;
+ border-bottom:0!important;
+}
+.editorial .sectionProcedure{
+ background:#fff;
+ border-left:4px solid #c9a227;
+}
+.editorial .sectionAttention{
+ background:#faf7ed;
+ border-left:4px solid #b78d2b;
+}
+.editorial .editorialSection .paragraph{max-width:80ch}
+.editorial .editorialSection .list{margin:14px 0 20px}
+.editorial .editorialSection .tableWrap{margin:17px 0 23px}
+@media(max-width:680px){
+ .editorial .editorialSection{padding:18px 17px;margin:26px 0}
+ .editorial .editorialSection>.heading:first-child{font-size:21px}
+ .editorial .sectionConclusion>.heading:first-child{
+  margin:-18px -17px 20px!important;padding:17px!important
+ }
+ .editorial .editorialSection .heading + .paragraph{font-size:15px}
+}
