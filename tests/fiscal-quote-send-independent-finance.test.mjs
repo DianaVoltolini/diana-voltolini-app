@@ -18,12 +18,13 @@ test("server action envia a Proposta sem depender da integração financeira",()
 });
 test("Torre habilita envio com SMTP e token, e mantém checkout separado",()=>{
  assert.match(detail,/const smtpReady=Boolean\(process\.env\.SMTP_HOST/);
- assert.match(detail,/const tokenReady=Boolean\(process\.env\.FISCAL_ANALYSIS_QUOTE_TOKEN_SECRET/);
+ assert.match(detail,/const tokenReady=fiscalQuoteTokenReady\(\)/);
  assert.match(detail,/const sendAvailable=!sendBlocked&&tokenReady&&smtpReady/);
  assert.match(detail,/A Proposta será enviada a/);
  assert.match(detail,/nenhuma cobrança será gerada agora/);
  assert.doesNotMatch(detail,/sendAvailable=.*FISCAL_ANALYSIS_VARIABLE_CHECKOUT_ENABLED/);
  assert.match(listing,/SMTP da Proposta configurado/);
+ assert.match(listing,/Assinatura segura do link de Proposta/);
  assert.match(listing,/Checkout individual habilitado neste aplicativo/);
 });
 test("cliente só segue ao checkout mediante ação expressa após Proposta enviada",()=>{
