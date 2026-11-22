@@ -12,7 +12,7 @@ export type FiscalProposalPayment={
  * Não cria pedido, recebível, PIX ou boleto ao visualizar o link.
  */
 export async function getFiscalProposalPayment(quote:{
- id:string;request_id:string;order_id:string|null;amount_cents:number
+ id:string;request_id:string;order_id:string|null;amount_cents:number;version:number
 }):Promise<FiscalProposalPayment>{
  const empty: FiscalProposalPayment={state:"none",method:null,url:null,dueDate:null};
  if(!quote.order_id)return empty;
@@ -25,7 +25,7 @@ export async function getFiscalProposalPayment(quote:{
  if(!metadata||typeof metadata!=="object"||Array.isArray(metadata))return empty;
  const meta=metadata as Record<string,unknown>;
  if(meta.fiscal_analysis_quote_id!==quote.id||
-    typeof meta.fiscal_analysis_quote_version!=="string"||
+    meta.fiscal_analysis_quote_version!==String(quote.version)||
     order.amount_cents!==quote.amount_cents)return empty;
  if(order.paid_at||order.status==="paid")return {state:"paid",method:null,url:null,dueDate:null};
  if(order.status!=="pending")return empty;
