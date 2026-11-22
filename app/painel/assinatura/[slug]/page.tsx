@@ -39,7 +39,7 @@ export default async function ExclusiveArticle({params}:{params:Promise<{slug:st
    </div>
   </header>
   <article className={styles.content}>
-   <FiscalRichText body={article.body??""}/>
+   <FiscalRichText body={article.body??""} editorial/>
    {sources.length>0&&<section className={styles.sources}><h2>Fontes e referências</h2><p>Documentos consultados na elaboração deste material.</p><ul className={styles.sourceList}>
     {sources.map((url,i)=><li key={i}><a href={url} target="_blank" rel="noopener noreferrer">{labelSource(url)}<small>{url.length>85?url.slice(0,82)+"…":url}</small></a></li>)}
    </ul></section>}

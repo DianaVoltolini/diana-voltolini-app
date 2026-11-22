@@ -1,0 +1,25 @@
+name: Validar Estúdio Editorial
+on:
+  pull_request:
+    paths:
+      - "components/fiscal-rich-text.tsx"
+      - "components/fiscal-rich-text.module.css"
+      - "lib/fiscal/editorial-grouping.mjs"
+      - "lib/fiscal/editorial-grouping.d.mts"
+      - "app/torre/conteudos/editor/article-body-editor.tsx"
+      - "app/painel/assinatura/**"
+      - "tests/fiscal-editorial.test.mjs"
+      - "package.json"
+      - ".github/workflows/validate-fiscal-editorial.yml"
+  workflow_dispatch:
+jobs:
+  markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run test:editorial
