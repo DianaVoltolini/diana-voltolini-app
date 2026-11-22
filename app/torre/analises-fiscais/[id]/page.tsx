@@ -22,13 +22,11 @@ type Event={id:string;event_type:string;created_at:string};
 const money=(n:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(n/100);
 const date=(v:string)=>new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo",dateStyle:"short",timeStyle:"short"}).format(new Date(v));
 const errors:Record<string,string>={
- validacao:"Confira os campos do Proposta e informe um valor positivo.",
- data_invalida:"Informe uma data de validade válida.",
- validade_expirada:"A validade deve ser posterior a hoje.",
- situacao:"A situação atual não permite modificar o Proposta.",
+ validacao:"Confira os campos da Proposta e informe um valor positivo.",
+ situacao:"A situação atual não permite modificar a Proposta.",
  proposta_ativa:"Já existe uma proposta enviada ou aceita para esta solicitação.",
  consulta_orcamentos:"Não foi possível consultar as versões anteriores.",
- salvar:"Não foi possível salvar o Proposta.",
+ salvar:"Não foi possível salvar a Proposta.",
  atualizar_situacao:"Proposta registrado, mas houve erro ao atualizar a situação. Confira o histórico.",
  conflito:"Outra versão foi salva. Atualize a tela e confira antes de continuar.",
  solicitacao:"Solicitação não encontrada.",
@@ -36,7 +34,7 @@ const errors:Record<string,string>={
  envio_em_andamento:"Este Proposta já está sendo enviado ou já foi enviado.",
  smtp:"Não foi possível enviar o e-mail. Consulte os registros de envio.",
  conferencia_envio:"O servidor aceitou o e-mail, mas houve falha ao registrar o envio. Verifique antes de reenviar.",
- prazo:"O prazo de validade do Proposta terminou.",
+ prazo:"O prazo de validade da Proposta terminou.",
  email:"O e-mail do solicitante precisa ser corrigido.",
  nao_encontrado:"Proposta não encontrada."
 };
@@ -68,7 +66,7 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
   <header className={css.header}>
    <div><p className={css.eyebrow}>TORRE DE CONTROLE · ANÁLISES FISCAIS</p>
     <h1 className={css.title}>Solicitação {request.protocol??request.id.slice(0,8)}</h1>
-    <p className={css.subtitle}>Avalie o pedido e prepare um Proposta individual, sem enviar antes da integração comercial.</p>
+    <p className={css.subtitle}>Avalie o pedido e prepare uma Proposta individual, sem enviar antes da integração comercial.</p>
    </div><Link href="/torre/analises-fiscais" className={css.secondary}>Voltar às solicitações</Link>
   </header>
   <div className={css.banner}><strong>Atendimento em implantação</strong>
@@ -114,14 +112,14 @@ export default async function FiscalAnalysisDetail({params,searchParams}:Props){
     <form action={sendFiscalAnalysisQuote} className={css.form}>
      <input type="hidden" name="request_id" value={request.id}/>
      <input type="hidden" name="quote_id" value={latest.id}/>
-     <p className={css.note}>Ao enviar, o Proposta será encaminhado obrigatoriamente para {request.customer_email}.</p>
+     <p className={css.note}>Ao enviar, a Proposta será encaminhado obrigatoriamente para {request.customer_email}.</p>
      <button className={css.button} type="submit">Enviar Proposta por e-mail</button>
     </form>}
    {whatsapp&&<div className={css.actions}><a className={css.button} href={whatsapp} target="_blank" rel="noopener noreferrer">Enviar WhatsApp</a><span className={css.note}>Abre a mensagem pronta; confirme o envio no WhatsApp.</span></div>}
   </section>
   <section className={css.section}><h2>Versões de Proposta</h2>
-   {qs.error?<p className={css.error}>Não foi possível consultar os Propostas.</p>:
-   quoteList.length===0?<p className={css.note}>Nenhum Proposta preparado.</p>:
+   {qs.error?<p className={css.error}>Não foi possível consultar as Propostas.</p>:
+   quoteList.length===0?<p className={css.note}>Nenhuma Proposta preparado.</p>:
    <div className={css.tableScroll}><table className={css.table}><thead><tr><th>Versão</th><th>Valor</th><th>Prazo</th><th>Validade</th><th>Status</th></tr></thead>
    <tbody>{quoteList.map(q=><tr key={q.id}><td>v{q.version}</td><td>{money(q.amount_cents)}</td><td>{q.delivery_business_days} dias úteis</td><td>{q.status==="draft"?"3 dias após envio":fiscalProposalExpiresLabel(q.valid_until)}</td><td>{q.status==="draft"?"Rascunho":q.status}</td></tr>)}</tbody></table></div>}
   </section>
