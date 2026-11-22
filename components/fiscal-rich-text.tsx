@@ -5,7 +5,7 @@ import styles from "./fiscal-rich-text.module.css";
 
 type Token={type:string;text?:string;raw?:string;tokens?:Token[];depth?:number;href?:string;items?:Token[];ordered?:boolean;start?:number;task?:boolean;checked?:boolean;header?:Cell[];rows?:Cell[][];align?:Array<"left"|"center"|"right"|null>};
 type Cell={text:string;tokens?:Token[]};
-const label:Record<string,string>={atencao:"PONTO DE ATENÇÃO",importante:"IMPORTANTE",exemplo:"EXEMPLO PRÁTICO",checklist:"CHECKLIST DE CONFERÊNCIA",conclusao:"CONCLUSÃO",resumo:"EM RESUMO",dica:"DICA PRÁTICA","na-pratica":"NA PRÁTICA"};
+const label:Record<string,string>={atencao:"PONTO DE ATENÇÃO",importante:"IMPORTANTE",exemplo:"EXEMPLO PRÁTICO",checklist:"CHECKLIST DE CONFERÊNCIA",conclusao:"CONCLUSÃO",resumo:"EM RESUMO",dica:"DICA PRÁTICA","na-pratica":"NA PRÁTICA",faixa:"DIFERENCIAIS",cards:"EM DESTAQUE",chips:"PONTOS ESSENCIAIS"};
 function url(value:string){
  if(value.startsWith("/")&&!value.startsWith("//"))return value;
  if(value.startsWith("#"))return value;
@@ -50,7 +50,7 @@ function blocks(ts:Token[],depth=0,headingIds:string[]=[],cursor:{value:number}=
    case "list":{
     const isTasks=(t.items??[]).some(x=>x.task);
     const children=(t.items??[]).map((x,j)=><li key={j} className={x.task?styles.taskItem:undefined}>{x.task?<span aria-hidden="true" className={styles.checkMark}>{x.checked?"☑":"☐"}</span>:null}{blocks(x.tokens??[],depth+1,headingIds,cursor)}</li>);
-    return t.ordered?<ol key={i} className={styles.list} start={t.start||1}>{children}</ol>:<ul key={i} className={[styles.list,isTasks?styles.taskList:""].join(" ")}>{children}</ul>;
+    return t.ordered?<ol key={i} className={styles.list} start={t.start||1}>{children}</ol>:<ul key={i} className={[styles.list,isTasks?styles.taskList:styles.iconList].join(" ")}>{children}</ul>;
    }
    case "table":return <div className={styles.tableWrap} key={i}><table className={styles.table}><thead><tr>{(t.header??[]).map((x,j)=><th key={j} scope="col" style={{textAlign:t.align?.[j]??"left"}}>{rich(x.tokens)}</th>)}</tr></thead><tbody>{(t.rows??[]).map((row,j)=><tr key={j}>{row.map((x,k)=><td key={k} style={{textAlign:t.align?.[k]??"left"}}>{rich(x.tokens)}</td>)}</tr>)}</tbody></table></div>;
    case "html":return <p key={i} className={styles.paragraph}>{t.raw??t.text??""}</p>;
@@ -63,7 +63,7 @@ function segments(body:string){
  let raw:string[]=[];
  const flush=()=>{if(raw.length){out.push({kind:null,content:raw.join("\n")});raw=[]}};
  for(let i=0;i<lines.length;i++){
-  const m=lines[i].trim().match(/^:::(atencao|importante|exemplo|checklist|conclusao|resumo|dica|na-pratica)$/i);
+  const m=lines[i].trim().match(/^:::(atencao|importante|exemplo|checklist|conclusao|resumo|dica|na-pratica|faixa|cards|chips)$/i);
   if(m){let end=i+1;while(end<lines.length&&lines[end].trim()!==":::")end++;
    if(end<lines.length){flush();out.push({kind:m[1].toLowerCase(),content:lines.slice(i+1,end).join("\n")});i=end;continue}
   }
