@@ -52,7 +52,7 @@ export default async function AnalisesFiscaisTorre(){
   <header className={css.header}><div><p className={css.eyebrow}>TORRE DE CONTROLE · SERVIÇOS</p>
    <h1 className={css.title}>Análise Fiscal Individual</h1>
    <p className={css.subtitle}>Solicitações, propostas individuais, pagamentos e acompanhamento de atendimentos.</p></div>
-   <div className={css.actions}><Link href="/torre/analises-fiscais/nova" className={css.button}>Nova solicitação</Link><Link href="/torre/analises-fiscais/previa" className={css.secondary}>Visualizar telas demonstrativas</Link></div>
+   <div className={css.actions}><a href="/solicitar-analise-fiscal" className={css.button} target="_blank" rel="noopener noreferrer">Formulário para o cliente</a><Link href="/torre/analises-fiscais/nova" className={css.secondary}>Cadastro interno</Link><Link href="/torre/analises-fiscais/previa" className={css.secondary}>Visualizar telas demonstrativas</Link></div>
   </header>
   <div className={css.banner}><strong>Implantação controlada</strong>
    A gestão das solicitações e dos rascunhos de propostas já está disponível. O envio ao cliente e a contratação dependem de homologação. Documentos iniciais são opcionais.</div>
