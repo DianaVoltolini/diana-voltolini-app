@@ -22,6 +22,14 @@ type Attachment={id:string;original_filename:string;size_bytes:number;created_at
 type Event={id:string;event_type:string;created_at:string};
 const money=(n:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(n/100);
 const date=(v:string)=>new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo",dateStyle:"short",timeStyle:"short"}).format(new Date(v));
+const eventText:Record<string,string>={
+ service_notification_sent:"Aviso por e-mail enviado",
+ service_notification_failed:"Falha no aviso por e-mail",
+ service_notification_not_configured:"Aviso por e-mail sem configuração",
+ service_message_sent:"Mensagem registrada no atendimento",
+ service_file_uploaded:"Documento anexado",
+ service_status_changed:"Situação do atendimento atualizada"
+};
 const errors:Record<string,string>={
  validacao:"Confira os campos da Proposta e informe um valor positivo.",
  situacao:"A situação atual não permite modificar a Proposta.",

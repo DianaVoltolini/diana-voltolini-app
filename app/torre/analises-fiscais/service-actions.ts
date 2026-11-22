@@ -5,6 +5,7 @@ import {revalidatePath} from "next/cache";
 import {redirect} from "next/navigation";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
+import {notifyFiscalAnalysisService} from "@/lib/fiscal/analysis-notifications";
 import {FISCAL_ACTIVE_STATUSES,FISCAL_ALLOWED_TYPES,FISCAL_FILES_BUCKET,FISCAL_MAX_FILE_BYTES,fiscalUuid,getFiscalClientRequest} from "@/lib/fiscal/analysis-service";
 
 type Role="admin"|"client";
@@ -47,6 +48,8 @@ async function postMessage(role:Role,form:FormData){
  if(error)fail(role,id,"salvar_mensagem");
  await db.from("fiscal_analysis_events").insert({request_id:id,actor_user_id:userId,event_type:"service_message_sent",detail:{sender_role:role}})
   .then(({error})=>{if(error)console.error("[fiscal-service] Event",error.code)});
+ await notifyFiscalAnalysisService(id,role==="admin"?"admin_message":"client_message")
+  .catch(error=>console.error("[fiscal-service] Notification unavailable",error));
  refresh(id);
  redirect(route(role,id)+"?mensagem=1");
 }
@@ -71,6 +74,8 @@ export async function updateFiscalServiceStatus(form:FormData){
  if(error||!data)fail("admin",id,"conflito");
  await db.from("fiscal_analysis_events").insert({request_id:id,actor_user_id:userId,event_type:"service_status_changed",detail:{from:request.status,to:target}})
   .then(({error})=>{if(error)console.error("[fiscal-service] Event",error.code)});
+ await notifyFiscalAnalysisService(id,target==="awaiting_client"?"status_awaiting_client":target==="completed"?"status_completed":"status_in_progress")
+  .catch(error=>console.error("[fiscal-service] Notification unavailable",error));
  refresh(id);
  redirect(adminPath(id)+"?situacao=1");
 }
@@ -102,6 +107,8 @@ async function upload(role:Role,form:FormData){
   request_id:id,actor_user_id:userId,event_type:"service_file_uploaded",
   detail:{uploaded_by_role:role,visible_to_client:visible}
  }).then(({error})=>{if(error)console.error("[fiscal-service] Event",error.code)});
+ if(role==="client"||visible)await notifyFiscalAnalysisService(id,role==="client"?"client_file":"admin_file")
+  .catch(error=>console.error("[fiscal-service] Notification unavailable",error));
  refresh(id);
  redirect(route(role,id)+"?arquivo=1");
 }
