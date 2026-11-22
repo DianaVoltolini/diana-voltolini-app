@@ -67,7 +67,19 @@ export async function updateFiscalServiceStatus(form:FormData){
   awaiting_client:["in_progress","completed"]
  };
  if(!request.paid_at||!transitions[request.status]?.includes(target))fail("admin",id,"transicao");
- const now=new Date().toISOString(),db=getSupabaseAdmin();
+ const db=getSupabaseAdmin();
+ // A conclusão exige uma entrega efetiva da equipe, visível ao cliente.
+ // Documentos enviados pelo próprio cliente ou anexos apenas internos não valem como entrega.
+ if(target==="completed"){
+  const {data:deliveries,error:deliveryError}=await db.from("fiscal_analysis_attachments")
+   .select("id").eq("request_id",id).eq("uploaded_by_role","admin")
+   .eq("visible_to_client",true)
+   .in("media_type",["application/pdf","application/vnd.openxmlformats-officedocument.wordprocessingml.document"])
+   .limit(1);
+  if(deliveryError)fail("admin",id,"conferencia_entrega");
+  if(!deliveries?.length)fail("admin",id,"entrega_obrigatoria");
+ }
+ const now=new Date().toISOString();
  const {data,error}=await db.from("fiscal_analysis_requests").update({
   status:target,updated_at:now,...(target==="completed"?{completed_at:now}:{})
  }).eq("id",id).eq("status",request.status).not("paid_at","is",null).select("id").maybeSingle();
