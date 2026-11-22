@@ -22,14 +22,14 @@ export default async function FiscalAnalysisCustomerPage({searchParams}:{searchP
  return <main className={css.page}>
   <header className={css.header}><div><p className={css.eyebrow}>ÁREA DO CLIENTE · SERVIÇOS</p>
   <h1 className={css.title}>Minhas Análises Fiscais</h1>
-  <p className={css.subtitle}>Consulte os atendimentos contratados. Consulte seus atendimentos, converse com a equipe e acompanhe documentos e entregas.</p>
+  <p className={css.subtitle}>Consulte seus atendimentos contratados, converse com a equipe e acompanhe documentos e entregas.</p>
   </div></header>
   {acesso==="vinculado"&&<p className={css.message} role="status">Pagamento confirmado e atendimento vinculado à sua conta.</p>}
   {acesso==="confirmacao"&&<p className={css.error} role="alert">Confirme seu e-mail de acesso antes de vincular um pagamento.</p>}
   {acesso==="consulta"&&<p className={css.error} role="alert">Não foi possível conferir os pagamentos. Tente novamente.</p>}
   {acesso==="nenhum"&&<p className={css.note} role="status">Nenhum pagamento novo foi encontrado para o e-mail confirmado desta conta. Se acabou de pagar, aguarde a confirmação financeira.</p>}
   <section className={css.section}><h2>Vincular uma contratação</h2>
-   <p className={css.note}>Se contratou uma Análise Fiscal Individual pelo site, entre com o mesmo e-mail da contratação e confirme o pagamento para liberar seu atendimento nesta conta. Nenhuma cobrança é gerada aqui.</p>
+   <p className={css.note}>Se contratou uma Análise Fiscal Individual pelo site, entre com o mesmo e-mail da contratação e verifique se o pagamento já foi confirmado no Bling para liberar seu atendimento nesta conta. Nenhuma cobrança é gerada aqui.</p>
    <form action={claimPaidFiscalAnalyses}>
     <button className={css.button} type="submit">Verificar pagamento confirmado</button>
    </form>
