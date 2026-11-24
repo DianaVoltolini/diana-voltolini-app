@@ -148,9 +148,9 @@ export default function TemplateEditor({selected,interests,landings,ctas,default
       setCta(chosen.buttonLabel);
      }}>{destinations.map(d=><option key={d.key} value={d.key}>{d.label}</option>)}</select></label>
      <label>Texto do botão<input name="cta_label" required maxLength={80} value={cta}
-       readOnly={Boolean(catalogCtaId||selectedLandingCtaId)} onChange={e=>setCta(e.target.value)}/>
+       readOnly={Boolean(catalogCtaId)} onChange={e=>setCta(e.target.value)}/>
        {catalogCtaId&&<small>Texto definido no cadastro do CTA. Para alterá-lo, edite o CTA na Torre.</small>}
-       {selectedLandingCtaId&&<small>Texto definido na landing page. Para alterá-lo, edite a landing na Torre.</small>}
+       {selectedLandingCtaId&&<small>Personalize o texto deste botão apenas para o e-mail. O botão da landing e o link individual de download não serão alterados.</small>}
      </label>
     </div>
    </div>}
