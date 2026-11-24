@@ -79,7 +79,9 @@ export default function LandingEditorForm({landing}:{landing:Landing|null}){
        const result=await saveLandingWithFeedback({status:"idle",message:""},data);
        if(result.status==="success"){
          discardDraft();
-         window.location.assign("/torre/landings?salvo=1");
+         window.location.assign(result.nextStep==="email"&&result.savedId?
+           "/torre/modelos-email/editor?landing_id="+encodeURIComponent(result.savedId):
+           "/torre/landings?salvo=1");
        }else setState(result);
      }catch(err){
        console.error("[landing-editor] submission failed",err);
