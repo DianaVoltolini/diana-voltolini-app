@@ -8,7 +8,7 @@ const save=read("app/torre/modelos-email/actions.ts");
 test("erros do salvamento não redirecionam nem apagam os campos do editor",()=>{
  const saveAction=save.slice(save.indexOf("export async function saveEmailTemplate("),save.indexOf("export async function saveEmailDraft("));
  assert.doesNotMatch(saveAction,/redirect\(/);
- assert.match(saveAction,/return fail\("Esta landing não está mais publicada/);
+ assert.match(saveAction,/return fail\("Landing ainda não publicada/);
  assert.match(saveAction,/return fail\("Não foi possível salvar o modelo no banco/);
  assert.match(saveAction,/console\.error\("\[email-template-save\] database write"/);
  assert.match(editor,/useActionState<EmailTemplateSaveState,FormData>\(saveEmailTemplate/);
@@ -18,5 +18,6 @@ test("erros do salvamento não redirecionam nem apagam os campos do editor",()=>
 test("novo modelo salvo abre sua edição para evitar cadastro duplicado",()=>{
  assert.match(save,/\.insert\(payload\)\.select\("id"\)\.maybeSingle\(\)/);
  assert.match(save,/savedId=saved\.id/);
- assert.match(editor,/router\.replace\("\/torre\/modelos-email\/editor\?editar="/);
+ assert.match(editor,/router\.replace\(setupMode&&defaultLandingId\?/);
+ assert.match(editor,/\?"\/torre\/landings\/editor\?id="/);
 });
