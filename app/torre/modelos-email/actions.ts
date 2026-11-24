@@ -39,7 +39,9 @@ export async function saveEmailTemplate(_previous:EmailTemplateSaveState=EMAIL_S
    if(landingCta.status!=="published"&&!(auto_enabled&&landing_id===selectedLandingCtaId&&audience_kind==="leads"))
     return fail("Landing ainda não publicada. Para criar seu e-mail de entrega, selecione a mesma landing como origem automática.");
    cta_url="https://dianavoltolini.com.br/l/"+landingCta.slug;
-   cta_label=(landingCta.button_text||"Acessar material gratuito").trim().slice(0,80);
+   // O destino é validado por ID, mas o rótulo pertence ao modelo de e-mail.
+   // Nunca substituir a personalização pelo botão da landing.
+   if(!cta_label)return fail("Informe o texto do botão do e-mail.");
   }else if(selectedCtaId){
    // CTA do catálogo: nunca confiar na URL enviada pelo navegador.
    if(!uuid.test(selectedCtaId))return fail("O CTA selecionado é inválido. Selecione novamente.");
