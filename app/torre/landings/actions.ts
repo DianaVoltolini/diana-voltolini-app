@@ -6,7 +6,7 @@ import {revalidatePath} from "next/cache";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 const safe=(f:FormData,k:string,max=300)=>String(f.get(k)??"").trim().slice(0,max);
-export type LandingSaveState={status:"idle"|"error"|"success";message:string};
+export type LandingSaveState={status:"idle"|"error"|"success";message:string;savedId?:string;nextStep?:"email"};
 export async function saveLandingWithFeedback(_previous:LandingSaveState,f:FormData):Promise<LandingSaveState>{
   await requireAdmin();
   const fail=(message:string):LandingSaveState=>({status:"error",message});
@@ -28,6 +28,16 @@ export async function saveLandingWithFeedback(_previous:LandingSaveState,f:FormD
     previousPath=old.file_path??null;
   }
   if(status==="published"&&!(file instanceof File&&file.size>0)&&!previousPath)return fail("Para publicar, selecione um PDF de entrega. Você também pode salvar como rascunho.");
+  // A criação é sempre em rascunho: a etapa obrigatória seguinte é o modelo de entrega.
+  if(status==="published"&&!id)return fail("Primeiro salve a landing como rascunho; depois configure o modelo de e-mail antes de publicar.");
+  if(status==="published"){
+    const {data:models,error:modelError}=await db.from("marketing_email_templates")
+      .select("id,subject,body").eq("landing_id",id).eq("active",true)
+      .eq("auto_enabled",true).eq("audience_kind","leads").eq("kind","manual").is("interest",null).limit(2);
+    if(modelError)return fail("Não foi possível validar o modelo de e-mail. A publicação foi bloqueada.");
+    if(!models||models.length!==1||!models[0].subject?.trim()||!models[0].body?.trim())
+      return fail("Publicação bloqueada: configure um único modelo de e-mail ativo e automático para esta landing, sem filtro de interesse.");
+  }
   let file_path:string|undefined,cover_path:string|undefined;
   try{
     if(file instanceof File&&file.size>0){
@@ -51,12 +61,14 @@ export async function saveLandingWithFeedback(_previous:LandingSaveState,f:FormD
       ...(file_path?{file_path}:{}),
       updated_at:new Date().toISOString()
     };
-    const {error}=id?await db.from("marketing_landings").update(payload).eq("id",id):await db.from("marketing_landings").insert(payload);
-    if(error){console.error("[landing-save] database failed",error);return fail(error.code==="23505"?"O endereço da campanha já está em uso. Escolha outro.":"Não foi possível salvar a landing. Seu conteúdo permanece no editor.");}
+    const {data:saved,error}=id?
+      await db.from("marketing_landings").update(payload).eq("id",id).select("id").single():
+      await db.from("marketing_landings").insert(payload).select("id").single();
+    if(error||!saved){console.error("[landing-save] database failed",error);return fail(error.code==="23505"?"O endereço da campanha já está em uso. Escolha outro.":"Não foi possível salvar a landing. Seu conteúdo permanece no editor.");}
     revalidatePath("/torre/landings");
     revalidatePath("/torre/modelos-email/editor");
     revalidatePath("/l/"+slug);
-    return {status:"success",message:"Landing salva com sucesso."};
+    return {status:"success",message:!id?"Landing salva como rascunho. Próxima etapa: configurar o e-mail de entrega.":"Landing salva com sucesso.",savedId:saved.id,...(!id?{nextStep:"email" as const}:{})};
   }catch(error){
     console.error("[landing-save] unexpected error",error);
     return fail("Ocorreu uma falha no servidor ao salvar. Tente novamente; os campos permanecem preenchidos.");
