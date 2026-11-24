@@ -18,46 +18,49 @@ const links=[
 ];
 const starter="Olá, {{nome}}!\n\nQue bom ter você por aqui!\n\nMeu objetivo é ajudar profissionais e empresas a compreender as mudanças fiscais e aplicá-las com mais segurança na rotina.\n\nObrigada pelo interesse!\nDiana Voltolini";
 const buttonPattern=/\[BOTAO:\s*([^\]\n|]+?)\s*\|\s*(https:\/\/[^\]\s]+)\]/g;
-export default function TemplateEditor({selected,interests,landings,ctas,defaultAudience="leads"}:{selected:Template|null;interests:string[];landings:Landing[];ctas:CatalogCta[];defaultAudience?:string}){
+export default function TemplateEditor({selected,interests,landings,ctas,defaultAudience="leads",defaultLandingId=""}:{selected:Template|null;interests:string[];landings:Landing[];ctas:CatalogCta[];defaultAudience?:string;defaultLandingId?:string}){
  const transactional=selected?.kind==="transactional";
+ const setupLanding=!selected?landings.find(l=>l.id===defaultLandingId):undefined;
+ const setupMode=Boolean(setupLanding);
  const router=useRouter();
  const [saveState,saveAction,savePending]=useActionState<EmailTemplateSaveState,FormData>(saveEmailTemplate,{status:"idle",message:""});
- useEffect(()=>{if(!selected&&saveState.status==="success"&&saveState.savedId)router.replace("/torre/modelos-email/editor?editar="+encodeURIComponent(saveState.savedId));},[saveState.status,saveState.savedId,selected,router]);
+ useEffect(()=>{if(!selected&&saveState.status==="success"&&saveState.savedId)router.replace(setupMode&&defaultLandingId?"/torre/landings/editor?id="+encodeURIComponent(defaultLandingId):"/torre/modelos-email/editor?editar="+encodeURIComponent(saveState.savedId));},[saveState.status,saveState.savedId,selected,router,setupMode,defaultLandingId]);
  // O identificador do CTA (não apenas a URL) mantém nome, botão e destino juntos.
  // URLs podem existir tanto no catálogo quanto na lista de destinos tradicionais.
  const destinations=[
   ...links.map(([label,url])=>({key:"legacy:"+url,label,url,buttonLabel:"Acessar "+label,ctaId:"",landingId:""})),
   ...ctas.filter(c=>c.active).map(c=>({key:"cta:"+c.id,label:c.name.startsWith("CTA — ")?
    c.name:"CTA — "+c.name,url:c.url,buttonLabel:c.button_label,ctaId:c.id,landingId:""})),
-  ...landings.filter(l=>l.status==="published").map(l=>({key:"landing:"+l.id,label:"Landing — "+l.title,
+  ...landings.filter(l=>l.status==="published"||l.id===defaultLandingId).map(l=>({key:"landing:"+l.id,label:"Landing — "+l.title,
    url:"https://dianavoltolini.com.br/l/"+l.slug,buttonLabel:(l.button_text||"Acessar material gratuito").slice(0,80),ctaId:"",landingId:l.id}))
  ];
  const savedUrl=selected?.cta_url??"";
  const matchingCta=ctas.find(c=>c.active&&c.url===savedUrl&&c.button_label===selected?.cta_label);
  const matchingLanding=destinations.find(d=>d.landingId&&d.url===savedUrl);
  const matchingLegacy=destinations.find(d=>!d.ctaId&&!d.landingId&&d.url===savedUrl);
- const startingKey=matchingCta?"cta:"+matchingCta.id:matchingLanding?.key??matchingLegacy?.key??(savedUrl?"saved":"legacy:"+links[0][1]);
+ const startingKey=matchingCta?"cta:"+matchingCta.id:matchingLanding?.key??(setupLanding?"landing:"+setupLanding.id:matchingLegacy?.key??(savedUrl?"saved":"legacy:"+links[0][1]));
  if(savedUrl&&!matchingCta&&!matchingLanding&&!matchingLegacy)
   destinations.push({key:"saved",label:"Destino salvo neste modelo",url:savedUrl,buttonLabel:selected?.cta_label??"Acessar",ctaId:"",landingId:""});
 
  const [audience,setAudience]=useState(selected?.audience_kind??defaultAudience);
- const [name,setName]=useState(selected?.name??"");
+ const [name,setName]=useState(selected?.name??(setupLanding?"Entrega de material — "+setupLanding.title:""));
  const [description,setDescription]=useState(selected?.description??"");
- const [subject,setSubject]=useState(selected?.subject??"");
- const [body,setBody]=useState((selected?.body??starter).replace(buttonPattern,"").trim());
+ const [subject,setSubject]=useState(selected?.subject??(setupLanding?"Seu material está disponível — "+setupLanding.title:""));
+ const [body,setBody]=useState((selected?.body??(setupLanding?
+  "Olá, {{nome}}!\n\nSeu material gratuito está disponível.\n\nClique no botão para acessar o PDF solicitado.\n\nDiana Voltolini\nFaturamento e Inteligência Fiscal":starter)).replace(buttonPattern,"").trim());
  const [destinationKey,setDestinationKey]=useState(startingKey);
- const [url,setUrl]=useState(matchingCta?.url??selected?.cta_url??links[0][1]);
- const [cta,setCta]=useState(matchingCta?.button_label??selected?.cta_label??"Conhecer o Blog Fiscal");
+ const [url,setUrl]=useState(matchingCta?.url??selected?.cta_url??(setupLanding?"https://dianavoltolini.com.br/l/"+setupLanding.slug:links[0][1]));
+ const [cta,setCta]=useState(matchingCta?.button_label??selected?.cta_label??(setupLanding?"Acessar material gratuito":"Conhecer o Blog Fiscal"));
  const selectedDestination=destinations.find(d=>d.key===destinationKey);
  const catalogCtaId=selectedDestination?.ctaId??"";
  const selectedLandingCtaId=selectedDestination?.landingId??"";
  const [interest,setInterest]=useState(selected?.interest??"");
- const [landing,setLanding]=useState(selected?.landing_id??"");
- const [active,setActive]=useState(selected?.active??false);
- const [automatic,setAutomatic]=useState(selected?.auto_enabled??false);
+ const [landing,setLanding]=useState(selected?.landing_id??defaultLandingId);
+ const [active,setActive]=useState(selected?.active??setupMode);
+ const [automatic,setAutomatic]=useState(selected?.auto_enabled??setupMode);
  const [existing,setExisting]=useState(selected?.auto_include_existing??false);
  const [source,setSource]=useState(selected?.kind==="welcome"?"home":"landing");
- const [sendType,setSendType]=useState<"automatic"|"manual">(selected?.auto_enabled||selected?.kind==="welcome"?"automatic":"manual");
+ const [sendType,setSendType]=useState<"automatic"|"manual">(selected?.auto_enabled||selected?.kind==="welcome"||setupMode?"automatic":"manual");
  const bodyRef=useRef<HTMLTextAreaElement>(null);
  useEffect(()=>{const el=bodyRef.current;if(el){el.style.height="auto";el.style.height=Math.max(320,el.scrollHeight)+"px"}},[body]);
  return <form action={transactional?saveTransactionalEmail:saveAction} className={css.grid}>
@@ -152,7 +155,7 @@ export default function TemplateEditor({selected,interests,landings,ctas,default
    </div>}
    {transactional?<p style={{fontSize:13,color:"#607184"}}>O link de cobrança e o link de acesso são incluídos pelo sistema conforme o produto. Variáveis disponíveis: {"{{produto}}"}, {"{{nome}}"}, {"{{valor}}"}, {"{{forma_pagamento}}"} e {"{{situacao_encontro}}"}.</p>:<label className={css.checkbox}><input type="checkbox" checked={active} onChange={e=>setActive(e.target.checked)}/> Modelo disponível para seleção</label>}
    {!transactional&&saveState.status!=="idle"&&<p role={saveState.status==="error"?"alert":"status"} aria-live="polite" style={{border:"1px solid "+(saveState.status==="error"?"#e7b6b6":"#b4d7c3"),background:saveState.status==="error"?"#fff7f7":"#f1faf4",color:saveState.status==="error"?"#9f2424":"#17613a",borderRadius:8,padding:"12px 14px",lineHeight:1.5}}>{saveState.message}</p>}
-   <div className={css.buttons}><button type="submit" disabled={savePending}>{savePending?"Salvando...":"Salvar modelo"}</button><Link href="/torre/modelos-email" className={css.backButton}>Voltar</Link></div>
+   <div className={css.buttons}><button type="submit" disabled={savePending}>{savePending?"Salvando...":"Salvar modelo"}</button>{(landing&&source==="landing")&&<Link href={"/torre/landings/editor?id="+encodeURIComponent(landing)} className={css.backButton}>Voltar à landing para publicar</Link>}<Link href="/torre/modelos-email" className={css.backButton}>Voltar</Link></div>
   </section>
   <aside className={css.previewPanel}>
    <div className={css.previewHeader}><span className={css.previewTitle}>04 · VISUALIZAÇÃO</span><p>O resultado aparece ao lado enquanto você escreve.</p></div>
@@ -163,7 +166,7 @@ export default function TemplateEditor({selected,interests,landings,ctas,default
      <div className={css.message}>{(body||"Sua mensagem aparecerá aqui.").replaceAll("{{nome}}","Cliente Teste").replaceAll("{{produto}}","Produto de Teste").replaceAll("{{valor}}","R$ 29,90").replaceAll("{{forma_pagamento}}","PIX").replaceAll("{{situacao_encontro}}","Sua inscrição no encontro está confirmada.")}</div>
      {transactional?<div className={css.ctaCenter}><span className={css.mailButton}>{selected?.id==="eb0c0000-0000-4000-8000-000000000001"||selected?.id==="eb0c0000-0000-4000-8000-000000000011"?"Ver cobrança":"Acessar minha compra"}</span></div>:cta.trim()&&<div className={css.ctaCenter}><a href={url} target="_blank" rel="noopener noreferrer" className={css.mailButton}>{cta}</a></div>}
     </div>
-    <footer><strong>Diana Voltolini</strong><p>Especialista em Faturamento e Inteligência Fiscal</p><p>{transactional?"Esta é uma comunicação referente à sua compra.":audience==="buyers"?"Você recebe esta campanha porque autorizou comunicações comerciais. Se não desejar receber novas campanhas, poderá cancelar sua inscrição.":"Você está recebendo este e-mail por ter autorizado nossas comunicações. Se não desejar continuar recebendo a Newsletter Fiscal, poderá cancelar sua inscrição pelo link de descadastro."}</p>{!transactional&&<span>{audience==="buyers"?"O link individual de descadastro será incluído na campanha enviada ao cliente.":"Cancelar inscrição — o link individual será incluído no e-mail enviado ao assinante."}</span>}</footer>
+    <footer><strong>Diana Voltolini</strong><p>Especialista em Faturamento e Inteligência Fiscal</p><p>{transactional?"Esta é uma comunicação referente à sua compra.":audience==="buyers"?"Você recebe esta campanha porque autorizou comunicações comerciais. Se não desejar receber novas campanhas, poderá cancelar sua inscrição.":(source==="landing"&&sendType==="automatic" ? "Este e-mail confirma a solicitação do material gratuito. O acesso será enviado após o cadastro." : "Você está recebendo este e-mail por ter autorizado nossas comunicações. Se não desejar continuar recebendo a Newsletter Fiscal, poderá cancelar sua inscrição pelo link de descadastro.")}</p>{!transactional&&<span>{audience==="buyers"?"O link individual de descadastro será incluído na campanha enviada ao cliente.":(source==="landing"&&sendType==="automatic" ? "Material gratuito solicitado — comunicação de entrega, sem descadastro de newsletter." : "Cancelar inscrição — o link individual será incluído no e-mail enviado ao assinante.")}</span>}</footer>
    </div>
   </aside>
  </form>;
