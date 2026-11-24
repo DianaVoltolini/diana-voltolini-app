@@ -24,7 +24,7 @@ export default function TemplateEditor({selected,interests,landings,ctas,default
  const setupMode=Boolean(setupLanding);
  const router=useRouter();
  const [saveState,saveAction,savePending]=useActionState<EmailTemplateSaveState,FormData>(saveEmailTemplate,{status:"idle",message:""});
- useEffect(()=>{if(!selected&&saveState.status==="success"&&saveState.savedId)router.replace("/torre/modelos-email/editor?editar="+encodeURIComponent(saveState.savedId));},[saveState.status,saveState.savedId,selected,router]);
+ useEffect(()=>{if(!selected&&saveState.status==="success"&&saveState.savedId)router.replace(setupMode&&defaultLandingId?"/torre/landings/editor?id="+encodeURIComponent(defaultLandingId):"/torre/modelos-email/editor?editar="+encodeURIComponent(saveState.savedId));},[saveState.status,saveState.savedId,selected,router,setupMode,defaultLandingId]);
  // O identificador do CTA (não apenas a URL) mantém nome, botão e destino juntos.
  // URLs podem existir tanto no catálogo quanto na lista de destinos tradicionais.
  const destinations=[
