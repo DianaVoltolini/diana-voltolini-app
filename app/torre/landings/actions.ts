@@ -64,7 +64,7 @@ export async function saveLandingWithFeedback(_previous:LandingSaveState,f:FormD
     const {data:saved,error}=id?
       await db.from("marketing_landings").update(payload).eq("id",id).select("id").single():
       await db.from("marketing_landings").insert(payload).select("id").single();
-    if(error||!saved){console.error("[landing-save] database failed",error);return fail(error.code==="23505"?"O endereço da campanha já está em uso. Escolha outro.":"Não foi possível salvar a landing. Seu conteúdo permanece no editor.");}
+    if(error||!saved){console.error("[landing-save] database failed",error);return fail(error?.code==="23505"?"O endereço da campanha já está em uso. Escolha outro.":"Não foi possível salvar a landing. Seu conteúdo permanece no editor.");}
     revalidatePath("/torre/landings");
     revalidatePath("/torre/modelos-email/editor");
     revalidatePath("/l/"+slug);
