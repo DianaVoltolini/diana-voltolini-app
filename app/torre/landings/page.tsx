@@ -58,6 +58,30 @@ export default async function Landings({searchParams}:{
   .order("created_at",{ascending:false}).limit(100);
  const rows=(data??[]) as LandingRow[];
  const counts=error?new Map<string,number|null>():await leadCounts(db,rows);
+ // Encontra o modelo de entrega ligado à landing pelo ID, nunca pelo título.
+ // Modelos automáticos ativos são prioritários sobre modelos antigos/inativos.
+ const {data:linkedTemplates,error:templatesError}=rows.length
+  ? await db.from("marketing_email_templates")
+     .select("id,landing_id,active,auto_enabled,kind,audience_kind,interest,updated_at")
+     .in("landing_id",rows.map(row=>row.id))
+     .eq("kind","manual").eq("audience_kind","leads")
+     .order("updated_at",{ascending:false}).limit(500)
+  : {data:[],error:null};
+ const templatesByLanding=new Map<string,string>();
+ if(!templatesError){
+  const ordered=[...(linkedTemplates??[])].sort((a,b)=>{
+   const rank=(x:{active:boolean;auto_enabled:boolean;interest:string|null})=>
+    Number(x.active&&x.auto_enabled&&!x.interest)*4+
+    Number(x.active&&x.auto_enabled)*2+Number(x.active);
+   return rank(b)-rank(a);
+  });
+  for(const template of ordered){
+   if(template.landing_id&&!templatesByLanding.has(template.landing_id))
+    templatesByLanding.set(template.landing_id,template.id);
+  }
+ }else{
+  console.error("[landings] Falha ao consultar modelos de e-mail",templatesError.code);
+ }
  const published=rows.filter(row=>row.status==="published").length;
  const registered=rows.reduce((sum,row)=>sum+(counts.get(row.id)??0),0);
  const statsComplete=rows.every(row=>counts.get(row.id)!==null&&counts.has(row.id));
@@ -112,6 +136,13 @@ export default async function Landings({searchParams}:{
      </div>
      <nav className={styles.actions} aria-label={"Ações da landing "+fullLandingName(row)}>
       <Link className={styles.edit} href={"/torre/landings/editor?id="+row.id}>Editar</Link>
+      {templatesError?
+       <span className={styles.emailUnavailable}>Modelo de e-mail indisponível</span>:
+       <Link className={styles.emailModel} href={templatesByLanding.has(row.id)
+        ? "/torre/modelos-email/editor?editar="+encodeURIComponent(templatesByLanding.get(row.id)!)
+        : "/torre/modelos-email/editor?landing_id="+encodeURIComponent(row.id)}>
+        {templatesByLanding.has(row.id)?"Modelo de e-mail":"Configurar e-mail"}
+       </Link>}
       {row.file_path&&<a href={"/torre/landings/download/"+row.id}>Baixar PDF</a>}
       {isPublished&&<a href={url} target="_blank" rel="noopener noreferrer">Abrir página ↗</a>}
      </nav>
