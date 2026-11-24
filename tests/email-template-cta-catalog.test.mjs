@@ -33,7 +33,9 @@ test("servidor só aceita URL segura de CTA cadastrado, legado ou do modelo exis
 
 test("landing pages publicadas aparecem no seletor sem duplicar CTA",()=>{
  assert.match(page,/from\("marketing_landings"\)/);
- assert.match(page,/id,title,slug,status,button_text/);
+ assert.match(page,/id,campaign_name,title,slug,status,button_text/);
+ assert.match(editor,/landingFullName\(l\)/);
+ assert.match(editor,/landingFullName\(setupLanding\)/);
  assert.match(editor,/landings\.filter\(l=>l\.status==="published"\|\|l\.id===defaultLandingId\)/);
  assert.match(editor,/key:"landing:"\+l\.id/);
  assert.match(editor,/cta_landing_id/);

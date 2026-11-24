@@ -14,7 +14,7 @@ export default async function EmailCampaign({searchParams}:{searchParams:Promise
  const [{data:models,error:modelError},{data:interests},{data:landings},{data:drafts}]=await Promise.all([
   db.from("marketing_email_templates").select("id,name,subject,body,active").eq("active",true).order("created_at",{ascending:false}).limit(100),
   db.from("marketing_leads").select("interest").not("interest","is",null).limit(2000),
-  db.from("marketing_landings").select("id,title").order("created_at",{ascending:false}).limit(100),
+  db.from("marketing_landings").select("id,campaign_name,title").order("created_at",{ascending:false}).limit(100),
   db.from("marketing_email_campaigns").select("id,subject,body,template_id,interest,landing_id,created_at").order("created_at",{ascending:false}).limit(20)
  ]);
  const draft=(drafts??[]).find(x=>x.id===query.editar);
@@ -39,7 +39,7 @@ export default async function EmailCampaign({searchParams}:{searchParams:Promise
  <label style={{display:"grid",gap:6}}>Interesse
  <select key={draft?.id??"new-interest"} defaultValue={draft?.interest??""} name="interest" style={{padding:12,border:"1px solid #d7e0e9",borderRadius:7}}><option value="">Todos os interesses</option>{unique.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
  <label style={{display:"grid",gap:6}}>Landing de origem
- <select key={draft?.id??"new-landing"} defaultValue={draft?.landing_id??""} name="landing_id" style={{padding:12,border:"1px solid #d7e0e9",borderRadius:7}}><option value="">Todas as landings</option>{(landings??[]).map(x=><option key={x.id} value={x.id}>{x.title}</option>)}</select></label>
+ <select key={draft?.id??"new-landing"} defaultValue={draft?.landing_id??""} name="landing_id" style={{padding:12,border:"1px solid #d7e0e9",borderRadius:7}}><option value="">Todas as landings</option>{(landings??[]).map(x=><option key={x.id} value={x.id}>{[x.campaign_name?.trim(),x.title?.trim()].filter(Boolean).join(" ")||"Landing sem título"}</option>)}</select></label>
  </div>
  <p style={{fontSize:13,color:"#647381",margin:0}}>Destinatários elegíveis: somente leads que autorizaram a newsletter. A contagem final e a exclusão de descadastros serão implementadas antes de liberar os disparos.</p>
  <label style={{display:"grid",gap:6}}>Assunto<input key={draft?.id??selected?.id??"custom"} id="email-preview-subject" required name="subject" defaultValue={draft?.subject??selected?.subject??""} maxLength={180} style={{padding:12,border:"1px solid #d7e0e9",borderRadius:7}}/></label>
