@@ -112,7 +112,7 @@ export default function LandingEditorForm({landing}:{landing:Landing|null}){
  {landing?.cover_path&&<div className={styles.coverOptions}><label className={styles.coverCheckbox}><input type="checkbox" name="remove_cover" value="yes"/>Remover capa atual ao salvar</label><small>Ou selecione outro arquivo para substituir.</small></div>}</label>
  <label>Título da entrega<input name="delivery_title" maxLength={180} defaultValue={landing?.delivery_title??"Seu material está pronto"}/></label>
  <label>Material para download — PDF (máximo 10 MB)<input type="file" name="file" accept="application/pdf"/>{landing?.file_path&&<small>Arquivo já cadastrado. Envie outro apenas para substituir a entrega nas próximas inscrições.</small>}</label>
- <label>Status<select name="status" defaultValue={landing?.status??"draft"}><option value="draft">Rascunho</option><option value="published">Publicada</option></select></label>
+ <label>Status<select name="status" defaultValue={landing?.status??"draft"}><option value="draft">Rascunho</option>{landing&&<option value="published">Publicada</option>}</select></label>
  <button type="submit" disabled={pending}>{pending?"Salvando...":"Salvar landing"}</button>
  </form>
  </>;
