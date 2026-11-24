@@ -25,6 +25,7 @@ export async function saveEmailTemplate(_previous:EmailTemplateSaveState=EMAIL_S
  const auto_enabled=f.get("auto_enabled")==="yes",auto_include_existing=f.get("auto_include_existing")==="yes";
  if(auto_enabled&&kind!=="welcome"&&!landing_id)return fail("Selecione a landing de origem para ativar o envio automático.");
  let savedId="";
+ let completionMessage="Modelo salvo com sucesso.";
  try{
   const db=getSupabaseAdmin();
   if(selectedLandingCtaId){
@@ -85,6 +86,37 @@ export async function saveEmailTemplate(_previous:EmailTemplateSaveState=EMAIL_S
   const {data:saved,error}=id?await db.from("marketing_email_templates").update(payload).eq("id",id).select("id").maybeSingle():await db.from("marketing_email_templates").insert(payload).select("id").maybeSingle();
   if(error||!saved){console.error("[email-template-save] database write",error??"no row returned");return fail("Não foi possível salvar o modelo no banco. O conteúdo permanece no formulário; tente novamente.");}
   savedId=saved.id;
+  // Encerradas as duas etapas (PDF + modelo de entrega), publica automaticamente.
+  if(landing_id&&audience_kind==="leads"&&auto_enabled&&f.get("active")==="yes"
+     &&kind==="manual"&&!interest){
+    const {data:landingToPublish,error:landingError}=await db.from("marketing_landings")
+      .select("id,status,file_path,slug").eq("id",landing_id).maybeSingle();
+    if(landingError||!landingToPublish){
+      completionMessage="Modelo salvo, mas não foi possível validar a publicação. Confira a landing.";
+    }else if(landingToPublish.status==="draft"){
+      if(!landingToPublish.file_path){
+        completionMessage="Modelo salvo. A landing permanece em rascunho até que um PDF seja cadastrado.";
+      }else{
+        const {data:ready,error:readyError}=await db.from("marketing_email_templates")
+          .select("id,subject,body").eq("landing_id",landing_id).eq("active",true)
+          .eq("auto_enabled",true).eq("audience_kind","leads").eq("kind","manual")
+          .is("interest",null).limit(2);
+        if(readyError||ready?.length!==1||!ready[0].subject?.trim()||!ready[0].body?.trim()){
+          completionMessage="Modelo salvo. A publicação foi bloqueada porque falta validar o modelo de entrega.";
+        }else{
+          const {error:publishError}=await db.from("marketing_landings")
+            .update({status:"published",updated_at:new Date().toISOString()})
+            .eq("id",landing_id).eq("status","draft");
+          if(publishError){
+            console.error("[email-template-save] landing publication",publishError);
+            completionMessage="Modelo salvo. Não foi possível publicar a landing; verifique o cadastro.";
+          }else{
+            completionMessage="Modelo salvo e landing publicada com PDF e envio automático configurados.";
+          }
+        }
+      }
+    }
+  }
   revalidatePath("/torre/modelos-email");
   revalidatePath("/torre/modelos-email/editor");
   revalidatePath("/torre/landings");
@@ -93,7 +125,7 @@ export async function saveEmailTemplate(_previous:EmailTemplateSaveState=EMAIL_S
   console.error("[email-template-save] unexpected",error);
   return fail("Ocorreu uma falha inesperada ao salvar. Seus campos foram mantidos; tente novamente.");
  }
- return {status:"success",message:"Modelo salvo com sucesso.",savedId};
+ return {status:"success",message:completionMessage,savedId};
 }
 export async function saveEmailDraft(f:FormData){
  await requireAdmin();
