@@ -6,7 +6,8 @@ import {saveEmailTemplate,type EmailTemplateSaveState} from "./actions";
 import {saveTransactionalEmail} from "./transacionais/actions";
 import css from "./template-editor.module.css";
 type Template={audience_kind?:string|null;id:string;name:string;subject:string;body:string;kind:string;active:boolean;description:string|null;interest:string|null;landing_id:string|null;cta_label:string|null;cta_url:string|null;auto_enabled?:boolean;auto_include_existing?:boolean};
-type Landing={id:string;title:string;slug:string;status:string;button_text:string|null};
+type Landing={id:string;campaign_name:string|null;title:string;slug:string;status:string;button_text:string|null};
+const landingFullName=(landing:Landing)=>[landing.campaign_name?.trim(),landing.title?.trim()].filter(Boolean).join(" ").trim()||"Landing sem título";
 type CatalogCta={id:string;name:string;button_label:string;url:string;active:boolean};
 const links=[
  ["Blog Fiscal","https://dianavoltolini.com.br/blog"],
@@ -31,7 +32,7 @@ export default function TemplateEditor({selected,interests,landings,ctas,default
   ...links.map(([label,url])=>({key:"legacy:"+url,label,url,buttonLabel:"Acessar "+label,ctaId:"",landingId:""})),
   ...ctas.filter(c=>c.active).map(c=>({key:"cta:"+c.id,label:c.name.startsWith("CTA — ")?
    c.name:"CTA — "+c.name,url:c.url,buttonLabel:c.button_label,ctaId:c.id,landingId:""})),
-  ...landings.filter(l=>l.status==="published"||l.id===defaultLandingId).map(l=>({key:"landing:"+l.id,label:"Landing — "+l.title,
+  ...landings.filter(l=>l.status==="published"||l.id===defaultLandingId).map(l=>({key:"landing:"+l.id,label:"Landing — "+landingFullName(l),
    url:"https://dianavoltolini.com.br/l/"+l.slug,buttonLabel:(l.button_text||"Acessar material gratuito").slice(0,80),ctaId:"",landingId:l.id}))
  ];
  const savedUrl=selected?.cta_url??"";
@@ -43,9 +44,9 @@ export default function TemplateEditor({selected,interests,landings,ctas,default
   destinations.push({key:"saved",label:"Destino salvo neste modelo",url:savedUrl,buttonLabel:selected?.cta_label??"Acessar",ctaId:"",landingId:""});
 
  const [audience,setAudience]=useState(selected?.audience_kind??defaultAudience);
- const [name,setName]=useState(selected?.name??(setupLanding?"Entrega de material — "+setupLanding.title:""));
+ const [name,setName]=useState(selected?.name??(setupLanding?"Entrega de material — "+landingFullName(setupLanding):""));
  const [description,setDescription]=useState(selected?.description??"");
- const [subject,setSubject]=useState(selected?.subject??(setupLanding?"Seu material está disponível — "+setupLanding.title:""));
+ const [subject,setSubject]=useState(selected?.subject??(setupLanding?"Seu material está disponível — "+landingFullName(setupLanding):""));
  const [body,setBody]=useState((selected?.body??(setupLanding?
   "Olá, {{nome}}!\n\nSeu material gratuito está disponível.\n\nClique no botão para acessar o PDF solicitado.\n\nDiana Voltolini\nFaturamento e Inteligência Fiscal":starter)).replace(buttonPattern,"").trim());
  const [destinationKey,setDestinationKey]=useState(startingKey);
@@ -109,7 +110,7 @@ export default function TemplateEditor({selected,interests,landings,ctas,default
         <label>Landing de origem
          <select value={landing} onChange={e=>setLanding(e.target.value)} required>
           <option value="">Selecione uma landing</option>
-          {landings.map(l=><option key={l.id} value={l.id}>{l.title}</option>)}
+          {landings.map(l=><option key={l.id} value={l.id}>{landingFullName(l)}</option>)}
          </select>
         </label>
         <label>Interesse
