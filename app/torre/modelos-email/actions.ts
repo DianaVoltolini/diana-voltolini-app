@@ -30,10 +30,13 @@ export async function saveEmailTemplate(_previous:EmailTemplateSaveState=EMAIL_S
   if(selectedLandingCtaId){
    if(!uuid.test(selectedLandingCtaId))return fail("O destino da landing é inválido. Selecione novamente.");
    const {data:landingCta,error:landingCtaError}=await db.from("marketing_landings")
-    .select("id,slug,status,button_text").eq("id",selectedLandingCtaId).eq("status","published").maybeSingle();
+    .select("id,slug,status,button_text").eq("id",selectedLandingCtaId).maybeSingle();
    if(landingCtaError){console.error("[email-template-save] landing lookup",landingCtaError);return fail("Não foi possível consultar a landing. Tente salvar novamente.");}
    if(!landingCta||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(landingCta.slug))
-    return fail("Esta landing não está mais publicada ou seu endereço é inválido. Escolha outro destino.");
+    return fail("Landing de destino inválida.");
+   // Permite preparar CTA enquanto a landing ainda está em rascunho.
+   if(landingCta.status!=="published"&&!(auto_enabled&&landing_id===selectedLandingCtaId&&audience_kind==="leads"))
+    return fail("Landing ainda não publicada. Para criar seu e-mail de entrega, selecione a mesma landing como origem automática.");
    cta_url="https://dianavoltolini.com.br/l/"+landingCta.slug;
    cta_label=(landingCta.button_text||"Acessar material gratuito").trim().slice(0,80);
   }else if(selectedCtaId){
@@ -64,6 +67,16 @@ export async function saveEmailTemplate(_previous:EmailTemplateSaveState=EMAIL_S
   })();
   if(!safeDestination||!cta_label||cta_label.length>80)
    return fail("O endereço ou texto do botão é inválido. Escolha novamente o CTA.");
+  // Um único modelo de entrega por landing evita ambiguidade e disparos duplicados.
+  if(audience_kind==="leads"&&auto_enabled&&f.get("active")==="yes"&&landing_id){
+    const {data:otherTemplates,error:otherError}=await db.from("marketing_email_templates")
+      .select("id").eq("landing_id",landing_id).eq("active",true)
+      .eq("auto_enabled",true).eq("audience_kind","leads").eq("kind","manual")
+      .is("interest",null).limit(3);
+    if(otherError)return fail("Não foi possível validar os modelos de entrega desta landing.");
+    if((otherTemplates??[]).some(t=>t.id!==id))
+      return fail("Esta landing já possui um modelo automático ativo. Edite o modelo existente em vez de criar outro.");
+  }
   const existingTemplate=id?await db.from("marketing_email_templates").select("auto_enabled,auto_activated_at").eq("id",id).maybeSingle():{data:null,error:null};
   if(existingTemplate.error){console.error("[email-template-save] template lookup",existingTemplate.error);return fail("Não foi possível consultar este modelo. Tente novamente.");}
   if(id&&!existingTemplate.data)return fail("O modelo não foi encontrado. Volte à lista e abra novamente.");
@@ -74,6 +87,8 @@ export async function saveEmailTemplate(_previous:EmailTemplateSaveState=EMAIL_S
   savedId=saved.id;
   revalidatePath("/torre/modelos-email");
   revalidatePath("/torre/modelos-email/editor");
+  revalidatePath("/torre/landings");
+  if(landing_id)revalidatePath("/torre/landings/editor?id="+landing_id);
  }catch(error){
   console.error("[email-template-save] unexpected",error);
   return fail("Ocorreu uma falha inesperada ao salvar. Seus campos foram mantidos; tente novamente.");
