@@ -50,3 +50,25 @@
 .overview span{font-size:11px}
 }
 @media(max-width:390px){.overview{grid-template-columns:1fr}.overview>div+div{border-left:0;border-top:1px solid #e5eaf0}}
+
+/* Acesso direto ao modelo de entrega associado à landing. */
+.actions .emailModel{
+ display:inline-flex;
+ align-items:center;
+ gap:7px;
+ padding:8px 13px;
+ border:1px solid #e1d5b2;
+ border-radius:6px;
+ background:#fbf7e9;
+ color:#775913;
+ font-weight:750;
+}
+.actions .emailModel:hover{
+ background:#f4ebd0;
+ color:#624809;
+ text-decoration:none;
+}
+.emailUnavailable{
+ color:#8a6161;
+ font-size:12px;
+}
