@@ -19,7 +19,7 @@ export default async function EditLanding({searchParams}:{searchParams:Promise<{
  <p>2. E-mail de entrega: {readyModels.length===1?"Modelo automático configurado":"Pendente — publicação bloqueada"}.</p>
  <Link href={readyModels[0]?"/torre/modelos-email/editor?editar="+readyModels[0].id:
  "/torre/modelos-email/editor?landing_id="+data.id}>{readyModels[0]?"Editar modelo de e-mail":"Gerar e configurar modelo de e-mail"}</Link>
- <p>Quando PDF e modelo estiverem concluídos, selecione “Publicada” e salve a landing.</p>
+ <p>Ao salvar o modelo automático, a landing com PDF será publicada. Se o modelo ficar incompleto, a página permanecerá em rascunho.</p>
  </div>}
  <LandingEditorForm landing={data}/></main>;
 }
