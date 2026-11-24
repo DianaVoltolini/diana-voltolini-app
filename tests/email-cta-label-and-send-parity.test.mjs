@@ -14,7 +14,7 @@ test("CTA selecionado vincula nome, URL e texto ao mesmo ID",()=>{
  assert.match(editor,/url:c\.url,buttonLabel:c\.button_label,ctaId:c\.id/);
  assert.match(editor,/name="cta_id" value=\{catalogCtaId\}/);
  assert.match(editor,/setCta\(chosen\.buttonLabel\)/);
- assert.match(editor,/readOnly=\\{Boolean\\(catalogCtaId\\)\\}/);
+ assert.match(editor,/readOnly=\{Boolean\(catalogCtaId\)\}/);
  assert.match(editor,/Personalize o texto deste botão apenas para o e-mail/);
  assert.match(editor,/href=\{url\}.*className=\{css\.mailButton\}/);
  assert.match(editor,/\{cta\}<\/a>/);
@@ -37,7 +37,7 @@ test("campanha real e teste controlado usam mesmo snapshot salvo no modelo",()=>
 });
 
 test("modelo de landing preserva CTA editável enquanto valida destino por ID",()=>{
- assert.match(save,/cta_url="https:\\/\\/dianavoltolini\\.com\\.br\\/l\\/"\\+landingCta\\.slug/);
- assert.match(save,/if\\(!cta_label\\)return fail\\("Informe o texto do botão do e-mail\\."\\)/);
- assert.doesNotMatch(save,/cta_label=\\(landingCta\\.button_text/);
+ assert.match(save,/cta_url="https:\/\/dianavoltolini\.com\.br\/l\/"\+landingCta\.slug/);
+ assert.match(save,/if\(!cta_label\)return fail\("Informe o texto do botão do e-mail\."\)/);
+ assert.doesNotMatch(save,/cta_label=\(landingCta\.button_text/);
 });
