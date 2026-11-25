@@ -6,11 +6,12 @@ const admin=[["/torre","Visão geral"],["/torre/financeiro","Financeiro"],["/tor
 const services=[["/torre/diagnosticos","Diagnóstico Expresso IBS/CBS"],["/torre/analises-fiscais","Análise Fiscal Individual"],["/torre/ebooks","E-books"],["/torre/encontro-online","Encontro Online"],["/torre/assinaturas","Fiscal na Prática · Assinatura"]];
 export default function TorreSidebar(){
  const path=usePathname();
- const item=(href:string,label:string)=><Link key={href} href={href} aria-current={path===href||(href!=="/torre"&&path.startsWith(href+"/"))?"page":undefined} className={styles.link}>{label}</Link>;
+ const campaignResults="/torre/modelos-email/resultados";
+ const item=(href:string,label:string)=><Link key={href} href={href} aria-current={path===href||(href!=="/torre"&&!(href==="/torre/modelos-email"&&path===campaignResults)&&path.startsWith(href+"/"))?"page":undefined} className={styles.link}>{label}</Link>;
  const navigation=<nav className={styles.links} aria-label="Navegação administrativa">
  <p className={styles.kicker}>ADMINISTRAÇÃO</p>{admin.map(([url,label])=>item(url,label))}
  <div className={styles.group}><span className={styles.groupLabel}>SERVIÇOS</span>{services.map(([url,label])=>item(url,label))}</div>
- <div className={styles.group}><span className={styles.groupLabel}>MARKETING</span>{item("/torre/landings","Landing Pages")}{item("/torre/leads","Leads")}{item("/torre/conteudos","Blog")}{item("/torre/sugestoes","Sugestões de conteúdo")}{item("/torre/ctas","CTAs do Blog")}{item("/torre/modelos-email","Modelos de E-mail")}{item("/torre/gerador-ebooks","Gerador de E-books")}</div>
+ <div className={styles.group}><span className={styles.groupLabel}>MARKETING</span>{item("/torre/landings","Landing Pages")}{item("/torre/leads","Leads")}{item("/torre/conteudos","Blog")}{item("/torre/sugestoes","Sugestões de conteúdo")}{item("/torre/ctas","CTAs do Blog")}{item("/torre/modelos-email","Modelos de E-mail")}{item(campaignResults,"Resultados das campanhas")}{item("/torre/gerador-ebooks","Gerador de E-books")}</div>
  <div className={styles.group}><span className={styles.groupLabel}>ÁREA COMERCIAL · EM IMPLANTAÇÃO</span>{item("/torre/comercio-v2","Visão geral")}{item("/torre/comercio-v2/produtos","Produtos")}{item("/torre/comercio-v2/ofertas","Ofertas e Preços")}{item("/torre/comercio-v2/paginas","Páginas de Vendas")}</div>
  <div className={styles.group}><span className={styles.groupLabel}>AUDITORIA · ACOMPANHAMENTO</span>{item("/torre/auditoria","Visão geral e pendências")}{item("/torre/auditoria?filtro=concluidas","Concluídas")}</div>
  </nav>;
