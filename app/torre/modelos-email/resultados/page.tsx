@@ -1,4 +1,6 @@
 import Link from "next/link";
+import {redirect} from "next/navigation";
+import {processManualCampaignQueue} from "@/lib/marketing/manual-queue";
 import {requireAdmin} from "@/lib/auth/require-admin";
 import {getSupabaseAdmin} from "@/lib/supabase/admin";
 import styles from "../../painel.module.css";
@@ -10,7 +12,7 @@ const card={border:"1px solid #e1e7ed",borderRadius:11,padding:17,background:"#f
 type Entry={key:string;label:string;type:"manual"|"automatic";id:string;templateId:string;planned:number|null;status:string|null};
 type Recipient={email:string;lead_name:string|null;status:string;created_at:string;accepted_at:string|null;error_message:string|null};
 
-export default async function NewsletterResults({searchParams}:{searchParams:Promise<{campanha?:string;modelo?:string}>}){
+export default async function NewsletterResults({searchParams}:{searchParams:Promise<{campanha?:string;modelo?:string;lote?:string}>}){
  await requireAdmin();
  const params=await searchParams;
  const db=getSupabaseAdmin();
@@ -28,6 +30,24 @@ export default async function NewsletterResults({searchParams}:{searchParams:Pro
    ??entries.find(e=>e.type==="manual"&&e.templateId===params.modelo)
    ??entries.find(e=>e.templateId===params.modelo)
    ??entries[0]??null;
+ const campaignId=selected?.type==="manual"?selected.id:null;
+ const hasPending=campaignId&&selected?.status==="processing"
+  ?await db.from("marketing_manual_send_recipients").select("id",{count:"exact",head:true}).eq("send_id",campaignId).eq("status","pending")
+  :null;
+ async function processBatch(){
+  "use server";
+  await requireAdmin();
+  const results="/torre/modelos-email/resultados";
+  if(!campaignId)redirect(results);
+  let outcome="erro";
+  try{
+   const result=await processManualCampaignQueue(campaignId);
+   outcome=result.enabled?String(result.processed):"desativada";
+  }catch(error){
+   console.error("[marketing manual queue] Erro no processamento pela Torre",error);
+  }
+  redirect(results+"?"+new URLSearchParams({campanha:"manual:"+campaignId,lote:outcome}).toString());
+ }
  const {data:records,error:recordsError}=selected?
   selected.type==="manual"
    ?await db.from("marketing_manual_send_recipients").select("email,lead_name,status,created_at,accepted_at,error_message").eq("send_id",selected.id).order("created_at",{ascending:false}).limit(1000)
@@ -56,6 +76,15 @@ export default async function NewsletterResults({searchParams}:{searchParams:Pro
    </select>
    <button type="submit" disabled={!selected} style={{justifySelf:"start",padding:"10px 16px",border:0,borderRadius:7,background:"#c9a227",fontWeight:750}}>Consultar</button>
   </form>
+  {campaignId&&params.lote==="desativada"&&<p role="status">O processamento de campanhas está desativado no servidor.</p>}
+  {campaignId&&params.lote==="erro"&&<p role="alert">Não foi possível concluir o lote. Confira o histórico antes de processar outro lote.</p>}
+  {campaignId&&params.lote==="0"&&<p role="status">Nenhum destinatário reservado. A fila pode estar ocupada ou ter atingido o limite de tentativas do período.</p>}
+  {campaignId&&params.lote&&/^(?:[1-9]|10)$/.test(params.lote)&&<p role="status">Destinatários processados neste lote: {params.lote}. Confira os resultados abaixo.</p>}
+  {hasPending?.error&&<p role="alert">Não foi possível verificar os destinatários que aguardam processamento.</p>}
+  {!error&&!!hasPending?.count&&<form action={processBatch} style={{...card,marginTop:16}}>
+   <p style={{marginTop:0}}>Envia e-mails desta campanha para até 10 destinatários pendentes por clique.</p>
+   <button className={styles.openLink} type="submit">Processar próximo lote</button>
+  </form>}
   {!selected?<p style={{marginTop:20,color:"#607184"}}>Nenhuma campanha com envio registrado.</p>:<>
    <p style={{color:"#607184",fontSize:13,marginTop:16}}>
     {selected.planned!==null?<>Destinatários previstos: <strong>{selected.planned}</strong> · </>:null}
