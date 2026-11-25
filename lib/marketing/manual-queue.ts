@@ -9,7 +9,7 @@ type Claimed={
 };
 const normalize=(value:string)=>value.trim().toLowerCase();
 
-export async function processManualCampaignQueue(){
+export async function processManualCampaignQueue(campaignId?:string){
  if(process.env.MARKETING_MANUAL_QUEUE_ENABLED!=="1")
    return {enabled:false,message:"Fila desativada",processed:0,accepted:0,failed:0,skipped:0};
  const host=process.env.SMTP_HOST,user=process.env.SMTP_USER,pass=process.env.SMTP_PASS,from=process.env.SMTP_FROM_EMAIL;
@@ -26,7 +26,10 @@ export async function processManualCampaignQueue(){
   for(let i=0;i<10;i++){
    // Cada claim consome uma vaga no orçamento móvel de 24h ANTES de tocar no SMTP.
    // Um registro em sending com resultado incerto nunca volta automaticamente a pending.
-   const {data:claimed,error:claimError}=await db.rpc("claim_marketing_manual_recipient",{p_max_24h:800});
+   const {data:claimed,error:claimError}=await db.rpc("claim_marketing_manual_recipient",{
+    p_max_24h:800,
+    ...(campaignId?{p_send_id:campaignId}:{})
+   });
    if(claimError)throw claimError;
    const item=(claimed?.[0]??null) as Claimed|null;
    if(!item)break;
